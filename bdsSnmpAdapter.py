@@ -223,7 +223,7 @@ class bdsSnmpAdapter:
 #logging.getLogger().setLevel(logging.DEBUG)
 #logging.getLogger().setLevel(logging.INFO)
 logging.getLogger().setLevel(logging.WARNING)
-myBdsSnmpAdapter = bdsSnmpAdapter(host="10.0.3.110",portDict={"confd":"2002","bgp.iod":"3102"})
+myBdsSnmpAdapter = bdsSnmpAdapter(host="10.0.3.110",portDict={"confd":"2002","bgp.iod":"3102","bgp.appd":"4102"})
 myBdsSnmpAdapter.loadOidMappingFromYamlFile("snmpOidMapping.yml")
 myBdsSnmpAdapter.oidTree.getOidDictParentDictAndIndex("1.3.6.1.15.3.1.1")
 myBdsSnmpAdapter.oidTree.getOidDictParentDictAndIndex("1.3.6.1.15.3.1")
