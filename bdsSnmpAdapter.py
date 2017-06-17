@@ -2,13 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import os
-import pprint
-import csv
 import requests
 import json
 import logging
+import argparse
 import yaml
+from pysnmp.entity import engine, config
+from pysnmp.entity.rfc3413 import cmdrsp, context
+from pysnmp.carrier.asyncore.dgram import udp
+from pysnmp.smi import instrum
+from pysnmp.proto.api import v2c
 
 class oidTree:
     def __init__(self):
@@ -220,28 +223,140 @@ class bdsSnmpAdapter:
                         logging.warning ("JSON parser error {}".format(responseString))
                         return None
 
-#logging.getLogger().setLevel(logging.DEBUG)
-#logging.getLogger().setLevel(logging.INFO)
-logging.getLogger().setLevel(logging.WARNING)
-myBdsSnmpAdapter = bdsSnmpAdapter(host="10.0.3.110",portDict={"confd":"2002","bgp.iod":"3102","bgp.appd":"4102"})
-myBdsSnmpAdapter.loadOidMappingFromYamlFile("snmpOidMapping.yml")
-myBdsSnmpAdapter.oidTree.getOidDictParentDictAndIndex("1.3.6.1.15.3.1.1")
-myBdsSnmpAdapter.oidTree.getOidDictParentDictAndIndex("1.3.6.1.15.3.1")
-print("#"*60)
-print("postive test cases for snmpGet")
-print("#"*60)
-myBdsSnmpAdapter.snmpGet(oid="1.3.6.1.15.1.0")
-myBdsSnmpAdapter.snmpGet(oid="1.3.6.1.15.4.0")
-myBdsSnmpAdapter.snmpGet(oid="1.3.6.1.15.3.1.1.20.10.10.1")
-myBdsSnmpAdapter.snmpGet(oid="1.3.6.1.15.3.1.2.20.10.10.1")
-myBdsSnmpAdapter.snmpGet(oid="1.3.6.1.15.3.1.7.20.10.10.1")
-print("#"*60)
-print("negative test cases for snmpGet")
-print("#"*60)
-myBdsSnmpAdapter.snmpGet(oid="1.3.6.1.16")
-myBdsSnmpAdapter.snmpGet(oid="1.3.6.1.15.3.1.2.30.10.10.3")
-print("#"*60)
-print("postive test cases for snmpWalk")
-print("#"*60)
-myBdsSnmpAdapter.snmpWalk(baseOid="1.3.6.1.15")
 
+class MibInstrumController(instrum.AbstractMibInstrumController):
+
+    # TODO: we probably need explicit SNMP type spec in YAML map
+    SNMP_TYPE_MAP = {
+        int: v2c.Integer32,
+        str: v2c.OctetString,
+    }
+
+    if sys.version_info[0] < 3:
+        SNMP_TYPE_MAP[unicode] = v2c.OctetString
+
+    def setBdsAdapter(self, bdsAdapter):
+        self._bdsAdapter = bdsAdapter
+        return self
+
+    def readVars(self, varBinds, acInfo=(None, None)):
+        logging.debug('SNMP request is GET {}'.format(', '.join(str(x[0]) for x in varBinds)))
+
+        try:
+            bdsAdapter = self._bdsAdapter
+
+        except AttributeError:
+            logging.error('BDS adapter not initialized')
+            return [(varBind[0], v2c.NoSuchObject()) for varBind in varBinds]
+
+        rspVarBinds = []
+
+        for oid, value in varBinds:
+            try:
+                valueDict = bdsAdapter.snmpGet(oid=str(oid))
+
+            except Exception as exc:
+                logging.error('BDS failure: {}'.format(exc))
+                valueDict = None
+
+            if valueDict is None:
+                value = v2c.NoSuchObject()
+            else:
+                value = valueDict[str(oid)]
+
+                try:
+                    value = self.SNMP_TYPE_MAP[value.__class__](value)
+
+                except KeyError:
+                    logging.error('unmapped BDS type {}'.format(value.__class__.__name__))
+                    value = v2c.NoSuchObject()
+
+            rspVarBinds.append((oid, value))
+
+        logging.debug('SNMP response is {}'.format(', '.join(['{}={}'.format(*x) for x in rspVarBinds])))
+
+        return rspVarBinds
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description="SNMP Agent serving BDS data")
+
+    parser.add_argument('--bds-host',
+                        metavar='<IPv4>',
+                        type=str,
+                        required=True,
+                        help='hostname/address of the BDS REST API service')
+
+    parser.add_argument('--bds-map',
+                        metavar='<PATH>',
+                        type=str,
+                        default='snmpOidMapping.yml',
+                        help='SNMP to BDS objects map file [snmpOidMapping.yml]')
+
+    parser.add_argument('--snmp-agent-ipv4-address',
+                        metavar='IPv4',
+                        type=str,
+                        default='0.0.0.0',
+                        help='SNMP agent listens at this address [0.0.0.0]')
+
+    parser.add_argument('--snmp-agent-udp-port',
+                        metavar='<INT>',
+                        type=int,
+                        default=161,
+                        help='SNMP agent listens at this UDP port [161]')
+
+    parser.add_argument('--snmp-community-name',
+                        metavar='<STRING>',
+                        type=str,
+                        default='public',
+                        help='SNMP agent responds to this community name [public]')
+
+    args = parser.parse_args()
+
+    logging.getLogger().setLevel(logging.DEBUG)
+
+    myBdsSnmpAdapter = bdsSnmpAdapter(host=args.bds_host, #"10.0.3.110",
+                                      portDict={"confd":"2002","bgp.iod":"3102"})
+    myBdsSnmpAdapter.loadOidMappingFromYamlFile(args.bds_map)
+
+    snmpEngine = engine.SnmpEngine()
+
+    # UDP over IPv4
+    try:
+        config.addTransport(
+            snmpEngine,
+            udp.domainName,
+            udp.UdpTransport().openServerMode((args.snmp_agent_ipv4_address,
+                                               args.snmp_agent_udp_port))
+        )
+
+    except Exception as exc:
+        logging.error('SNMP transport error: {}'.format(exc))
+        sys.exit(1)
+
+    config.addV1System(snmpEngine, 'read-subtree', args.snmp_community_name)
+
+    # Allow full MIB access for this user / securityModels at VACM
+    config.addVacmUser(snmpEngine, 2, 'read-subtree', 'noAuthNoPriv', (1, 3, 6))
+
+    snmpContext = context.SnmpContext(snmpEngine)
+
+    snmpContext.unregisterContextName(v2c.OctetString(''))
+
+    snmpContext.registerContextName(
+        v2c.OctetString(''),  # Context Name
+        MibInstrumController().setBdsAdapter(myBdsSnmpAdapter)
+    )
+
+    cmdrsp.GetCommandResponder(snmpEngine, snmpContext)
+
+    logging.debug('SNMP agent is running at {}:{}'.format(args.snmp_agent_ipv4_address, args.snmp_agent_udp_port))
+
+    snmpEngine.transportDispatcher.jobStarted(1)
+
+    try:
+        snmpEngine.transportDispatcher.runDispatcher()
+    except:
+        snmpEngine.transportDispatcher.closeDispatcher()
+        raise
