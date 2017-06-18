@@ -102,8 +102,8 @@ class bdsSnmpAdapter:
             self.oidTree.addOid(oid,oidDict)
 
 
-    def snmpGet(self,oid="",urlSuffix="/bds/object/get",indexWalk=False):
-        logging.debug ("enter snmpGet {} ".format(oid))
+    def snmpGet(self,oid="",urlSuffix="/bds/object/get",indexWalk=False,dataSource = None):
+        logging.debug ("enter snmpGet {} datasource {}".format(oid,dataSource))
         self.urlSuffix=urlSuffix
         oidDict,parentOidDict,snmpTableIndex = self.oidTree.getOidDictParentDictAndIndex(oid) ###FIXME ErrorCodes
         if oidDict:
@@ -122,19 +122,24 @@ class bdsSnmpAdapter:
                 keyAttrName = parentOidDict["keyAttribute"]
                 tableName = parentOidDict["table"]
                 processName = parentOidDict["process"]
-            requestData = {"table":{"table_name":tableName},"objects":[{"attribute":{ keyAttrName:bdsIndex}}]}
-            url = 'http://'+self.host+":"+self.portDict[processName]+self.urlSuffix
-            headers = {'Content-Type': 'application/json'} 
-            logging.debug ("POST {} {}".format(url,json.dumps(requestData)))
-            self.response = requests.post(url,
-                    data=json.dumps(requestData),
-                    headers= headers)
-            logging.debug (self.response)
+            if dataSource == None: 
+                requestData = {"table":{"table_name":tableName},"objects":[{"attribute":{ keyAttrName:bdsIndex }}]}
+                url = 'http://'+self.host+":"+self.portDict[processName]+self.urlSuffix
+                headers = {'Content-Type': 'application/json'} 
+                logging.info ("POST {}".format(url))
+                logging.debug ("POST {} {}".format(url,json.dumps(requestData)))
+                self.response = requests.post(url,
+                        data=json.dumps(requestData),
+                        headers= headers)
+                logging.debug (self.response)
             if len(self.response.text) > 0:
                 try:
-                    responseJSON = json.loads(self.response.text)
-                    responseString = json.dumps(responseJSON,indent=4)
-                    logging.debug ("JSON response {}".format(responseJSON))
+                    if dataSource == None: 
+                        responseJSON = json.loads(self.response.text)
+                        #responseString = json.dumps(responseJSON,indent=4)
+                        #logging.debug ("JSON response {}".format(responseJSON))  ###FIXME size check ...
+                    else:
+                        responseJSON  =  [dataSource]    
                     if 'object-not-found' in responseJSON[0].keys():
                         logging.warning ("negative REST API response {}!!!!".format(responseJSON))
                         return None
@@ -142,6 +147,8 @@ class bdsSnmpAdapter:
                         attributeValue = responseJSON[0]["attribute"][oidDict["attribute"]]
                         logging.debug ("value for attribute {} found in REST API response: {}".format(oidDict["attribute"],attributeValue ))
                         returnValue = attributeValue
+                        if "operation" in oidDict.keys():
+                            returnValue = eval(oidDict["operation"])
                         if "valueMappingDict" in oidDict.keys():
                             if attributeValue in oidDict["valueMappingDict"].keys():
                                 returnValue = oidDict["valueMappingDict"][attributeValue] 
@@ -199,29 +206,40 @@ class bdsSnmpAdapter:
                         data=json.dumps(requestData),
                         headers= headers)
                 logging.debug (self.response)
+                print ("got bdsWalk response")
                 if len(self.response.text) > 0:
                     try:
-                        responseJSON = json.loads(self.response.text)
-                        responseString = json.dumps(responseJSON,indent=4)
-                        keyAttribute = parentOidDict["keyAttribute"]
-                        for bdsObject in responseJSON['objects']:
-                            #print (keyAttribute,bdsObject['attribute'].keys())
-                            if keyAttribute in bdsObject['attribute'].keys():
-                                keyValue =  bdsObject['attribute'][keyAttribute]
-                                logging.debug ("suppressKeys {} keyValue {}".format(oid,keyValue))
-                                if "suppressKeys" in parentOidDict.keys():
-                                    if  keyValue in parentOidDict["suppressKeys"][keyAttribute]:              
-                                        logging.debug("suppress {} keyValue {}".format(oid,keyValue))
-                                    else:
-                                        bdsIndex = bdsObject["attribute"][parentOidDict["keyAttribute"]]
-                                        snmpTableIndex  = eval(parentOidDict["bdsIndexToSnmpIndex"])
-                                        oidList.append(".".join([oid,snmpTableIndex]))
-                        for thisOid in oidList:
-                            self.snmpGet(oid=thisOid)                                 
+                        responseJSON = json.loads(self.response.text)                             
                     except ValueError:
                         responseString = self.response.text
                         logging.warning ("JSON parser error {}".format(responseString))
                         return None
+                    print ("json load complete")
+                    #responseString = json.dumps(responseJSON,indent=4)
+                    keyAttribute = parentOidDict["keyAttribute"]
+                    for bdsObject in responseJSON['objects']:
+                        if keyAttribute in bdsObject['attribute'].keys():
+                            keyValue =  bdsObject['attribute'][keyAttribute]
+                            logging.debug ("oid {} keyValue {}".format(oid,keyValue))
+                            if "suppressKeys" in parentOidDict.keys():
+                                if  keyValue in parentOidDict["suppressKeys"][keyAttribute]:              
+                                    logging.debug("suppress {} keyValue {}".format(oid,keyValue))
+                                else:
+                                    bdsIndex = bdsObject["attribute"][parentOidDict["keyAttribute"]]
+                                    snmpTableIndex  = eval(parentOidDict["bdsIndexToSnmpIndex"])
+                                    thisOid = ".".join([oid,snmpTableIndex])
+                                    oidList.append([thisOid,bdsObject]) 
+                                    #oidList.append([thisOid])
+                            else:
+                                bdsIndex = bdsObject["attribute"][parentOidDict["keyAttribute"]]                                 
+                                snmpTableIndex  = eval(parentOidDict["bdsIndexToSnmpIndex"])
+                                thisOid = ".".join([oid,snmpTableIndex])
+                                oidList.append([thisOid,bdsObject]) 
+                                #oidList.append([thisOid]) 
+                    print ("oid list complete")
+                    for thisOid,bdsObject in oidList:
+                        #self.snmpGet(oid=thisOid,dataSource = bdsObject)  
+                        self.snmpGet(oid=thisOid) 
 
 
 class MibInstrumController(instrum.AbstractMibInstrumController):
