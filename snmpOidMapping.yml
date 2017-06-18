@@ -216,3 +216,94 @@
   process: confd
   table: global.bgp.instance.config
   type: snmpObject
+1.3.6.1.15.6.1:
+  name: Bgp4PathAttrEntry
+  type: snmpTable
+  description: |
+            Information about a path to a network.
+            INDEX { bgp4PathAttrIpAddrPrefix,
+                    bgp4PathAttrIpAddrPrefixLen,
+                    bgp4PathAttrPeer            }
+  keyAttribute: prefix4
+  process: bgp.appd
+  table: default.bgp.1.fib-local.ipv4.unicast
+  snmpIndexToBdsIndex: '".".join( snmpTableIndex.split(".")[:4]) + "/" + snmpTableIndex.split(".")[4]'
+  bdsIndexToSnmpIndex: '".".join( bdsIndex.split("/")[0].split(".") + [bdsIndex.split("/")[1]] )'
+1.3.6.1.15.6.1.1:
+  name: bgp4PathAttrPeer
+  type: snmpTableObject
+  description: |
+           "The IP address of the peer where the path
+           information was learned."
+  attribute: peer4
+1.3.6.1.15.6.1.2:
+  name: bgp4PathAttrIpAddrPrefixLen
+  type: snmpTableObject
+  description: |
+           "The IP address of the peer where the path
+           information was learned."
+  attribute: prefix4
+  operation: attributeValue.split("/")[1]
+1.3.6.1.15.6.1.3:
+  name: bgp4PathAttrIpAddrPrefix
+  type: snmpTableObject
+  description: |
+           "The IP address of the peer where the path
+           information was learned."
+  attribute: prefix4
+  operation: attributeValue.split("/")[0]
+1.3.6.1.15.6.1.4:
+  name: bgp4PathAttrIpAddrPrefix
+  type: snmpTableObject
+  description: |
+            "The ultimate origin of the path
+            information."
+            SYNTAX     INTEGER {
+                                 igp(1),-- networks are interior
+                                 egp(2),-- networks learned
+                                        -- via EGP
+                                 incomplete(3) -- undetermined
+                               }
+  attribute: origin
+  valueMappingDict: 
+    IGP: 1
+    EGP: 2 
+    Incomplete: 3
+1.3.6.1.15.6.1.5:
+  name: bgp4PathAttrASPathSegment
+  type: snmpTableObject
+  description: |
+            "The sequence of AS path segments.  Each AS
+            path segment is represented by a triple
+            <type, length, value>.
+
+            The type is a 1-octet field which has two
+            possible values:
+                 1      AS_SET: unordered set of ASs a
+                             route in the UPDATE
+                             message has traversed
+                 2      AS_SEQUENCE: ordered set of ASs
+                             a route in the UPDATE
+                             message has traversed.
+
+            The length is a 1-octet field containing the
+            number of ASs in the value field.
+
+            The value field contains one or more AS
+            numbers, each AS is represented in the octet
+            string as a pair of octets according to the
+            following algorithm:
+
+                first-byte-of-pair = ASNumber / 256;
+                second-byte-of-pair = ASNumber & 255;"
+  value: "not set in this test"
+1.3.6.1.15.6.1.6:
+  name: bgp4PathAttrIpAddrPrefix
+  type: snmpTableObject
+  description: |
+        "The address of the border router that
+        should be used for the destination
+        network."
+  attribute: bgp_nh4
+  
+  
