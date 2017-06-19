@@ -119,6 +119,10 @@ class bdsSnmpAdapter:
                 processName = oidDict["process"]
             if oidDict["type"] == "snmpTableObject":
                 bdsIndex = eval(parentOidDict["snmpIndexToBdsIndex"])
+                #print (parentOidDict["snmpIndexToBdsIndexList"])
+                bdsIndexList = eval(parentOidDict["snmpIndexToBdsIndexList"])
+                #print (bdsIndexList)
+
                 keyAttrName = parentOidDict["keyAttribute"]
                 tableName = parentOidDict["table"]
                 processName = parentOidDict["process"]
@@ -231,8 +235,14 @@ class bdsSnmpAdapter:
                                     oidList.append([thisOid,bdsObject]) 
                                     #oidList.append([thisOid])
                             else:
-                                bdsIndex = bdsObject["attribute"][parentOidDict["keyAttribute"]]                                 
+                                bdsIndex = bdsObject["attribute"][parentOidDict["keyAttribute"]]
                                 snmpTableIndex  = eval(parentOidDict["bdsIndexToSnmpIndex"])
+                                #print ( parentOidDict["indexAttributeList"],type(parentOidDict["indexAttributeList"]))
+                                bdsIndexList = parentOidDict["indexAttributeList"]
+                                #print ( bdsIndexList )
+                                #print ( parentOidDict["bdsIndexListToSnmpIndex"] )
+                                snmpTableIndex  = eval(parentOidDict["bdsIndexListToSnmpIndex"])
+                                #print ( snmpTableIndex )                              
                                 thisOid = ".".join([oid,snmpTableIndex])
                                 oidList.append([thisOid,bdsObject]) 
                                 #oidList.append([thisOid]) 
