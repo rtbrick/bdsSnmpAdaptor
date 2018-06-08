@@ -1,16 +1,13 @@
 1.3.6.1.2.1.1.1.0:
   name: sysDescr
-  type: snmpObject
   pysnmpBaseType: OctetString
   fixedValue: 'some apples'
 1.3.6.1.2.1.1.2.0:
   name: sysObjectID
-  type: snmpObject
   pysnmpBaseType: ObjectIdentifier
   fixedValue: 1.3.6.1.2.1.1.1.0
 1.3.6.1.2.1.1.3.0:
   name: sysUpTime
-  type: snmpObject
   pysnmpBaseType: TimeTicks
   fixedValue: 321
 

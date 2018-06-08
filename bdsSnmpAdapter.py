@@ -63,21 +63,39 @@ class bdsSnmpAdapter:
         pprint.pprint(self.oidList)             ###temp
         pprint.pprint(self.oidDict)             ###temp
 
-    def snmpGet(self,oid="",urlSuffix="/bds/object/get",indexWalk=False,dataSource = None):
-        logging.debug ("enter snmpGet {} datasource {}".format(oid,dataSource))
-        self.urlSuffix=urlSuffix
-        #oidDict,parentOidDict,snmpTableIndex = self.oidTree.getOidDictParentDictAndIndex(oid) ###FIXME ErrorCodes
-        oidDict = self.oidDict[oid]
-        if oidDict:
-            if "fixedValue" in oidDict.keys():
-                baseType = oidDict["pysnmpBaseType"]
-                evalString = "{}('{}')".format(oidDict["pysnmpBaseType"],oidDict["fixedValue"])
-                logging.info("evalString {}('{}')".format(oidDict["pysnmpBaseType"],oidDict["fixedValue"]))
-                returnValue = eval(evalString )             
-                logging.info ("snmpGet {} returning {} for fixed value".format(oid,returnValue))
-                #print ({oid:returnValue})
-                return {oid:returnValue}
-            return None
+    def snmpGet(self,oid=""):
+        print ("snmpGet for oid {}".format(oid))
+        if oid in self.oidList:
+            logging.info ("snmpGet {} in Dict".format(oid))
+            iodIndex = self.oidList.index(oid)
+            oidDict = self.oidDict[oid]
+        else:
+            logging.error ("snmpGet {} not in Dict".format(oid))   
+            nextOid = self.oidList[0]
+            oidDict = self.oidDict[nextOid]
+        if "fixedValue" in oidDict.keys():
+            baseType = oidDict["pysnmpBaseType"]
+            evalString = "{}('{}')".format(oidDict["pysnmpBaseType"],oidDict["fixedValue"])
+            logging.info("evalString {}('{}')".format(oidDict["pysnmpBaseType"],oidDict["fixedValue"]))
+            returnValue = eval(evalString )             
+            logging.info ("snmpGet {} returning {} for fixed value".format(oid,returnValue))
+            #print ({oid:returnValue})
+            return {oid:returnValue}    
+        return None
+
+    def snmpNext(self,oid=""):
+        print ("snmpGetNext {}".format(oid))
+        if oid in self.oidList:
+            iodIndex = self.oidList.index(oid) 
+            if iodIndex < len(self.oidList) - 1:
+                nextOid = self.oidList[self.oidList.index(oid)+1]
+                returnDict = self.snmpGet(nextOid)
+                print (returnDict)
+                return self.snmpGet(nextOid)
+            else:
+                nextOid = None
+                return None
+        return None
 
 
 
@@ -94,44 +112,34 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         SNMP_TYPE_MAP[unicode] = v2c.OctetString
 
     def setBdsAdapter(self, bdsAdapter):
+        logging.debug ("setBdsAdapter: {}".format(bdsAdapter)) ###Temp
         self._bdsAdapter = bdsAdapter
         return self
 
     def readVars(self, varBinds, acInfo=(None, None)):
         logging.debug('SNMP request is GET {}'.format(', '.join(str(x[0]) for x in varBinds)))
-
         try:
             bdsAdapter = self._bdsAdapter
-
         except AttributeError:
             logging.error('BDS adapter not initialized')
             return [(varBind[0], v2c.NoSuchObject()) for varBind in varBinds]
-
         rspVarBinds = []
-
+        print ("MibInstrumController varBinds {}".format(varBinds))
         for oid, value in varBinds:
             try:
                 valueDict = bdsAdapter.snmpGet(oid=str(oid))
-
             except Exception as exc:
                 logging.error('BDS failure: {}'.format(exc))
                 valueDict = None
-
-            if valueDict is None:
-                value = v2c.NoSuchObject()
             else:
-                value = valueDict[str(oid)]
-                logging.debug ("value: {} class {} type: {}".format(value,value.__class__,type(value))) ###Temp
-                #value = valueDict[str(oid)]
-                #try:
-                #    value = self.SNMP_TYPE_MAP[value.__class__](value)
-                #except KeyError:
-                #    logging.error('unmapped BDS type {}'.format(value.__class__.__name__))
-                    #value = v2c.NoSuchObject()
-            rspVarBinds.append((oid, value))
-
-        logging.debug('SNMP response is {}'.format(', '.join(['{}={}'.format(*x) for x in rspVarBinds])))
-
+                if valueDict is None:
+                    logging.error('BDS return None: {}')
+                    value = v2c.NoSuchObject()
+                else:
+                    value = valueDict[str(oid)]
+                    #logging.debug ("value: {} class {} type: {}".format(value,value.__class__,type(value))) ###Temp
+                    rspVarBinds.append((oid, value))
+                    #logging.debug('SNMP response is {}'.format(', '.join(['{}={}'.format(*x) for x in rspVarBinds])))
         return rspVarBinds
 
 
@@ -207,6 +215,7 @@ if __name__ == '__main__':
     )
 
     cmdrsp.GetCommandResponder(snmpEngine, snmpContext)
+    cmdrsp.NextCommandResponder(snmpEngine, snmpContext)
 
     logging.debug('SNMP agent is running at {}:{}'.format(args.snmp_agent_ipv4_address, args.snmp_agent_udp_port))
 
