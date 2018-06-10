@@ -13,55 +13,42 @@ from pysnmp.entity.rfc3413 import cmdrsp, context
 from pysnmp.carrier.asyncore.dgram import udp
 from pysnmp.smi import instrum
 from pysnmp.proto.api import v2c
-from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks
+from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integer32
+from pysnmp.proto.rfc1902 import Gauge32, Counter32
+from bdsSnmpTables import ifTable
+from oidDefintion import oidObj, oidListObj
 
                     
-                       
-class snmpObject:
-    def __init__(self,id=None,oidDict = None,parent = None,childs=[]):
-        self.id = id
-        self.parent = parent
-        self.childs = childs
-        self.oidDict = oidDict
-
-    def rootPath(self,pathList):
-        #print("rootPath",pathList)
-        if self.parent:
-            pathList.append(self.id)
-            return self.parent.rootPath(pathList)
-        else:
-            pathList.reverse()
-            return pathList
-
-    def __str__(self):
-        returnList = []
-        if self.oidDict != None: 
-            returnList.append("oid path: {}".format(".".join(self.rootPath([]))))
-            returnList.append("name: {}".format(self.oidDict["name"]))
-            returnList.append("type: {}".format(self.oidDict["type"]))
-        if self.parent != None:
-            returnList.append("parent path: {}".format(".".join(self.parent.rootPath([]))))
-            if self.parent.oidDict != None:
-                returnList.append("parent name: {}".format(self.parent.oidDict["name"]))
-                returnList.append("parent type: {}".format(self.parent.oidDict["type"]))
-        for child in self.childs:
-            if child.oidDict != {}:
-                returnList.append("child name: {}".format(child.oidDict["name"]))
-        return "\n".join(returnList)
 
 class bdsSnmpAdapter:
-    def __init__(self,host="127.0.0.1",portDict={"confd":"2102","bgp.iod":"3102"}):
-        self.host = host
-        self.portDict = portDict
-
-
-    def loadOidMappingFromYamlFile(self,yamlFile):
-        with open(yamlFile, 'r') as stream:
-            self.oidDict = yaml.load(stream)
-        self.oidList = list(self.oidDict.keys())
-        self.oidList.sort()
-        pprint.pprint(self.oidList)             ###temp
-        pprint.pprint(self.oidDict)             ###temp
+    def __init__(self,configFile=""):
+        self.configFile = configFile
+        try:
+            with open(self.configFile, 'r') as stream:
+                self.configDict = yaml.load(stream)
+        except Exception as e:
+            logging.error("cannot load config file: {}".format(e))
+            raise
+        else:
+            #pprint.pprint(self.configDict)
+            self.listeningAddress = self.configDict["config"]["snmp"]["listeningAddress"]
+            self.listeningPort = self.configDict["config"]["snmp"]["listeningPort"]
+            self.v2Community = self.configDict["config"]["snmp"]["community"]
+            self.bdsAccess = self.configDict["config"]["bdsAccess"]
+            try:
+                oidYamlFile = self.configDict["config"]["snmp"]["oidMappingFile"]
+                with open(oidYamlFile, 'r') as stream:
+                    self.oidDict = yaml.load(stream)
+            except Exception as e:
+                logging.error("cannot load config file: {}".format(e))
+                raise
+            else:
+                self.oidDict = ifTable.addTableEntry(self.oidDict,1)
+                self.oidDict = ifTable.addTableEntry(self.oidDict,2)
+                self.oidList = list(self.oidDict.keys())
+                self.oidList = oidListObj.getSortedList(self.oidList)
+                pprint.pprint(self.oidList)             ###temp
+                #pprint.pprint(self.oidDict)             ###temp
 
     def snmpGet(self,oid=""):
         print ("snmpGet for oid {}".format(oid))
@@ -69,33 +56,59 @@ class bdsSnmpAdapter:
             logging.info ("snmpGet {} in Dict".format(oid))
             iodIndex = self.oidList.index(oid)
             oidDict = self.oidDict[oid]
+            baseType = oidDict["pysnmpBaseType"]        #FIXME catch exception
+            if "fixedValue" in oidDict.keys():
+                evalString = "{}('{}')".format(oidDict["pysnmpBaseType"],oidDict["fixedValue"])
+                logging.info("evalString {}('{}')".format(oidDict["pysnmpBaseType"],oidDict["fixedValue"]))
+                returnValue = eval(evalString )             
+                logging.info ("snmpGet {} returning {} for fixed value".format(oid,returnValue))
+                #print ({oid:returnValue})
+                return {oid:returnValue}  
+            elif 'BDSrequest' in oidDict.keys():
+                print (oidDict['BDSrequest'])
+                bdsProcess = oidDict['BDSrequest'].split("::")[0]
+                bdsHostIp = self.bdsAccess[bdsProcess]["host"]
+                bdsHostPort = self.bdsAccess[bdsProcess]["port"]
+                bdsSuffix = oidDict['BDSrequest'].split("::")[1]
+                bdsTable = oidDict['BDSrequest'].split("::")[2]
+                requestData = {"table":{"table_name":bdsTable}}
+                url = "http://{}:{}{}".format(bdsHostIp,bdsHostPort,bdsSuffix)
+                headers = {'Content-Type': 'application/json'} 
+                logging.info ("POST {}".format(url))
+                logging.debug ("POST {} {}".format(url,json.dumps(requestData)))
+                self.response = requests.post(url,
+                        data=json.dumps(requestData),
+                        headers= headers)
+                logging.debug (self.response)
+                return {oid:v2c.NoSuchObject()} 
         else:
             logging.error ("snmpGet {} not in Dict".format(oid))   
             nextOid = self.oidList[0]
-            oidDict = self.oidDict[nextOid]
-        if "fixedValue" in oidDict.keys():
-            baseType = oidDict["pysnmpBaseType"]
-            evalString = "{}('{}')".format(oidDict["pysnmpBaseType"],oidDict["fixedValue"])
-            logging.info("evalString {}('{}')".format(oidDict["pysnmpBaseType"],oidDict["fixedValue"]))
-            returnValue = eval(evalString )             
-            logging.info ("snmpGet {} returning {} for fixed value".format(oid,returnValue))
-            #print ({oid:returnValue})
-            return {oid:returnValue}    
-        return None
+            oidDict = self.oidDict[nextOid]  
+        return {oid:v2c.NoSuchObject()}  
 
-    def snmpNext(self,oid=""):
-        print ("snmpGetNext {}".format(oid))
+
+    def getNextOid(self,oid=""):
+        print ("getNextOid {}".format(oid))
         if oid in self.oidList:
             iodIndex = self.oidList.index(oid) 
             if iodIndex < len(self.oidList) - 1:
                 nextOid = self.oidList[self.oidList.index(oid)+1]
-                returnDict = self.snmpGet(nextOid)
-                print (returnDict)
-                return self.snmpGet(nextOid)
+                print ("getNextOid returns {}".format(nextOid))
+                return nextOid
             else:
-                nextOid = None
-                return None
-        return None
+                nextOid = "1.3.6.1.3.92.1.1.1.0"
+                print ("getNextOid returns {}".format(nextOid))
+                return nextOid 
+        elif self.oidList[0].startswith(oid):
+                nextOid = self.oidList[0]
+                print ("getNextOid returns {}".format(nextOid))
+                return nextOid
+        else:
+            nextOid = "1.3.6.1.3.92.1.1.1.0"
+            print ("getNextOid returns {}".format(nextOid))
+            return nextOid
+
 
 
 
@@ -124,7 +137,6 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
             logging.error('BDS adapter not initialized')
             return [(varBind[0], v2c.NoSuchObject()) for varBind in varBinds]
         rspVarBinds = []
-        print ("MibInstrumController varBinds {}".format(varBinds))
         for oid, value in varBinds:
             try:
                 valueDict = bdsAdapter.snmpGet(oid=str(oid))
@@ -137,53 +149,58 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
                     value = v2c.NoSuchObject()
                 else:
                     value = valueDict[str(oid)]
-                    #logging.debug ("value: {} class {} type: {}".format(value,value.__class__,type(value))) ###Temp
                     rspVarBinds.append((oid, value))
-                    #logging.debug('SNMP response is {}'.format(', '.join(['{}={}'.format(*x) for x in rspVarBinds])))
         return rspVarBinds
+
+    def readNextVars(self, varBinds, acInfo=(None, None) ):
+        logging.debug('SNMP request is GET-NEXT {}'.format(', '.join(str(x[0]) for x in varBinds)))
+        try:
+            bdsAdapter = self._bdsAdapter
+        except AttributeError:
+            logging.error('BDS adapter not initialized')
+            return [(varBind[0], v2c.NoSuchObject()) for varBind in varBinds]
+        rspVarBinds = []
+        for oid, value in varBinds:
+            nextOid = bdsAdapter.getNextOid(oid=str(oid))
+        if nextOid != "1.3.6.1.3.92.1.1.1.0":
+            try:
+                valueDict = bdsAdapter.snmpGet(oid=str(nextOid))
+            except Exception as exc:
+                logging.error('BDS failure: {}'.format(exc))
+                valueDict = None
+                value = v2c.NoSuchObject()
+                rspVarBinds.append((nextOid, value))
+                return rspVarBinds
+            else:
+                if valueDict is None:
+                    logging.error('BDS return None: {}')
+                    value = v2c.NoSuchObject()
+                else:
+                    value = valueDict[str(nextOid)]
+                rspVarBinds.append((nextOid, value))
+                return rspVarBinds
+        else:
+            rspVarBinds.append((nextOid, v2c.Integer32(2) ))
+            return rspVarBinds
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="SNMP Agent serving BDS data")
 
-    parser.add_argument('--bds-host',
-                        metavar='<IPv4>',
-                        type=str,
-                        required=True,
-                        help='hostname/address of the BDS REST API service')
-
-    parser.add_argument('--bds-map',
+    parser.add_argument('--config',
                         metavar='<PATH>',
                         type=str,
-                        default='snmpOidMapping.yml',
-                        help='SNMP to BDS objects map file [snmpOidMapping.yml]')
-
-    parser.add_argument('--snmp-agent-ipv4-address',
-                        metavar='IPv4',
-                        type=str,
-                        default='0.0.0.0',
-                        help='SNMP agent listens at this address [0.0.0.0]')
-
-    parser.add_argument('--snmp-agent-udp-port',
-                        metavar='<INT>',
-                        type=int,
-                        default=161,
-                        help='SNMP agent listens at this UDP port [161]')
-
-    parser.add_argument('--snmp-community-name',
-                        metavar='<STRING>',
-                        type=str,
-                        default='public',
-                        help='SNMP agent responds to this community name [public]')
+                        default='bdsAdapterConfig.yml',
+                        help='config file [bdsAdapterConfig.yml]')
 
     args = parser.parse_args()
 
     logging.getLogger().setLevel(logging.DEBUG)
 
-    myBdsSnmpAdapter = bdsSnmpAdapter(host=args.bds_host, #"10.0.3.110",
-                                      portDict={"confd":"2002","bgp.iod":"3102"})
-    myBdsSnmpAdapter.loadOidMappingFromYamlFile(args.bds_map)
+    pprint.pprint(args.config)
+
+    myBdsSnmpAdapter = bdsSnmpAdapter(configFile=args.config)
 
     snmpEngine = engine.SnmpEngine()
 
@@ -192,15 +209,15 @@ if __name__ == '__main__':
         config.addTransport(
             snmpEngine,
             udp.domainName,
-            udp.UdpTransport().openServerMode((args.snmp_agent_ipv4_address,
-                                               args.snmp_agent_udp_port))
+            udp.UdpTransport().openServerMode(( myBdsSnmpAdapter.listeningAddress ,
+                                                myBdsSnmpAdapter.listeningPort ))
         )
 
     except Exception as exc:
         logging.error('SNMP transport error: {}'.format(exc))
         sys.exit(1)
 
-    config.addV1System(snmpEngine, 'read-subtree', args.snmp_community_name)
+    config.addV1System(snmpEngine, 'read-subtree', myBdsSnmpAdapter.v2Community)
 
     # Allow full MIB access for this user / securityModels at VACM
     config.addVacmUser(snmpEngine, 2, 'read-subtree', 'noAuthNoPriv', (1, 3, 6))
@@ -217,7 +234,8 @@ if __name__ == '__main__':
     cmdrsp.GetCommandResponder(snmpEngine, snmpContext)
     cmdrsp.NextCommandResponder(snmpEngine, snmpContext)
 
-    logging.debug('SNMP agent is running at {}:{}'.format(args.snmp_agent_ipv4_address, args.snmp_agent_udp_port))
+    logging.debug('SNMP agent is running at {}:{}'.format(myBdsSnmpAdapter.listeningAddress, 
+                                                             myBdsSnmpAdapter.listeningPort))
 
     snmpEngine.transportDispatcher.jobStarted(1)
 

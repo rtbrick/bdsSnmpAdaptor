@@ -1,0 +1,18 @@
+---
+config:
+  snmp:
+    listeningAddress: 0.0.0.0
+    listeningPort: 161    
+    version: v2c
+    community: public
+    oidMappingFile: snmpOidMapping.yml
+  bdsAccess:
+    confd:
+      host: 10.8.3.10
+      port: 2011
+    bgp-iod:
+      host: 10.8.3.10
+      port: 2111
+    bgp-appd:
+      host: 10.8.3.10
+      port: 2411
