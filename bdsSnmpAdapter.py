@@ -17,6 +17,7 @@ from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integ
 from pysnmp.proto.rfc1902 import Gauge32, Counter32
 from bdsSnmpTables import ifTable
 from oidDefintion import oidObj, oidListObj
+from bdsAccess import bdsAccess
 
                     
 
@@ -44,42 +45,46 @@ class bdsSnmpAdapter:
                 raise
             else:
                 self.oidDict = ifTable.addTableEntry(self.oidDict,1)
-                self.oidDict = ifTable.addTableEntry(self.oidDict,2)
                 self.oidList = list(self.oidDict.keys())
                 self.oidList = oidListObj.getSortedList(self.oidList)
                 pprint.pprint(self.oidList)             ###temp
-                #pprint.pprint(self.oidDict)             ###temp
+                pprint.pprint(self.oidDict)             ###temp
 
     def snmpGet(self,oid=""):
-        print ("snmpGet for oid {}".format(oid))
+        #print ("snmpGet for oid {}".format(oid))
         if oid in self.oidList:
             logging.info ("snmpGet {} in Dict".format(oid))
             iodIndex = self.oidList.index(oid)
             oidDict = self.oidDict[oid]
             baseType = oidDict["pysnmpBaseType"]        #FIXME catch exception
             if "fixedValue" in oidDict.keys():
-                evalString = "{}('{}')".format(oidDict["pysnmpBaseType"],oidDict["fixedValue"])
-                logging.info("evalString {}('{}')".format(oidDict["pysnmpBaseType"],oidDict["fixedValue"]))
+                if "pysnmpRepresentation" in oidDict.keys():
+                    evalString = "{}({}='{}')".format(oidDict["pysnmpBaseType"],
+                                                      oidDict["pysnmpRepresentation"],
+                                                      oidDict["fixedValue"])
+                else:
+                    evalString = "{}('{}')".format(oidDict["pysnmpBaseType"],oidDict["fixedValue"])  
+                logging.debug("evalString {}('{}')".format(oidDict["pysnmpBaseType"],oidDict["fixedValue"]))
                 returnValue = eval(evalString )             
                 logging.info ("snmpGet {} returning {} for fixed value".format(oid,returnValue))
-                #print ({oid:returnValue})
                 return {oid:returnValue}  
-            elif 'BDSrequest' in oidDict.keys():
-                print (oidDict['BDSrequest'])
-                bdsProcess = oidDict['BDSrequest'].split("::")[0]
-                bdsHostIp = self.bdsAccess[bdsProcess]["host"]
-                bdsHostPort = self.bdsAccess[bdsProcess]["port"]
-                bdsSuffix = oidDict['BDSrequest'].split("::")[1]
-                bdsTable = oidDict['BDSrequest'].split("::")[2]
-                requestData = {"table":{"table_name":bdsTable}}
-                url = "http://{}:{}{}".format(bdsHostIp,bdsHostPort,bdsSuffix)
-                headers = {'Content-Type': 'application/json'} 
-                logging.info ("POST {}".format(url))
-                logging.debug ("POST {} {}".format(url,json.dumps(requestData)))
-                self.response = requests.post(url,
-                        data=json.dumps(requestData),
-                        headers= headers)
-                logging.debug (self.response)
+            elif 'bdsRequest' in oidDict.keys():
+                bdsSuccess,responseJSON = bdsAccess.getJson(oidDict,self.bdsAccess)
+                if bdsSuccess:
+                    evalString = oidDict['bdsEvalString']
+                    bdsValue = eval(evalString)
+                    if "pysnmpRepresentation" in oidDict.keys():
+                        evalString = "{}({}='{}')".format(oidDict["pysnmpBaseType"],
+                                                          oidDict["pysnmpRepresentation"],
+                                                          bdsValue)
+                    else:
+                        evalString = "{}('{}')".format(oidDict["pysnmpBaseType"],bdsValue)  
+                    returnValue = eval(evalString )             
+                    logging.info ("snmpGet {} returning {} for bds value".format(oid,returnValue))
+                    return {oid:returnValue}
+                else:
+                    return {oid:v2c.NoSuchObject()} 
+            else:
                 return {oid:v2c.NoSuchObject()} 
         else:
             logging.error ("snmpGet {} not in Dict".format(oid))   
@@ -89,27 +94,35 @@ class bdsSnmpAdapter:
 
 
     def getNextOid(self,oid=""):
-        print ("getNextOid {}".format(oid))
+        try:
+            oidIndex = self.oidList.index(oid)
+        except ValueError:
+            if self.oidList[0].startswith(oid):
+                return self.oidList[0]
+            else:
+                return "1.3.6.1.3.92.1.1.1.0"
+        else:
+            if oidIndex < len(self.oidList) - 1:
+                return self.oidList[oidIndex+1]
+            else:
+                return "1.3.6.1.3.92.1.1.1.0"
+
+
+    def getNextOid2(self,oid=""):
         if oid in self.oidList:
             iodIndex = self.oidList.index(oid) 
             if iodIndex < len(self.oidList) - 1:
                 nextOid = self.oidList[self.oidList.index(oid)+1]
-                print ("getNextOid returns {}".format(nextOid))
                 return nextOid
             else:
                 nextOid = "1.3.6.1.3.92.1.1.1.0"
-                print ("getNextOid returns {}".format(nextOid))
                 return nextOid 
         elif self.oidList[0].startswith(oid):
                 nextOid = self.oidList[0]
-                print ("getNextOid returns {}".format(nextOid))
                 return nextOid
         else:
             nextOid = "1.3.6.1.3.92.1.1.1.0"
-            print ("getNextOid returns {}".format(nextOid))
             return nextOid
-
-
 
 
 class MibInstrumController(instrum.AbstractMibInstrumController):
@@ -198,7 +211,7 @@ if __name__ == '__main__':
 
     logging.getLogger().setLevel(logging.DEBUG)
 
-    pprint.pprint(args.config)
+    #pprint.pprint(args.config)
 
     myBdsSnmpAdapter = bdsSnmpAdapter(configFile=args.config)
 

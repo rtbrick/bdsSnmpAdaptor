@@ -11,6 +11,8 @@ import pprint
 from copy import deepcopy
 
 
+
+
 class bdsSnmpTables():
 
     def __init__():
@@ -47,6 +49,8 @@ class ifTable(bdsSnmpTables):
 
     @classmethod
     def addTableEntry(self,oidDict,ifIndex):
+
+
         #returnDict = {}
         oidDict["1.3.6.1.2.1.2.2.1.1."+str(ifIndex)] =\
                  {"name": "ifIndex" ,
@@ -54,8 +58,9 @@ class ifTable(bdsSnmpTables):
                  "fixedValue": int(ifIndex) }
         oidDict["1.3.6.1.2.1.2.2.1.2."+str(ifIndex)] =\
                  {"name": "ifDescr",
-                "pysnmpBaseType": "OctetString",
-                 "fixedValue": "int-{}".format(ifIndex) }
+                 "pysnmpBaseType": "OctetString",
+                 "bdsRequest": "confd::/bds/object/get::global.interface.physical::interface_name=ifp-0/1/1",
+                 "bdsEvalString": 'responseJSON["objects"][0]["attribute"]["interface_name"]'}
         oidDict["1.3.6.1.2.1.2.2.1.3.{}".format(ifIndex)] =\
                  {"name": "ifType",
                  "pysnmpBaseType": "Integer32",
@@ -63,7 +68,8 @@ class ifTable(bdsSnmpTables):
         oidDict["1.3.6.1.2.1.2.2.1.4.{}".format(ifIndex)] =\
                  {"name": "ifMtu",
                  "pysnmpBaseType": "Integer32",
-                 "fixedValue": 1514 }
+                 "bdsRequest": "confd::/bds/object/get::global.interface.physical::interface_name=ifp-0/1/1",
+                 "bdsEvalString": 'responseJSON["objects"][0]["attribute"]["layer2_mtu"]'}
         oidDict["1.3.6.1.2.1.2.2.1.5.{}".format(ifIndex)] =\
                  {"name": "ifSpeed",
                  "pysnmpBaseType": "Gauge32",
@@ -71,7 +77,9 @@ class ifTable(bdsSnmpTables):
         oidDict["1.3.6.1.2.1.2.2.1.6.{}".format(ifIndex)] =\
                   {"name": "ifPhysAddress",
                 "pysnmpBaseType": "OctetString",
-                 "fixedValue": "11:22:33:44:55:66" }
+                "pysnmpRepresentation": "hexValue",
+                 "bdsRequest": "confd::/bds/object/get::global.interface.physical::interface_name=ifp-0/1/1",
+                 "bdsEvalString": 'responseJSON["objects"][0]["attribute"]["mac_address"].replace(":","")'}
         oidDict["1.3.6.1.2.1.2.2.1.7.{}".format(ifIndex)] =\
                 {"name": "ifAdminStatus",
                  "pysnmpBaseType": "Integer32",
@@ -151,5 +159,18 @@ if __name__ == '__main__':
 
     pprint.pprint(oidDict)
 
+    bdsResponse = {"table": { "table_name": "global.interface.physical"},
+                   "objects": [ { "update": true,
+                    "attribute": {
+                        "layer2_mtu": 9216,
+                        "pci_addr": 100664064,
+                        "link_status": "up",
+                        "admin_status": "up",
+                        "interface_type": "ethernet",
+                        "interface_description": "Physical interface #1 from node 0, chip 1",
+                        "bandwidth": "0.000 Kbps",
+                        "mac_address": "3c:fd:fe:b6:57:bb",
+                        "interface_name": "ifp-0/1/1"},
+                    "sequence": 2 }]}
 
 
