@@ -20,7 +20,7 @@
   bdsRequest:
     process: confd
     urlSuffix: /bds/table/walk
-    table: global.interface.physical
+    table: global.rtbrick.hostname.config
   bdsEvalString: 'responseJSON["objects"][0]["attribute"]["rtbrick_hostname"]'
 1.3.6.1.2.1.1.6.0:
   name: sysLocation
