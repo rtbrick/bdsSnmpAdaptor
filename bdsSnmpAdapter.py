@@ -37,20 +37,12 @@ class bdsSnmpAdapter:
             self.listeningPort = self.configDict["config"]["snmp"]["listeningPort"]
             self.v2Community = self.configDict["config"]["snmp"]["community"]
             self.bdsAccess = self.configDict["config"]["bdsAccess"]
-            try:
-                oidYamlFile = self.configDict["config"]["snmp"]["oidMappingFile"]
-                with open(oidYamlFile, 'r') as stream:
-                    self.oidDict = yaml.load(stream)
-            except Exception as e:
-                logging.error("cannot load config file: {}".format(e))
-                raise
-            else:
-                self.bdsSnmpTablesObj = bdsSnmpTables()
-                self.bdsSnmpTablesObj.globalInterfaceContainer(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
-                self.bdsSnmpTablesObj.defaultInterfaceLogical(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
-                self.bdsSnmpTablesObj.globalInterfaceAddressConfig(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
-                self.bdsSnmpTablesObj.defaultFwdNeighborIpv4(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
-                self.bdsSnmpTablesObj.localSystemSoftwareInfoConfd(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
+            self.bdsSnmpTablesObj = bdsSnmpTables()
+            self.bdsSnmpTablesObj.globalInterfaceContainer(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
+            self.bdsSnmpTablesObj.defaultInterfaceLogical(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
+            self.bdsSnmpTablesObj.globalInterfaceAddressConfig(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
+            self.bdsSnmpTablesObj.defaultFwdNeighborIpv4(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
+            self.bdsSnmpTablesObj.localSystemSoftwareInfoConfd(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
             print ( self.oidDb )
 
 

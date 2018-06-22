@@ -162,11 +162,10 @@ class bdsSnmpTables():
                 libraryString = ifObject["attribute"]["library"]
                 libraryChars = [str(ord(c)) for c in libraryString]
                 libraryIndex = str(len(libraryChars)) + "." + ".".join(libraryChars)
-                #libraryIndex = ".".join(libraryChars)
                 myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.1.{}".format(sequenceNr),
                                            name = "libraryIndex",
                                  pysnmpBaseType = "Integer32",  
-                                     fixedValue = lsequenceNr ) )
+                                     fixedValue = sequenceNr ) )
                 myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.2.{}".format(sequenceNr),
                                            name = "libraryName",
                                  pysnmpBaseType = "OctetString",
@@ -181,7 +180,7 @@ class bdsSnmpTables():
                                      fixedValue = ifObject["attribute"]["commit_date"] ) )
 
 
-    def localSystemSoftwareInfoConfd2(self,myOidDb,bdsAccessDict):
+    def localSystemSoftwareInfoConfd_Old(self,myOidDb,bdsAccessDict):
         self.bdsTable = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk', 'table': 'local.system.software.info.confd'}}
         bdsSuccess,responseJSON = bdsAccess.getJson(self.bdsTable,bdsAccessDict)
         if bdsSuccess:
