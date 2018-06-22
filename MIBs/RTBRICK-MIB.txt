@@ -1,0 +1,88 @@
+RTBRICK-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Top-level infrastructure of the RtBrick enterprise MIB tree
+--
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, 
+    Integer32, enterprises FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, DisplayString,
+    PhysAddress, TruthValue, RowStatus,
+    TimeStamp, AutonomousType, TestAndIncr   FROM SNMPv2-TC;
+
+
+rtbrick MODULE-IDENTITY
+    LAST-UPDATED "201804140000Z"
+    ORGANIZATION "RtBrick"
+    CONTACT-INFO "E-mail: Stefan Lieberth <stefan@rtbrick.com>"
+    DESCRIPTION
+	"RtBrick top-level MIB tree infrastructure"
+    REVISION     "201804140000Z"
+    DESCRIPTION  "Initial revision"
+    ::= { enterprises 50058 }
+
+
+--
+--  rtbrick enterprise-specific management objects
+--
+
+bsdTables                  OBJECT IDENTIFIER ::= {rtbrick 1}
+
+systemSoftwareInfoTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SystemSoftwareInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table of sw modue information"
+    ::= { bsdTables 1 }
+
+systemSoftwareInfoEntry OBJECT-TYPE
+    SYNTAX      SystemSoftwareInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A row describing Rtbrick SW module information"
+    INDEX   { libraryIndex }
+    ::= { systemSoftwareInfoTable 1 }
+
+SystemSoftwareInfoEntry ::= SEQUENCE {
+	libraryIndex 	    Integer32,
+	libraryName 	    DisplayString,
+	libraryVersion	    DisplayString,
+	libraryCommitDate	DisplayString
+}
+
+libraryIndex      OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+	"attribute: library (1)"
+    ::= { systemSoftwareInfoEntry 1 }
+
+libraryName      OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+	"attribute: library (1)"
+    ::= { systemSoftwareInfoEntry 2 }
+
+libraryVersion OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: version (7)"
+    ::= { systemSoftwareInfoEntry 3 }
+
+libraryCommitDate OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: commit_date (3)"
+    ::= { systemSoftwareInfoEntry 4 }
+
+END
