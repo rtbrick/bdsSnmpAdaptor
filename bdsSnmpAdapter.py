@@ -40,9 +40,11 @@ class bdsSnmpAdapter:
             self.bdsSnmpTablesObj = bdsSnmpTables()
             self.bdsSnmpTablesObj.globalInterfaceContainer(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
             self.bdsSnmpTablesObj.defaultInterfaceLogical(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
+            #self.bdsSnmpTablesObj.defaultInterfaceLogical_Rtbrick(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
             self.bdsSnmpTablesObj.globalInterfaceAddressConfig(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
             self.bdsSnmpTablesObj.defaultFwdNeighborIpv4(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
             self.bdsSnmpTablesObj.localSystemSoftwareInfoConfd(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
+            self.bdsSnmpTablesObj.globalHostnameConfig(self.oidDb,self.bdsAccess)    #FIXME make this dynamic/recurring
             print ( self.oidDb )
 
 
@@ -51,8 +53,8 @@ class bdsSnmpAdapter:
         oidObj = self.oidDb.getObjFromOid(oid)
         
         if oidObj:
-            logging.info ("snmpGet {} in oidDb".format(oid))
-            logging.debug ("oidDb: {}".format(oidObj))
+            logging.info ("snmpGet {} found in oidDb".format(oid))
+            #logging.debug ("oidDb: {}".format(oidObj))
             #iodIndex = self.oidList.index(oid)
             #oidDict = self.oidDict[oid]
             baseType = oidObj.pysnmpBaseType      #FIXME catch exception
@@ -77,7 +79,7 @@ class bdsSnmpAdapter:
 
 
     def getNextOid(self,oid=""):
-        logging.debug("getNextOid {})".format(self.oidDb.getNextOid(oid)))
+        #logging.debug("getNextOid {})".format(self.oidDb.getNextOid(oid)))
         return self.oidDb.getNextOid(oid)
 
 class MibInstrumController(instrum.AbstractMibInstrumController):

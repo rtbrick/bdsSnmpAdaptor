@@ -90,6 +90,7 @@ class bdsSnmpTables():
                                  pysnmpBaseType = "Integer32",
                                      fixedValue = 6 ) )   #FIXME - bds mapping
 
+
     def globalInterfaceAddressConfig(self,myOidDb,bdsAccessDict):
         self.bdsTable = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk', 'table': 'global.interface.address.config'}}
         bdsSuccess,responseJSON = bdsAccess.getJson(self.bdsTable,bdsAccessDict)
@@ -158,51 +159,45 @@ class bdsSnmpTables():
         bdsSuccess,responseJSON = bdsAccess.getJson(self.bdsTable,bdsAccessDict)
         if bdsSuccess:
             for ifObject in responseJSON["objects"]:
-                sequenceNr = ifObject["sequence"]
-                libraryString = ifObject["attribute"]["library"]
-                libraryChars = [str(ord(c)) for c in libraryString]
-                libraryIndex = str(len(libraryChars)) + "." + ".".join(libraryChars)
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.1.{}".format(sequenceNr),
-                                           name = "libraryIndex",
-                                 pysnmpBaseType = "Integer32",  
-                                     fixedValue = sequenceNr ) )
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.2.{}".format(sequenceNr),
+#                 sequenceNr = ifObject["sequence"]
+#                 libraryString = ifObject["attribute"]["library"]
+#                 libraryChars = [str(ord(c)) for c in libraryString]
+#                 libraryIndex = str(len(libraryChars)) + "." + ".".join(libraryChars)
+
+                indexString = ifObject["attribute"]["library"]
+                indexCharList = [str(ord(c)) for c in indexString]
+                index = str(len(indexCharList)) + "." + ".".join(indexCharList)
+
+                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.1.{}".format(index),
                                            name = "libraryName",
                                  pysnmpBaseType = "OctetString",
-                                     fixedValue = libraryString ) )
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.3.{}".format(sequenceNr),
+                                     fixedValue = indexString ) )
+                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.2.{}".format(index),
                                            name = "libraryVersion",
                                  pysnmpBaseType = "OctetString",
                                      fixedValue = ifObject["attribute"]["version"] ) )
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.4.{}".format(sequenceNr),
+                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.3.{}".format(index),
                                            name = "libraryCommitDate",
                                  pysnmpBaseType = "OctetString",
                                      fixedValue = ifObject["attribute"]["commit_date"] ) )
 
 
-    def localSystemSoftwareInfoConfd_Old(self,myOidDb,bdsAccessDict):
-        self.bdsTable = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk', 'table': 'local.system.software.info.confd'}}
+    def globalHostnameConfig(self,myOidDb,bdsAccessDict):
+        self.bdsTable = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk', 'table': 'global.rtbrick.hostname.config'}}
         bdsSuccess,responseJSON = bdsAccess.getJson(self.bdsTable,bdsAccessDict)
         if bdsSuccess:
             for ifObject in responseJSON["objects"]:
-                sequenceNr = ifObject["sequence"]
-                libraryString = ifObject["attribute"]["library"]
-                libraryChars = [str(ord(c)) for c in libraryString]
-                #libraryIndex = str(len(libraryChars)) + "." + ".".join(libraryChars)
-                libraryIndex = ".".join(libraryChars)
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.1.{}".format(sequenceNr),
-                                           name = "libraryName",
-                                 #pysnmpBaseType = "OctetString",
-                                 pysnmpBaseType = "Integer32",  
-                                     fixedValue = sequenceNr ) )
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.2.{}".format(sequenceNr),
-                                           name = "libraryVersion",
+                indexString = ifObject["attribute"]["system_hostname"]
+                indexCharList = [str(ord(c)) for c in indexString]
+                index = str(len(indexCharList)) + "." + ".".join(indexCharList)
+                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.2.1.1.{}".format(index),
+                                           name = "systemHostname",
                                  pysnmpBaseType = "OctetString",
-                                     fixedValue = ifObject["attribute"]["version"] ) )
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.3.{}".format(sequenceNr),
-                                           name = "libraryCommitDate",
+                                     fixedValue = indexString ) )
+                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.2.1.2.{}".format(index),
+                                           name = "rtbrickHostname",
                                  pysnmpBaseType = "OctetString",
-                                     fixedValue = ifObject["attribute"]["commit_date"] ) )
+                                     fixedValue = ifObject["attribute"]["rtbrick_hostname"] ) )
 
 
 

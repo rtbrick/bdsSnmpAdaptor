@@ -49,10 +49,10 @@ class oidDb():
             return None
 
     def getNextOid(self,searchOid):
-        logging.debug('getNextOid {}'.format(searchOid))
+        #logging.debug('getNextOid entry {}'.format(searchOid))
         if self.firstItem:
             if searchOid in self.oidDict.keys():
-                logging.debug('getNextOid found {}'.format(self.oidDict[searchOid]))
+                #logging.debug('getNextOid found {}'.format(self.oidDict[searchOid].oid))
                 if self.oidDict[searchOid].nextOidObj:
                     logging.debug('getNextOid returns {}'.format(self.oidDict[searchOid].nextOidObj.oid))
                     return self.oidDict[searchOid].nextOidObj.oid
@@ -60,6 +60,7 @@ class oidDb():
                     logging.debug('getNextOid returns 1.3.6.1.3.92.1.1.1.0 as no nextOidObj')
                     return "1.3.6.1.3.92.1.1.1.0"
             elif self.firstItem.oid.startswith(searchOid):
+                logging.debug('getNextOid returns start oid {}'.format(self.firstItem.oid))
                 return self.firstItem.oid
             else:
                 logging.debug('getNextOid returns 1.3.6.1.3.92.1.1.1.0 as no start')
