@@ -1,0 +1,123 @@
+RTBRICK-SYS-SW-INFO-TABLE-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Top-level infrastructure of the RtBrick enterprise MIB tree
+--
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, 
+    Integer32, enterprises                   FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, DisplayString,
+    PhysAddress, TruthValue, RowStatus,
+    TimeStamp, AutonomousType, TestAndIncr   FROM SNMPv2-TC
+    bdsTables                               FROM RTBRICK-MIB;
+
+
+systemSoftwareInfo MODULE-IDENTITY
+    LAST-UPDATED "201804140000Z"
+    ORGANIZATION "RtBrick"
+    CONTACT-INFO "E-mail: Stefan Lieberth <stefan@rtbrick.com>"
+    DESCRIPTION
+	"system_software_info"
+    REVISION     "201804140000Z"
+    DESCRIPTION  "Initial revision"
+    ::= { bdsTables 1 }
+
+--
+--  rtbrick enterprise-specific management objects
+--
+
+systemSoftwareInfoTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SystemSoftwareInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table of sw modue information"
+    ::= { systemSoftwareInfo }
+
+systemSoftwareInfoEntry OBJECT-TYPE
+    SYNTAX      SystemSoftwareInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A row describing Rtbrick SW module information"
+    INDEX   { name }
+    ::= { systemSoftwareInfoTable 1 }
+
+SystemSoftwareInfoEntry ::= SEQUENCE {
+	name 	    DisplayString,
+    commitId    DisplayString,
+	commitDate	DisplayString,
+    packageDate DisplayString,
+    vcCheckout  DisplayString,
+    branch      DisplayString,
+	version	    DisplayString,
+	sourcePath	DisplayString
+}
+
+name      OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: library (1)"
+    ::= { systemSoftwareInfoEntry 1 }
+
+commitId   OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: commit_id (2)"
+    ::= { systemSoftwareInfoEntry 2 }
+
+commitDate OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: commit_date (3)"
+    ::= { systemSoftwareInfoEntry 3 }
+
+packageDate OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: package_date (4)"
+    ::= { systemSoftwareInfoEntry 4 }
+
+vcCheckout OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: vc_checkout (5)"
+    ::= { systemSoftwareInfoEntry 5 }
+
+branch OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: branch (6)"
+    ::= { systemSoftwareInfoEntry 6 }
+
+version OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: version (7)"
+    ::= { systemSoftwareInfoEntry 7 }
+
+sourcePath OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: source_path (8)"
+    ::= { systemSoftwareInfoEntry 8 }
+
+END
+

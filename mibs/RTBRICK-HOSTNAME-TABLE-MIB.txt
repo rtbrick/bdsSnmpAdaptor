@@ -1,0 +1,70 @@
+RTBRICK-HOSTNAME-TABLE-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Top-level infrastructure of the RtBrick enterprise MIB tree
+--
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, 
+    Integer32, enterprises FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, DisplayString,
+    PhysAddress, TruthValue, RowStatus,
+    TimeStamp, AutonomousType, TestAndIncr   FROM SNMPv2-TC
+    bdsTables                               FROM RTBRICK-MIB;
+
+
+hostnameConfig MODULE-IDENTITY
+    LAST-UPDATED "201804140000Z"
+    ORGANIZATION "RtBrick"
+    CONTACT-INFO "E-mail: Stefan Lieberth <stefan@rtbrick.com>"
+    DESCRIPTION
+	"RtBrick top-level MIB tree infrastructure"
+    REVISION     "201804140000Z"
+    DESCRIPTION  "Initial revision"
+    ::= { bdsTables 2 }
+
+
+--
+--  rtbrick enterprise-specific management objects
+--
+
+hostnameConfigTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF HostnameConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table of sw modue information"
+    ::= { hostnameConfig }
+
+hostnameConfigEntry OBJECT-TYPE
+    SYNTAX      HostnameConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A row describing Rtbrick SW module information"
+    INDEX   { systemHostname }
+    ::= { hostnameConfigTable 1 }
+
+HostnameConfigEntry ::= SEQUENCE {
+	systemHostname 	    DisplayString,
+	rtbrickHostname	    DisplayString
+}
+
+systemHostname      OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: system_hostname (1)"
+    ::= { hostnameConfigEntry 1 }
+
+rtbrickHostname      OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: rtbrick_hostname (2)"
+    ::= { hostnameConfigEntry 2 }
+
+END
+

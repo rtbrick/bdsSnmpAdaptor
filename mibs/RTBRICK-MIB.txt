@@ -1,0 +1,35 @@
+RTBRICK-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Top-level infrastructure of the RtBrick enterprise MIB tree
+--
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE,
+    Integer32, enterprises FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, DisplayString,
+    PhysAddress, TruthValue, RowStatus,
+    TimeStamp, AutonomousType, TestAndIncr   FROM SNMPv2-TC;
+
+
+rtbrick MODULE-IDENTITY
+    LAST-UPDATED "201804140000Z"
+    ORGANIZATION "RtBrick"
+    CONTACT-INFO "E-mail: Stefan Lieberth <stefan@rtbrick.com>"
+    DESCRIPTION
+	"RtBrick top-level MIB tree infrastructure"
+    REVISION     "201804140000Z"
+    DESCRIPTION  "Initial revision"
+    ::= { enterprises 50058 }
+
+
+--
+--  rtbrick enterprise-specific management objects
+--
+
+bdsTables                  OBJECT IDENTIFIER ::= { rtbrick 1 }
+syslogMib                  OBJECT IDENTIFIER ::= { rtbrick 2 }
+rtbrickTraps               OBJECT IDENTIFIER ::= { rtbrick 3 }
+    rtbrickSyslogNotifications     OBJECT IDENTIFIER ::= { rtbrickTraps 1 }
+
+END

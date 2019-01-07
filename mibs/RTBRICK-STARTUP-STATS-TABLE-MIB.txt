@@ -1,0 +1,64 @@
+RTBRICK-SYS-SW-INFO-TABLE-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Top-level infrastructure of the RtBrick enterprise MIB tree
+--
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, 
+    Integer32, enterprises                   FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, DisplayString,
+    PhysAddress, TruthValue, RowStatus,
+    TimeStamp, AutonomousType, TestAndIncr   FROM SNMPv2-TC
+    bdsTables                               FROM RTBRICK-MIB;
+
+
+startupStats MODULE-IDENTITY
+    LAST-UPDATED "201804140000Z"
+    ORGANIZATION "RtBrick"
+    CONTACT-INFO "E-mail: Stefan Lieberth <stefan@rtbrick.com>"
+    DESCRIPTION
+	"system_software_info"
+    REVISION     "201804140000Z"
+    DESCRIPTION  "Initial revision"
+    ::= { bdsTables 3 }
+
+--
+--  rtbrick enterprise-specific management objects
+--
+
+
+startupStatsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SystemSoftwareInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table of sw modue information"
+    ::= { startupStats }
+
+startupStatsTableEntry OBJECT-TYPE
+    SYNTAX      SystemSoftwareInfoEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "... ...."
+    INDEX   { moduleName }
+    ::= { startupStatsTable 1 }
+
+StartupStatsTableEntry ::= SEQUENCE {
+	moduleName 	     DisplayString,
+    startUpStatus    Integer32,
+    upTime           TimeStamp,
+	description	     DisplayString
+}
+
+moduleName      OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	"attribute: library (1)"
+    ::= { systemSoftwareInfoEntry 1 }
+
+END
+
