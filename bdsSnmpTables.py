@@ -10,194 +10,122 @@ import yaml
 import pprint
 from copy import deepcopy
 import ipaddress
-from bdsAccess import bdsAccess
-from oidDb import oidDbItem
+#from bdsAccess import bdsAccess
+#from redisOidDb import redisOidDb, redisOidSegment
 from bdsMappingFunctions import bdsMappingFunctions
-
-
-
+import time
+import redis
+from bdsSnmpTableModules.confd_global_interface_container import confd_global_interface_container
+from bdsSnmpTableModules.ffwd_default_interface_logical import ffwd_default_interface_logical
+from bdsSnmpTableModules.confd_local_system_software_info_confd import confd_local_system_software_info_confd
+from bdsSnmpTableModules.confd_global_startup_status_confd import confd_global_startup_status_confd
 
 class bdsSnmpTables():
 
-    def __init__(self):
-        pass
-        
+    def __init__(self,redisServer):
+        self.requestCounter = 0
+        self.bdsSnmpTableModules = [\
+            confd_global_interface_container,
+            ffwd_default_interface_logical,
+            confd_local_system_software_info_confd,
+            confd_global_startup_status_confd
+            ]
+        self.redisServer = cliArgsDict["redisServer"]
 
-    def globalInterfaceContainer(self,myOidDb,bdsAccessDict):
-        self.bdsTable = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk', 'table': 'global.interface.container'}}
-        bdsSuccess,responseJSON = bdsAccess.getJson(self.bdsTable,bdsAccessDict)
-        for ifObject in responseJSON["objects"]:
-            ifName = ifObject["attribute"]["interface_name"]
-            ifIndex =  bdsMappingFunctions.ifIndexFromIfName(ifName)
-            myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.2.2.1.1."+str(ifIndex),
-                                       name = "ifIndex",
-                             pysnmpBaseType = "Integer32",
-                                 fixedValue = int(ifIndex) ) )
-            myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.2.2.1.2."+str(ifIndex),
-                                       name = "ifDescr",
-                             pysnmpBaseType = "OctetString",
-                                 fixedValue = ifObject["attribute"]["interface_name"] ) )
-            myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.2.2.1.3."+str(ifIndex),
-                                       name = "ifType",
-                             pysnmpBaseType = "Integer32",
-                                 fixedValue = 6 ) )   #FIXME - bds mapping
-            myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.2.2.1.4."+str(ifIndex),
-                                       name = "ifMtu",
-                             pysnmpBaseType = "Integer32",
-                                 fixedValue = ifObject["attribute"]["layer2_mtu"] ) )
-            myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.2.2.1.5."+str(ifIndex),
-                                       name = "ifMtu",
-                             pysnmpBaseType = "Gauge32",
-                                 fixedValue = 10000000 ) )   #FIXME - bds mapping
-            myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.2.2.1.6."+str(ifIndex),
-                                       name = "ifPhysAddress",
-                             pysnmpBaseType = "OctetString",
-                       pysnmpRepresentation = "hexValue",
-                                 fixedValue = ifObject["attribute"]["mac_address"].replace(":","") ) )  
-            myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.2.2.1.7."+str(ifIndex),
-                                       name = "ifAdminStatus",
-                             pysnmpBaseType = "OctetString",    #FIXME - integer
-                                 fixedValue = ifObject["attribute"]["admin_status"] ) )   #FIXME - raw value
-            myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.2.2.1.8."+str(ifIndex),
-                                       name = "ifOperStatus",
-                             pysnmpBaseType = "OctetString",    #FIXME - integer
-                                 fixedValue = ifObject["attribute"]["link_status"] ) )   #FIXME - raw value
-            myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.2.2.1.9."+str(ifIndex),
-                                       name = "ifLastChange",
-                             pysnmpBaseType = "TimeTicks",    #FIXME - integer
-                                 fixedValue = 0 ) )   #FIXME - bds mapping not available
+    def getTableFunctionFromOid(self,oid):
+        for btc in self.bdsTableChain:
+            if btc[0].startswith(oid):
+                return btc[1]
+        return None
 
+    def getNextTableOidFromOid(self,oid):
+        logging.debug('getNextTableOidFromOid for {}'.format(oid))
+        for i,btc in enumerate(self.bdsTableChain):
+            if oid.startswith(btc[0]):
+                if i + 1 <  len(self.bdsTableChain):
+                    nextTableOid = self.bdsTableChain[i+1][0]
+                    logging.debug('getNextTableOidFromOid for {} is {}'.format(oid,nextTableOid))
+                    return nextTableOid,True  # NextTableFlag = True
+                else:
+                    return "0.0",False # NextTableFlag = False
+        return "0.0",False  # NextTableFlag = False
 
+    def setBdsTableRequest (self,bdsTableDict):
+        self.requestCounter += 1    #FIXME overrun prevention
+        process = bdsTableDict["bdsRequest"]["process"]
+        table = bdsTableDict["bdsRequest"]["table"]
+        self.redisServer.set("bdsTableRequest-{}-{}".format(process,table),json.dumps(bdsTableDict),ex=60)
+        logging.debug('set bdsTableRequest {}-{}'.format(process,table))
 
-    def defaultInterfaceLogical(self,myOidDb,bdsAccessDict):
-        self.bdsTable = {'bdsRequest': {'process': 'fwdd', 'urlSuffix': '/bds/table/walk', 'table': 'default.interface.logical'}}
-        bdsSuccess,responseJSON = bdsAccess.getJson(self.bdsTable,bdsAccessDict)
-        print(bdsSuccess,responseJSON)
-        if bdsSuccess:
-            for ifObject in responseJSON["objects"]:
-                ifName = ifObject["attribute"]["interface_name"]
-                ifIndex =  bdsMappingFunctions.ifIndexFromIfName(ifName)
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.2.2.1.1."+str(ifIndex),
-                                           name = "ifIndex",
-                                 pysnmpBaseType = "Integer32",
-                                     fixedValue = int(ifIndex) ) )
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.2.2.1.2."+str(ifIndex),
-                                           name = "ifDescr",
-                                 pysnmpBaseType = "OctetString",
-                                     fixedValue = ifObject["attribute"]["interface_name"] ) )
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.2.2.1.3."+str(ifIndex),
-                                           name = "ifType",
-                                 pysnmpBaseType = "Integer32",
-                                     fixedValue = 6 ) )   #FIXME - bds mapping
+    def checkBdsTableInfo (self,redisKeysAsList):
+        bdsTableRedisKey = redisKeysAsList[0]
+        try:
+            responseString = self.redisServer.get(bdsTableRedisKey).decode()
+        except Exception as e:
+            logging.error('something went wrong in fetching the responseString: {}'.format(e))
+            self.redisServer.set(bdsTableRedisKey,"error",ex=30)
+            logging.debug('set {} to error with timeout 30'.format(bdsTableRedisKey))
+            return False,"error",bdsTableRedisKey
+        else:
+            if responseString not in [ "processed", "requested", "error" ]:
+                #print(responseString)
+                try:
+                    responseJSON = json.loads(responseString)
+                    logging.debug('loaded JSON from bdsTableRedisKey {} responseString {}'.format(bdsTableRedisKey,responseString))
+                except Exception as e:
+                    logging.error('cannot decode JSON string: {}'.format(responseString))
+                    self.redisServer.set(bdsTableRedisKey,"error",ex=30)
+                    logging.debug('set {} to error with timeout 30'.format(bdsTableRedisKey))
+                    return False,"error",bdsTableRedisKey
+                else:
+                    return True,responseJSON,bdsTableRedisKey
+            else:
+                return False,responseString,bdsTableRedisKey
 
-
-    def globalInterfaceAddressConfig(self,myOidDb,bdsAccessDict):
-        self.bdsTable = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk', 'table': 'global.interface.address.config'}}
-        bdsSuccess,responseJSON = bdsAccess.getJson(self.bdsTable,bdsAccessDict)
-        print(bdsSuccess,responseJSON)
-        if bdsSuccess:
-            for ifObject in responseJSON["objects"]:
-                ifName = ifObject["attribute"]["ifl_name"]
-                ifIndex =  bdsMappingFunctions.ifIndexFromIfName(ifName)
-                if "ipv4_address" in ifObject["attribute"].keys():
-                    myIfObj = ipaddress.IPv4Interface(ifObject["attribute"]["ipv4_address"])
-                    myAddrObj = ipaddress.IPv4Address(myIfObj.ip)
-                    ipIndex = myIfObj.ip
-                    myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.4.20.1.1.{}".format(ipIndex),
-                                               name = "ipAdEntAddr",
-                                     pysnmpBaseType = "IpAddress",
-                               pysnmpRepresentation = "hexValue",
-                                         fixedValue = myAddrObj.packed.hex() ) )  
-                    myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.4.20.1.2.{}".format(ipIndex),
-                                               name = "ipAdEntIfIndex",
-                                     pysnmpBaseType = "Integer32",
-                                         fixedValue = int(ifIndex) ) )
-                    myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.4.20.1.3.{}".format(ipIndex),
-                                               name = "ipAdEntNetMask",
-                                     pysnmpBaseType = "IpAddress",
-                               pysnmpRepresentation = "hexValue",
-                                         fixedValue = myIfObj.network.netmask.packed.hex() ) )  
-                    myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.4.20.1.4.{}".format(ipIndex),
-                                               name = "ipAdEntBcastAddr",
-                                     pysnmpBaseType = "Integer32",
-                                         fixedValue = 1 ) )
-                    myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.4.20.1.5.{}".format(ipIndex),
-                                               name = "ipAdEntBcastAddr",
-                                     pysnmpBaseType = "Integer32", 
-                                         fixedValue = 65535 ) )
-
-
-    def defaultFwdNeighborIpv4(self,myOidDb,bdsAccessDict):
-        self.bdsTable = {'bdsRequest': {'process': 'fwdd', 'urlSuffix': '/bds/table/walk', 'table': 'default.fwd.neighbor.ipv4'}}
-        bdsSuccess,responseJSON = bdsAccess.getJson(self.bdsTable,bdsAccessDict)
-        if bdsSuccess:
-            for ifObject in responseJSON["objects"]:
-                remoteAddr = ifObject["attribute"]["address4"]
-                ifIndex = bdsMappingFunctions.ifIndexFromIfName(ifObject["attribute"]["ifl"])
-                mediaIndex = str(ifIndex) + "." + remoteAddr
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.4.22.1.1.{}".format(mediaIndex),
-                                           name = "ipNetToMediaIfIndex",
-                                 pysnmpBaseType = "Integer32",
-                                     fixedValue = int(ifIndex) ) )
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.4.22.1.2.{}".format(mediaIndex),
-                                           name = "ipNetToMediaPhysAddress",
-                                 pysnmpBaseType = "OctetString",
-                           pysnmpRepresentation = "hexValue",
-                                     fixedValue = ifObject["attribute"]["mac_address"].replace(":","") ) )  
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.4.22.1.3.{}".format(mediaIndex),
-                                           name = " ipNetToMediaNetAddress",
-                                 pysnmpBaseType = "IpAddress",
-                           pysnmpRepresentation = "hexValue",
-                                     fixedValue = ipaddress.IPv4Address(remoteAddr).packed.hex() ) )  
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.2.1.4.22.1.4.{}".format(mediaIndex),
-                                           name = "ipNetToMediaType",
-                                 pysnmpBaseType = "Integer32",  
-                                     fixedValue = 3 ) )
-
-    def localSystemSoftwareInfoConfd(self,myOidDb,bdsAccessDict):
-        self.bdsTable = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk', 'table': 'local.system.software.info.confd'}}
-        bdsSuccess,responseJSON = bdsAccess.getJson(self.bdsTable,bdsAccessDict)
-        if bdsSuccess:
-            for ifObject in responseJSON["objects"]:
-#                 sequenceNr = ifObject["sequence"]
-#                 libraryString = ifObject["attribute"]["library"]
-#                 libraryChars = [str(ord(c)) for c in libraryString]
-#                 libraryIndex = str(len(libraryChars)) + "." + ".".join(libraryChars)
-
-                indexString = ifObject["attribute"]["library"]
-                indexCharList = [str(ord(c)) for c in indexString]
-                index = str(len(indexCharList)) + "." + ".".join(indexCharList)
-
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.1.{}".format(index),
-                                           name = "libraryName",
-                                 pysnmpBaseType = "OctetString",
-                                     fixedValue = indexString ) )
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.2.{}".format(index),
-                                           name = "libraryVersion",
-                                 pysnmpBaseType = "OctetString",
-                                     fixedValue = ifObject["attribute"]["version"] ) )
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.1.1.3.{}".format(index),
-                                           name = "libraryCommitDate",
-                                 pysnmpBaseType = "OctetString",
-                                     fixedValue = ifObject["attribute"]["commit_date"] ) )
-
-
-    def globalHostnameConfig(self,myOidDb,bdsAccessDict):
-        self.bdsTable = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk', 'table': 'global.rtbrick.hostname.config'}}
-        bdsSuccess,responseJSON = bdsAccess.getJson(self.bdsTable,bdsAccessDict)
-        if bdsSuccess:
-            for ifObject in responseJSON["objects"]:
-                indexString = ifObject["attribute"]["system_hostname"]
-                indexCharList = [str(ord(c)) for c in indexString]
-                index = str(len(indexCharList)) + "." + ".".join(indexCharList)
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.2.1.1.{}".format(index),
-                                           name = "systemHostname",
-                                 pysnmpBaseType = "OctetString",
-                                     fixedValue = indexString ) )
-                myOidDb.insertOid(oidDbItem(oid = "1.3.6.1.4.1.50058.1.2.1.2.{}".format(index),
-                                           name = "rtbrickHostname",
-                                 pysnmpBaseType = "OctetString",
-                                     fixedValue = ifObject["attribute"]["rtbrick_hostname"] ) )
+    def setOidHash (self,fullOid,fullOidDict,expiryTimer):
+        self.redisServer.hmset("oidHash-{}".format(fullOid),fullOidDict)
+        self.redisServer.expire("oidHash-{}".format(fullOid),expiryTimer)
+        logging.debug("set oidHash-{} with {}".format(fullOid,fullOidDict))
 
 
 
+    def run_forever(self):
+        while True:
+            #for oidSegmentFunction in self.oidSegmentFunctions:
+                #logging.debug("working on self.oidSegmentFunctions element:  {}".format(oidSegmentFunction))
+                #oidSegmentFunction()
+            for bdsSnmpTableModule in self.bdsSnmpTableModules:
+                #logging.debug("working on self.oidSegmentFunctions element:  {}".format(oidSegmentFunction))
+                bdsSnmpTableModule.setOids(self)
+            time.sleep(0.1)
+            #sys.exit(0)  ###TEMP
+
+
+if __name__ == "__main__":
+
+    epilogTXT = """
+
+    ... to be added """
+
+    parser = argparse.ArgumentParser(epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("--logging", choices=['debug', 'warning', 'info'],
+                        default='info', type=str,
+                        help="Define logging level(debug=highest)")
+    parser.add_argument('--redisServerIp', default='127.0.0.1',
+                        help='redis server IP address, default is 127.0.0.1', type=str)
+    parser.add_argument('--redisServerPort', default=6379,
+                        help='redis Server port, default is 6379', type=int)
+    parser.add_argument('-e', '--expiryTimer', default=60,
+                        help='redis key expiry timer setting', type=int)
+    cliargs = parser.parse_args()
+    cliArgsDict = vars(cliargs)
+    if cliArgsDict["logging"] == "debug":
+        logging.getLogger().setLevel(logging.DEBUG)       # FIXME set level from cliargs
+    elif cliArgsDict["logging"] == "warning":
+        logging.getLogger().setLevel(logging.WARNING)       # FIXME set level from cliargs
+    else:
+        logging.getLogger().setLevel(logging.INFO)       # FIXME set level from cliargs
+    logging.debug(cliArgsDict)
+    cliArgsDict["redisServer"] = redis.Redis(host=cliArgsDict["redisServerIp"], port=cliArgsDict["redisServerPort"], db=0)
+    myBdsSnmpTables = bdsSnmpTables(cliArgsDict)
+    myBdsSnmpTables.run_forever()
