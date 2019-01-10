@@ -5,7 +5,7 @@ Installation:
 ## Redis:
 ```shell
 sudo apt install redis-server
-sudo vim /etc/redis/redis.conf   ### change manually the value for supervised:  supervised systemd   (advanced add sed onliner?) ###
+sudo vim /etc/redis/redis.conf   ### change manually: supervised systemd 
 sudo systemctl restart redis.service
 redis-cli info
 ```
