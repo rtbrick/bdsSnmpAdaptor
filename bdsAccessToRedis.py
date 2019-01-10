@@ -132,33 +132,6 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--configFile",
                             default="/etc/bdsSnmpAdapterConfig.yml", type=str,
                             help="config file")
-    # parser.add_argument("--rtbrickHost",
-    #                     default='192.168.56.22', type=str,
-    #                     help="Define IP address of RtBrick Host, please make sure that ctrld on port 19091 runs on this system")
-    # parser.add_argument("--rtbrickCtrldPort",
-    #                     default=19091, type=int,
-    #                     help="Define the port on which ctrld listens")
-    # parser.add_argument("--rtbrickContainerName",
-    #                     default='Basesim', type=str,
-    #                     help="Define the name of RtBrick Container")
-    # parser.add_argument("--confdPort",
-    #                     default=2002, type=int,
-    #                     help="Define port number for confd access")
-    # parser.add_argument("--bgpIodPort",
-    #                     default=3102, type=int,
-    #                     help="Define port number for bgp-iod access")
-    # parser.add_argument("--fwddPort",
-    #                     default=5002, type=int,
-    #                     help="Define port number for fwdd access")
-    # parser.add_argument("--logging", choices=['debug', 'warning', 'info'],
-    #                     default='warning', type=str,
-    #                     help="Define logging level(debug=highest)")
-    # parser.add_argument('--redisServerIp', default='127.0.0.1',
-    #                     help='redis server IP address, default is 127.0.0.1', type=str)
-    # parser.add_argument('--redisServerPort', default=6379,
-    #                     help='redis Server port, default is 6379', type=int)
-    # parser.add_argument('-e', '--expiryTimer', default=60,
-    #                     help='redis key expiry timer setting', type=int)
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
     logging.debug(cliArgsDict)

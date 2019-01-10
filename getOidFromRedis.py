@@ -75,7 +75,6 @@ class oidDbItem():
 
 class getOidFromRedis:
 
-
     def set_logging(self,configDict):
         logging.root.handlers = []
         self.moduleLogger = logging.getLogger('getOidFromRedis')
@@ -207,7 +206,6 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
                     rspVarBinds.append((oid, value))
         return rspVarBinds
 
-
     def readNextVars(self, varBinds, acInfo=(None, None) ):
         logging.debug('SNMP request is GET-NEXT {}'.format(', '.join(str(x[0]) for x in varBinds)))
         try:
@@ -255,36 +253,8 @@ if __name__ == '__main__':
                             default="/etc/bdsSnmpAdapterConfig.yml", type=str,
                             help="config file")
 
-    # parser.add_argument('-s', '--listeningIP', default='0.0.0.0',
-    #                     help='syslog listening IP address, default is 0.0.0.0', type=str)
-    # parser.add_argument('-p', '--listeningPort', default=161,
-    #                     help='snmp get/getNext listening port, default is 161', type=int)
-    # parser.add_argument("-v","--version",  default='2c', type=str, choices=['2c', '3'],
-    #                     help='specify snmp version')
-    # parser.add_argument("-c","--community",  default='public', type=str,
-    #                     help='v2c community')
-    # parser.add_argument("-u","--usmUserTuples",  default='', type=str,
-    #                     help='usmUserTuples engine,user,authkey,privkey list as comma separated string')
-    # parser.add_argument("--logging", choices=['debug', 'warning', 'info'],
-    #                     default='warning', type=str,
-    #                     help="Define logging level(debug=highest)")
-    # parser.add_argument('-m', '--mibs', default='',
-    #                     help='mib list as comma separated string', type=str)
-    # parser.add_argument('--mibSources', default='',
-    #                     help='mibSource list as comma separated string', type=str)
-    # parser.add_argument('--decode',action='store_true')
-    # parser.add_argument('--redisServerIp', default='127.0.0.1',
-    #                     help='redis server IP address, default is 127.0.0.1', type=str)
-    # parser.add_argument('--redisServerPort', default=6379,
-    #                     help='redis Server port, default is 6379', type=int)
-    # parser.add_argument('-e', '--expiryTimer', default=3,
-    #                     help='redis key expiry timer setting', type=int)
-
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
-    # cliArgsDict["redisServer"] = redis.StrictRedis(host=cliArgsDict["redisServerIp"], port=cliArgsDict["redisServerPort"], db=0,decode_responses=True)
-    # print(cliArgsDict)
-    # logging.getLogger().setLevel(logging.DEBUG)       # FIXME set level from cliargs
 
     myBdsSnmpAdapter = getOidFromRedis(cliArgsDict)
 

@@ -11,8 +11,6 @@ import yaml
 import pprint
 from copy import deepcopy
 import ipaddress
-#from bdsAccess import bdsAccess
-#from redisOidDb import redisOidDb, redisOidSegment
 from bdsMappingFunctions import bdsMappingFunctions
 import time
 import redis
@@ -127,10 +125,8 @@ class bdsSnmpTables():
             self.redisServer.hmset("BSA_status_bdsSnmpTables",statusDict)
             self.redisServer.expire("BSA_status_bdsSnmpTables",4)
             for bdsSnmpTableModule in self.bdsSnmpTableModules:
-                #self.moduleLogger.debug("working on self.oidSegmentFunctions element:  {}".format(oidSegmentFunction))
                 bdsSnmpTableModule.setOids(self)
             time.sleep(0.1)
-            #sys.exit(0)  ###TEMP
 
 
 if __name__ == "__main__":
@@ -143,17 +139,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--configFile",
                             default="/etc/bdsSnmpAdapterConfig.yml", type=str,
                             help="config file")
-    # parser.add_argument("--logging", choices=['debug', 'warning', 'info'],
-    #                     default='info', type=str,
-    #                     help="Define logging level(debug=highest)")
-    # parser.add_argument('--redisServerIp', default='127.0.0.1',
-    #                     help='redis server IP address, default is 127.0.0.1', type=str)
-    # parser.add_argument('--redisServerPort', default=6379,
-    #                     help='redis Server port, default is 6379', type=int)
-    # parser.add_argument('-e', '--expiryTimer', default=60,
-    #                     help='redis key expiry timer setting', type=int)
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
-    #cliArgsDict["redisServer"] = redis.Redis(host=cliArgsDict["redisServerIp"], port=cliArgsDict["redisServerPort"], db=0)
     myBdsSnmpTables = bdsSnmpTables(cliArgsDict)
     myBdsSnmpTables.run_forever()

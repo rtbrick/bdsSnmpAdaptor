@@ -68,10 +68,6 @@ class redisToSnmpTrapForwarder:
         self.dstDirectory = configDict["mibCompileDir"]
         self.trapCounter = 0
 
-        #self.inputMibs = ['RTBRICK-SYSLOG-MIB']
-        #self.srcDirectories = ['/usr/share/snmp/mibs','/Users/Shared/snmp/mibs']
-        #self.dstDirectory = '/Users/sli/.pysnmp/mibs'
-
         if configDict["compileMibs"]:
             mibCompiler = MibCompiler(SmiStarParser(),
                                       PySnmpCodeGen(),
