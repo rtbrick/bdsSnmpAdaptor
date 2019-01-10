@@ -104,6 +104,9 @@ class redisToSnmpTrapForwarder:
     def run_forever(self):
         self.moduleLogger.info('entering infinite while loop for processing rtbrickLogging-*-* keys from redis')
         while True:
+            statusDict = {"running":1,"sent":self.trapCounter} #add uptime
+            self.redisServer.hmset("BSA_status_redisToSnmpTrap",statusDict)
+            self.redisServer.expire("BSA_status_redisToSnmpTrap",4)
             for key in self.redisServer.scan_iter("rtbrickLogging-*-*"):
                 self.moduleLogger.debug ("processing redis key {}::{}".format(key,self.redisServer.get(key)))
                 try:
@@ -159,51 +162,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--configFile",
                             default="/etc/bdsSnmpAdapterConfig.yml", type=str,
                             help="config file")
-
-    # parser.add_argument("--logging", choices=['debug', 'warning', 'info'],
-    #                     default='info', type=str,
-    #                     help="Define logging level(debug=highest)")
-    # parser.add_argument('-s', '--snmpTrapServer', default='127.0.0.1',
-    #                     help='specify SNMP server, which receives the traps', type=str)
-    # parser.add_argument('-p', '--snmpTrapPort', default=162,
-    #                     help='snmp trap destination port, default is 162', type=int)
-    # parser.add_argument("-v","--version",  default='2c', type=str, choices=['2c', '3'],
-    #                     help='specify snmp version')
-    # parser.add_argument("-c","--community",  default='public', type=str,
-    #                     help='v2c community')
-    # parser.add_argument("-u","--usmUserTuples",  default='', type=str,
-    #                     help='usmUserTuples engine,user,authkey,privkey list as comma separated string e.g:\n'+
-    #                          '"80000a4c010a090150,usr-sha-aes128,authkey1,privkey1"')
-    # parser.add_argument('-m', '--mibs', default='RTBRICK-SYSLOG-MIB',
-    #                     help='mib list as comma separated string', type=str)
-    # parser.add_argument('--mibSources', default="/usr/share/snmp/mibs,/Users/Shared/snmp/mibs",
-    #                     help='mibSource list as comma separated string', type=str)
-    # parser.add_argument('--compileMibs',action='store_true')
-    # parser.add_argument('--mibCompileDir', default="/Users/sli/.pysnmp/mibs",
-    #                     help='mibSource list as comma separated string', type=str)
-    # parser.add_argument('--redisServerIp', default='127.0.0.1',
-    #                     help='redis server IP address, default is 127.0.0.1', type=str)
-    # parser.add_argument('--redisServerPort', default=6379,
-    #                     help='redis Server port, default is 6379', type=int)
-    # parser.add_argument('-e', '--expiryTimer', default=3,
-    #                     help='redis key expiry timer setting', type=int)
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
-    # if cliArgsDict["logging"] == "debug":
-    #     logging.getLogger().setLevel(logging.DEBUG)       # FIXME set level from cliargs
-    # elif cliArgsDict["logging"] == "warning":
-    #     logging.getLogger().setLevel(logging.WARNING)       # FIXME set level from cliargs
-    # else:
-    #     logging.getLogger().setLevel(logging.INFO)       # FIXME set level from cliargs
-    # logging.debug("cliArgsDict: {}".format(cliArgsDict))
-    # cliArgsDict["mibSources"] = [source.strip() for source in cliArgsDict["mibSources"].split(',') if len(source) > 0 ]
-    # logging.debug("cliArgsDict['mibSources']: {}".format(cliArgsDict["mibSources"]))
-    # cliArgsDict["mibs"] = [ mib.strip() for mib in cliArgsDict["mibs"].split(',') if len(mib) > 0 ]
-    # logging.debug("cliArgsDict['mibs']: {}".format(cliArgsDict["mibs"]))
-    # cliArgsDict["usmUserDataMatrix"] = [ usmUserTuple.strip().split(",") for usmUserTuple in cliArgsDict["usmUserTuples"].split(';') if len(usmUserTuple) > 0 ]
-    # logging.debug("cliArgsDict['usmUserDataMatrix']: {}".format(cliArgsDict["usmUserDataMatrix"]))
-    # cliArgsDict["usmUsers"] = []
-    # cliArgsDict["redisServer"] = redis.StrictRedis(host=cliArgsDict["redisServerIp"], port=cliArgsDict["redisServerPort"], db=0,decode_responses=True)
-    # logging.info("redis client started: {}".format(cliArgsDict["redisServer"]))
     myRedisToSnmpForwarder = redisToSnmpTrapForwarder(cliArgsDict)
     myRedisToSnmpForwarder.run_forever()

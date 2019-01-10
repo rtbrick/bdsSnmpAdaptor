@@ -98,6 +98,9 @@ class bdsAccessToRedis():
 
     def run_forever(self):
         while True:
+            statusDict = {"running":1,"recv":self.responseSequence} #add uptime
+            self.redisServer.hmset("BSA_status_bdsAccessToRedis",statusDict)
+            self.redisServer.expire("BSA_status_bdsAccessToRedis",4)
             redisKeys = self.redisServer.scan_iter("bdsTableRequest-*")
             redisKeysAsList = list(redisKeys)
             redisKeysAsList.sort()

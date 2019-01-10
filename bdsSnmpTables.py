@@ -123,9 +123,9 @@ class bdsSnmpTables():
 
     def run_forever(self):
         while True:
-            #for oidSegmentFunction in self.oidSegmentFunctions:
-                #self.moduleLogger.debug("working on self.oidSegmentFunctions element:  {}".format(oidSegmentFunction))
-                #oidSegmentFunction()
+            statusDict = {"running":1,"sent":self.requestCounter} #add uptime
+            self.redisServer.hmset("BSA_status_bdsSnmpTables",statusDict)
+            self.redisServer.expire("BSA_status_bdsSnmpTables",4)
             for bdsSnmpTableModule in self.bdsSnmpTableModules:
                 #self.moduleLogger.debug("working on self.oidSegmentFunctions element:  {}".format(oidSegmentFunction))
                 bdsSnmpTableModule.setOids(self)
