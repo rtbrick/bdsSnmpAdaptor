@@ -5,7 +5,7 @@ class ffwd_default_interface_logical(object):
 
     @classmethod
     def setOids(self,bdsSnmpTableObject):
-        self.bdsTableDict = {'bdsRequest': {'process': 'fwdd', 'urlSuffix': '/bds/table/walk', 'table': 'default.interface.logical'}}
+        self.bdsTableDict = {'bdsRequest': {'process': 'fwdd', 'urlSuffix': 'bds/table/walk?format=raw', 'table': 'default.interface.logical'}}
         oidSegment = "1.3.6.1.2.1.2.2."
         expiryTimer = 60
         redisKeyPattern = "bdsTableInfo-fwdd-default.interface.logical"

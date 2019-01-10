@@ -5,6 +5,7 @@ import sys
 import requests
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 import argparse
 import yaml
 import pprint
@@ -19,7 +20,7 @@ from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress
 #from oidDb import oidDb
 #from bdsAccess import bdsAccess
 import redis
-
+from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 
 class oidDbItem():
 
@@ -72,23 +73,47 @@ class oidDbItem():
         return self.oid
 
 
-class bdsSnmpAdapter:
+class getOidFromRedis:
+
+
+    def set_logging(self,configDict):
+        logging.root.handlers = []
+        self.moduleLogger = logging.getLogger('getOidFromRedis')
+        logFile = configDict['rotatingLogFile'] + "getOidFromRedis.log"
+        #
+        #logging.basicConfig(filename=logFile, filemode='w', level=logging.DEBUG)
+        rotateHandler = RotatingFileHandler(logFile, maxBytes=1000000,backupCount=2)  #1M rotating log
+        formatter = logging.Formatter('%(asctime)s : %(name)s : %(levelname)s : %(message)s')
+        rotateHandler.setFormatter(formatter)
+        logging.getLogger("").addHandler(rotateHandler)
+        #
+        self.loggingLevel = configDict['loggingLevel']
+        if self.loggingLevel in ["debug", "info", "warning"]:
+            if self.loggingLevel == "debug": logging.getLogger().setLevel(logging.DEBUG)
+            if self.loggingLevel == "info": logging.getLogger().setLevel(logging.INFO)
+            if self.loggingLevel == "warning": logging.getLogger().setLevel(logging.WARNING)
+        self.moduleLogger.info("self.loggingLevel: {}".format(self.loggingLevel))
 
     def __init__(self,cliArgsDict):
-        self.redisServer = cliArgsDict["redisServer"]
-        self.listeningAddress = cliArgsDict["listeningIP"]
-        self.listeningPort = cliArgsDict["listeningPort"]
-        self.snmpVersion = cliArgsDict["version"]
+        self.moduleLogger = logging.getLogger('bdsAccessToRedis')
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"getOidFromRedis")
+        self.set_logging(configDict)
+        self.moduleLogger.debug("configDict:{}".format(configDict))
+        self.redisServer = redis.StrictRedis(host=configDict["redisServerIp"], port=configDict["redisServerPort"], db=0,decode_responses=True)
+        #self.redisServer = configDict["redisServer"]
+        self.listeningAddress = configDict["listeningIP"]
+        self.listeningPort = configDict["listeningPort"]
+        self.snmpVersion = configDict["version"]
         if self.snmpVersion == "2c":
-            self.community = cliArgsDict["community"]
+            self.community = configDict["community"]
 
 
     def snmpGet(self,oid=""):
-        logging.debug('snmpGET {}'.format(oid))
+        self.moduleLogger.debug('snmpGET {}'.format(oid))
         oidDict = self.redisServer.hgetall("oidHash-{}".format(oid))
-        logging.debug('snmpGET found dict {}'.format(oidDict))
+        self.moduleLogger.debug('snmpGET found dict {}'.format(oidDict))
         if oidDict != {}:
-            logging.info ("snmpGet {} found in oidDb with {}".format(oid,oidDict))
+            self.moduleLogger.info ("snmpGet {} found in oidDb with {}".format(oid,oidDict))
             baseType = oidDict["pysnmpBaseType"]      #FIXME catch exception
             if "value" in oidDict.keys():
                 if "pysnmpRepresentation" in oidDict.keys():
@@ -98,22 +123,22 @@ class bdsSnmpAdapter:
                 else:
                     evalString = "{}('{}')".format(baseType,
                                                       oidDict["value"])
-                logging.debug("evalString {})".format(evalString))
+                self.moduleLogger.debug("evalString {})".format(evalString))
                 returnValue = eval(evalString )
-                logging.info ("snmpGet {} returning {}".format(oid,returnValue))
+                self.moduleLogger.info ("snmpGet {} returning {}".format(oid,returnValue))
                 return {oid:returnValue}
             else:
                 return {oid:v2c.NoSuchObject()}
         else:
-            logging.error ("snmpGet {} not in redis DB".format(oid))
+            self.moduleLogger.error ("snmpGet {} not in redis DB".format(oid))
         return {oid:v2c.NoSuchObject()}
 
     def snmpGetForNext(self,oid=""):
-        logging.debug('snmpGetForNext {}'.format(oid))
+        self.moduleLogger.debug('snmpGetForNext {}'.format(oid))
         oidDict = self.redisServer.hgetall("oidHash-{}".format(oid))
-        #logging.debug('snmpGetForNext found oidDict {}'.format(oidDict))
+        #self.moduleLogger.debug('snmpGetForNext found oidDict {}'.format(oidDict))
         if oidDict != {}:
-            logging.info ("snmpGetForNext {} found in oidDb with {}".format(oid,oidDict))
+            self.moduleLogger.info ("snmpGetForNext {} found in oidDb with {}".format(oid,oidDict))
             baseType = oidDict["pysnmpBaseType"]      #FIXME catch exception
             if "value" in oidDict.keys():
                 if "pysnmpRepresentation" in oidDict.keys():
@@ -123,23 +148,23 @@ class bdsSnmpAdapter:
                 else:
                     evalString = "{}('{}')".format(baseType,
                                                       oidDict["value"])
-                logging.debug("evalString {})".format(evalString))
+                self.moduleLogger.debug("evalString {})".format(evalString))
                 returnValue = eval(evalString )
-                logging.info ("snmpGetForNext {} returning {}".format(oid,returnValue))
+                self.moduleLogger.info ("snmpGetForNext {} returning {}".format(oid,returnValue))
                 return {oid:returnValue}
             else:
                 return {oid:v2c.NoSuchObject()}
         else:
-            logging.error ("snmpGetForNext {} not in redis DB".format(oid))
+            self.moduleLogger.error ("snmpGetForNext {} not in redis DB".format(oid))
         return {oid:v2c.NoSuchObject()}
 
     def getOidsStringsForNextVars(self, oid="" ):
-        logging.debug('getOidsStringsForNextVars for: {}'.format(oid))
+        self.moduleLogger.debug('getOidsStringsForNextVars for: {}'.format(oid))
         oidStartItem = oidDbItem(oid=oid)
         oidsItems = [ oidDbItem(oid=x[8:]) for x in list(self.redisServer.scan_iter("oidHash-*")) if oidDbItem(oid=x[8:]) > oidStartItem ]
         oidsItems.sort()
         oidsStrings = [ str(x) for x in oidsItems ]
-        #logging.debug('oidsStrings: {}'.format(oidsStrings))
+        #self.moduleLogger.debug('oidsStrings: {}'.format(oidsStrings))
         return oidsStrings
 
 class MibInstrumController(instrum.AbstractMibInstrumController):
@@ -221,39 +246,47 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description="SNMP Agent serving BDS data")
-    parser.add_argument('-s', '--listeningIP', default='0.0.0.0',
-                        help='syslog listening IP address, default is 0.0.0.0', type=str)
-    parser.add_argument('-p', '--listeningPort', default=161,
-                        help='snmp get/getNext listening port, default is 161', type=int)
-    parser.add_argument("-v","--version",  default='2c', type=str, choices=['2c', '3'],
-                        help='specify snmp version')
-    parser.add_argument("-c","--community",  default='public', type=str,
-                        help='v2c community')
-    parser.add_argument("-u","--usmUserTuples",  default='', type=str,
-                        help='usmUserTuples engine,user,authkey,privkey list as comma separated string')
-    parser.add_argument("--logging", choices=['debug', 'warning', 'info'],
-                        default='warning', type=str,
-                        help="Define logging level(debug=highest)")
-    parser.add_argument('-m', '--mibs', default='',
-                        help='mib list as comma separated string', type=str)
-    parser.add_argument('--mibSources', default='',
-                        help='mibSource list as comma separated string', type=str)
-    parser.add_argument('--decode',action='store_true')
-    parser.add_argument('--redisServerIp', default='127.0.0.1',
-                        help='redis server IP address, default is 127.0.0.1', type=str)
-    parser.add_argument('--redisServerPort', default=6379,
-                        help='redis Server port, default is 6379', type=int)
-    parser.add_argument('-e', '--expiryTimer', default=3,
-                        help='redis key expiry timer setting', type=int)
+    epilogTXT = """
+
+    ... to be added """
+
+    parser = argparse.ArgumentParser(epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("-f", "--configFile",
+                            default="/etc/bdsSnmpAdapterConfig.yml", type=str,
+                            help="config file")
+
+    # parser.add_argument('-s', '--listeningIP', default='0.0.0.0',
+    #                     help='syslog listening IP address, default is 0.0.0.0', type=str)
+    # parser.add_argument('-p', '--listeningPort', default=161,
+    #                     help='snmp get/getNext listening port, default is 161', type=int)
+    # parser.add_argument("-v","--version",  default='2c', type=str, choices=['2c', '3'],
+    #                     help='specify snmp version')
+    # parser.add_argument("-c","--community",  default='public', type=str,
+    #                     help='v2c community')
+    # parser.add_argument("-u","--usmUserTuples",  default='', type=str,
+    #                     help='usmUserTuples engine,user,authkey,privkey list as comma separated string')
+    # parser.add_argument("--logging", choices=['debug', 'warning', 'info'],
+    #                     default='warning', type=str,
+    #                     help="Define logging level(debug=highest)")
+    # parser.add_argument('-m', '--mibs', default='',
+    #                     help='mib list as comma separated string', type=str)
+    # parser.add_argument('--mibSources', default='',
+    #                     help='mibSource list as comma separated string', type=str)
+    # parser.add_argument('--decode',action='store_true')
+    # parser.add_argument('--redisServerIp', default='127.0.0.1',
+    #                     help='redis server IP address, default is 127.0.0.1', type=str)
+    # parser.add_argument('--redisServerPort', default=6379,
+    #                     help='redis Server port, default is 6379', type=int)
+    # parser.add_argument('-e', '--expiryTimer', default=3,
+    #                     help='redis key expiry timer setting', type=int)
 
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
-    cliArgsDict["redisServer"] = redis.StrictRedis(host=cliArgsDict["redisServerIp"], port=cliArgsDict["redisServerPort"], db=0,decode_responses=True)
-    print(cliArgsDict)
-    logging.getLogger().setLevel(logging.DEBUG)       # FIXME set level from cliargs
+    # cliArgsDict["redisServer"] = redis.StrictRedis(host=cliArgsDict["redisServerIp"], port=cliArgsDict["redisServerPort"], db=0,decode_responses=True)
+    # print(cliArgsDict)
+    # logging.getLogger().setLevel(logging.DEBUG)       # FIXME set level from cliargs
 
-    myBdsSnmpAdapter = bdsSnmpAdapter(cliArgsDict)
+    myBdsSnmpAdapter = getOidFromRedis(cliArgsDict)
 
     snmpEngine = engine.SnmpEngine()
 

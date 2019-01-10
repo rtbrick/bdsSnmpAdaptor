@@ -1,0 +1,32 @@
+bdsSnmpAdapter:
+  loggingLevel: debug
+  rotatingLogFile: /tmp/bdsSnmpAdapter.log   #FIXME make permanent lokation
+  redisServerIp: 127.0.0.1 #redis server IP address
+  redisServerPort: 6379 #redis Server port, default is 6379', type=int)
+  bdsAccessToRedis:
+    rtbrickHost: 192.168.56.22 #Define IP address of RtBrick Host, please make sure that ctrld on port 19091 runs on this system"
+    rtbrickCtrldPort: 19091  #Define the port on which ctrld listens"
+    rtbrickContainerName: Basesim #Define the name of RtBrick Container")
+  getOidFromRedis:
+    listeningIP: 0.0.0.0  #SNMP get/getNext listening IP address
+    listeningPort: 161 #SNMP get/getNext listening port
+    version: 2c # specify snmp version type=str, choices=['2c', '3']
+    community: public # v2c community
+    usmUserTuples: "engine,user,authkey,privkey"
+                  # "80000a4c010a090150,usr-sha-aes128,authkey1,privkey1
+                  # one entry per SNMP v§ server
+  restServerForRtBrickSnmpTrapsToRedis:
+    listeningIP: 0.0.0.0  #REST listening IP address
+    listeningPort: 5000 #REST listening port
+  redisToSnmpTrap:
+    snmpTrapServer: 127.0.0.1 #defines the SNMP server, which receives the traps
+    snmpTrapPort: 162 # defines the SNMP trap destination port
+    version: 2c # specify snmp version type=str, choices=['2c', '3']
+    community: public # v2c community
+    usmUserTuples: "engine,user,authkey,privkey" # usmUserTuples engine,user,authkey,privkey list as comma separated strings
+                                                 # '"80000a4c010a090150,usr-sha-aes128,authkey1,privkey1
+                                                 # only one entry is rquired
+    mibs: RTBRICK-SYSLOG-MIB # mib list as comma separated string
+    mibSources: "/usr/share/snmp/mibs,/Users/Shared/snmp/mibs" #mibSource list as comma separated string', type=str)
+    compileMibs: true
+    mibCompileDir: "/Users/sli/.pysnmp/mibs"     # FIXME for ubuntu
