@@ -27,7 +27,6 @@ git clone https://github.com/slieberth/bdsSnmpAdaptor
 cd bdsSnmpAdaptor
 sudo cp mibs/RT* /usr/share/snmp/mibs
 sudo cp bdsSnmpAdapterConfig.yml /etc/bdsSnmpAdapterConfig.yml  
-sudo cp bdsSnmpAdapterConfig.yml /etc/bdsSnmpAdapterConfig.yml  
 ```
 
 ## Modify config parameters in config file
