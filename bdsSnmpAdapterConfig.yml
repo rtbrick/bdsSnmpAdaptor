@@ -1,6 +1,6 @@
 bdsSnmpAdapter:
   loggingLevel: debug
-  rotatingLogFile: /tmp/bdsSnmpAdapter.log   #FIXME make permanent lokation
+  rotatingLogFile: /tmp/bdsSnmpAdapter_   #FIXME store this at permament location
   redisServerIp: 127.0.0.1 #redis server IP address
   redisServerPort: 6379 #redis Server port, default is 6379', type=int)
   bdsAccessToRedis:
