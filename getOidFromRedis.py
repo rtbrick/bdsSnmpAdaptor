@@ -16,11 +16,9 @@ from pysnmp.smi import instrum
 from pysnmp.proto.api import v2c
 from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integer32
 from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress
-#from bdsSnmpTables import bdsSnmpTables
-#from oidDb import oidDb
-#from bdsAccess import bdsAccess
 import redis
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
+import asyncio
 
 class oidDbItem():
 
@@ -73,12 +71,12 @@ class oidDbItem():
         return self.oid
 
 
-class getOidFromRedis:
+class snmpBackEnd:
 
     def set_logging(self,configDict):
         logging.root.handlers = []
-        self.moduleLogger = logging.getLogger('getOidFromRedis')
-        logFile = configDict['rotatingLogFile'] + "getOidFromRedis.log"
+        self.moduleLogger = logging.getLogger('snmpBackEnd')
+        logFile = configDict['rotatingLogFile'] + "snmpBackEnd.log"
         #
         #logging.basicConfig(filename=logFile, filemode='w', level=logging.DEBUG)
         rotateHandler = RotatingFileHandler(logFile, maxBytes=1000000,backupCount=2)  #1M rotating log
@@ -94,21 +92,20 @@ class getOidFromRedis:
         self.moduleLogger.info("self.loggingLevel: {}".format(self.loggingLevel))
 
     def __init__(self,cliArgsDict):
-        self.moduleLogger = logging.getLogger('bdsAccessToRedis')
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"getOidFromRedis")
         self.set_logging(configDict)
         self.moduleLogger.debug("configDict:{}".format(configDict))
         self.redisServer = redis.StrictRedis(host=configDict["redisServerIp"], port=configDict["redisServerPort"], db=0,decode_responses=True)
         #self.redisServer = configDict["redisServer"]
-        self.listeningAddress = configDict["listeningIP"]
-        self.listeningPort = configDict["listeningPort"]
-        self.snmpVersion = configDict["version"]
-        if self.snmpVersion == "2c":
-            self.community = configDict["community"]
+        self.requestCounter = 0
 
 
     def snmpGet(self,oid=""):
         self.moduleLogger.debug('snmpGET {}'.format(oid))
+        self.requestCounter += 1
+        statusDict = {"running":1,"recv":self.requestCounter} #add uptime
+        self.redisServer.hmset("BSA_status_getOidFromRedis",statusDict)
+        self.redisServer.expire("BSA_status_getOidFromRedis",60*60*24 )
         oidDict = self.redisServer.hgetall("oidHash-{}".format(oid))
         self.moduleLogger.debug('snmpGET found dict {}'.format(oidDict))
         if oidDict != {}:
@@ -133,6 +130,7 @@ class getOidFromRedis:
         return {oid:v2c.NoSuchObject()}
 
     def snmpGetForNext(self,oid=""):
+        self.requestCounter += 1
         self.moduleLogger.debug('snmpGetForNext {}'.format(oid))
         oidDict = self.redisServer.hgetall("oidHash-{}".format(oid))
         #self.moduleLogger.debug('snmpGetForNext found oidDict {}'.format(oidDict))
@@ -178,22 +176,22 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
     if sys.version_info[0] < 3:
         SNMP_TYPE_MAP[unicode] = v2c.OctetString
 
-    def setBdsAdapter(self, bdsAdapter):
-        logging.debug ("MibInstrumController setBdsAdapter: {}".format(bdsAdapter)) ###Temp
-        self._bdsAdapter = bdsAdapter
+    def setSnmpBackEnd(self, _snmpBackEnd):
+        logging.debug ("MibInstrumController snmpBackEnd: {}".format(snmpBackEnd)) ###Temp
+        self._snmpBackEnd = _snmpBackEnd
         return self
 
     def readVars(self, varBinds, acInfo=(None, None)):
         logging.debug('SNMP request is GET {}'.format(', '.join(str(x[0]) for x in varBinds)))
         try:
-            bdsAdapter = self._bdsAdapter
+            _snmpBackEnd = self._snmpBackEnd   #FIXME
         except AttributeError:
-            logging.error('readVars BDS adapter not initialized')
+            logging.error('readVars _snmpBackEnd not initialized')
             return [(varBind[0], v2c.NoSuchObject()) for varBind in varBinds]
         rspVarBinds = []
         for oid, value in varBinds:
             try:
-                valueDict = bdsAdapter.snmpGet(oid=str(oid))
+                valueDict = _snmpBackEnd.snmpGet(oid=str(oid))
             except Exception as exc:
                 logging.error('BDS failure: {}'.format(exc))
                 valueDict = None
@@ -209,19 +207,19 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
     def readNextVars(self, varBinds, acInfo=(None, None) ):
         logging.debug('SNMP request is GET-NEXT {}'.format(', '.join(str(x[0]) for x in varBinds)))
         try:
-            bdsAdapter = self._bdsAdapter
+            _snmpBackEnd = self._snmpBackEnd
         except AttributeError:
-            logging.error('readNextVars BDS adapter not initialized')
+            logging.error('readNextVars _snmpBackEnd not initialized')
             return [(varBind[0], v2c.NoSuchObject()) for varBind in varBinds]   #CHECK
         rspVarBinds = []
         oidStrings = []
         for oid, value in varBinds:
             logging.debug('for {},{} in varBinds'.format(oid, value))
-            oidStrings = bdsAdapter.getOidsStringsForNextVars(oid=str(oid))
+            oidStrings = _snmpBackEnd.getOidsStringsForNextVars(oid=str(oid))
         if len(oidStrings) > 0:
             nextOid = oidStrings[0]
             try:
-                valueDict = bdsAdapter.snmpGetForNext(oid=str(nextOid))
+                valueDict = _snmpBackEnd.snmpGetForNext(oid=str(nextOid))
             except Exception as exc:
                 logging.error('BDS failure: {}'.format(exc))
                 valueDict = None
@@ -240,9 +238,91 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
             return rspVarBinds
 
 
+class snmpFrontEnd:
+
+    def set_logging(self,configDict):
+        logging.root.handlers = []
+        self.moduleLogger = logging.getLogger('snmpBackEnd')
+        logFile = configDict['rotatingLogFile'] + "snmpBackEnd.log"
+        #
+        #logging.basicConfig(filename=logFile, filemode='w', level=logging.DEBUG)
+        rotateHandler = RotatingFileHandler(logFile, maxBytes=1000000,backupCount=2)  #1M rotating log
+        formatter = logging.Formatter('%(asctime)s : %(name)s : %(levelname)s : %(message)s')
+        rotateHandler.setFormatter(formatter)
+        logging.getLogger("").addHandler(rotateHandler)
+        #
+        self.loggingLevel = configDict['loggingLevel']
+        if self.loggingLevel in ["debug", "info", "warning"]:
+            if self.loggingLevel == "debug": logging.getLogger().setLevel(logging.DEBUG)
+            if self.loggingLevel == "info": logging.getLogger().setLevel(logging.INFO)
+            if self.loggingLevel == "warning": logging.getLogger().setLevel(logging.WARNING)
+        self.moduleLogger.info("self.loggingLevel: {}".format(self.loggingLevel))
+
+    def __init__(self,cliArgsDict):
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"getOidFromRedis")
+        self.set_logging(configDict)
+        self.redisServer = redis.StrictRedis(host=configDict["redisServerIp"], port=configDict["redisServerPort"], db=0,decode_responses=True)
+        self.moduleLogger.debug("configDict:{}".format(configDict))
+        #
+        self.listeningAddress = configDict["listeningIP"]
+        self.listeningPort = configDict["listeningPort"]
+        self.snmpVersion = configDict["version"]
+        if self.snmpVersion == "2c":
+            self.community = configDict["community"]
+        self.snmpBackEnd = snmpBackEnd(cliArgsDict)
+        self.snmpEngine = engine.SnmpEngine()
+        # UDP over IPv4
+        try:
+            config.addTransport(
+                self.snmpEngine,
+                udp.domainName,
+                udp.UdpTransport().openServerMode(( self.listeningAddress ,
+                                                    self.listeningPort ))
+            )
+        except Exception as exc:
+            logging.error('SNMP transport error: {}'.format(exc))
+            sys.exit(1)
+        config.addV1System(self.snmpEngine, 'read-subtree', self.community)
+        # Allow full MIB access for this user / securityModels at VACM
+        config.addVacmUser(self.snmpEngine, 2, 'read-subtree', 'noAuthNoPriv', (1, 3, 6))
+        snmpContext = context.SnmpContext(self.snmpEngine)
+        snmpContext.unregisterContextName(v2c.OctetString(''))
+        snmpContext.registerContextName(
+            v2c.OctetString(''),  # Context Name
+            MibInstrumController().setSnmpBackEnd(self.snmpBackEnd)
+        )
+        cmdrsp.GetCommandResponder(self.snmpEngine, snmpContext)
+        cmdrsp.NextCommandResponder(self.snmpEngine, snmpContext)
+        self.snmpEngine.transportDispatcher.jobStarted(1)
+
+    async def runSnmpFrontEnd(self):
+        logging.debug('SNMP agent is running at {}:{}'.format(self.listeningAddress,
+                                                        self.listeningPort))
+        print('SNMP agent is running at {}:{}'.format(self.listeningAddress,
+                                                        self.listeningPort))
+        try:
+            await self.snmpEngine.transportDispatcher.runDispatcher()
+        except:
+            self.snmpEngine.transportDispatcher.closeDispatcher()
+            raise
+
+    async def statusUpdates(self):
+        while True:
+            statusDict = {"running":1,"recv":0 } #add uptime
+            self.redisServer.hmset("BSA_status_getOidFromRedis",statusDict)
+            self.redisServer.expire("BSA_status_getOidFromRedis",4 )
+            print(statusDict)
+            await asyncio.sleep(1)
 
 
-if __name__ == '__main__':
+    async def run_forever(self):
+        await asyncio.gather(
+            self.runSnmpFrontEnd(),
+            self.statusUpdates()
+            )
+
+
+if __name__ == "__main__":
 
     epilogTXT = """
 
@@ -256,46 +336,11 @@ if __name__ == '__main__':
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
 
-    myBdsSnmpAdapter = getOidFromRedis(cliArgsDict)
+    mySnmpFrontEnd = snmpFrontEnd(cliArgsDict)
 
-    snmpEngine = engine.SnmpEngine()
-
-    # UDP over IPv4
+    loop = asyncio.get_event_loop()
     try:
-        config.addTransport(
-            snmpEngine,
-            udp.domainName,
-            udp.UdpTransport().openServerMode(( myBdsSnmpAdapter.listeningAddress ,
-                                                myBdsSnmpAdapter.listeningPort ))
-        )
-
-    except Exception as exc:
-        logging.error('SNMP transport error: {}'.format(exc))
-        sys.exit(1)
-
-    config.addV1System(snmpEngine, 'read-subtree', myBdsSnmpAdapter.community)
-
-    # Allow full MIB access for this user / securityModels at VACM
-    config.addVacmUser(snmpEngine, 2, 'read-subtree', 'noAuthNoPriv', (1, 3, 6))
-
-    snmpContext = context.SnmpContext(snmpEngine)
-
-    snmpContext.unregisterContextName(v2c.OctetString(''))
-
-    snmpContext.registerContextName(
-        v2c.OctetString(''),  # Context Name
-        MibInstrumController().setBdsAdapter(myBdsSnmpAdapter)
-    )
-
-    cmdrsp.GetCommandResponder(snmpEngine, snmpContext)
-    cmdrsp.NextCommandResponder(snmpEngine, snmpContext)
-
-    logging.debug('SNMP agent is running at {}:{}'.format(myBdsSnmpAdapter.listeningAddress,
-                                                             myBdsSnmpAdapter.listeningPort))
-
-    snmpEngine.transportDispatcher.jobStarted(1)
-    try:
-        snmpEngine.transportDispatcher.runDispatcher()
-    except:
-        snmpEngine.transportDispatcher.closeDispatcher()
-        raise
+        loop.run_until_complete(mySnmpFrontEnd.run_forever())
+    except KeyboardInterrupt:
+        pass
+    loop.close()
