@@ -22,38 +22,18 @@ from aiohttp.web import Application, Response, StreamResponse, run_app
 import aioredis
 
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
-
+from bdsSnmpAdapterManager import set_logging
 
 class restHttpServer():
 
-    def set_logging(self,configDict):
-        logging.root.handlers = []
-        self.moduleLogger = logging.getLogger('restServer.py')
-        logFile = configDict['rotatingLogFile'] + "restServer.log"
-        #
-        #logging.basicConfig(filename=logFile, filemode='w', level=logging.DEBUG)
-        rotateHandler = RotatingFileHandler(logFile, maxBytes=1000000,backupCount=2)  #1M rotating log
-        formatter = logging.Formatter('%(asctime)s : %(name)s : %(levelname)s : %(message)s')
-        rotateHandler.setFormatter(formatter)
-        logging.getLogger("").addHandler(rotateHandler)
-        #
-        self.loggingLevel = configDict['loggingLevel']
-        if self.loggingLevel in ["debug", "info", "warning"]:
-            if self.loggingLevel == "debug": logging.getLogger().setLevel(logging.DEBUG)
-            if self.loggingLevel == "info": logging.getLogger().setLevel(logging.INFO)
-            if self.loggingLevel == "warning": logging.getLogger().setLevel(logging.WARNING)
-        self.moduleLogger.info("self.loggingLevel: {}".format(self.loggingLevel))
-
     def __init__(self,configDict):
-        self.moduleLogger = logging.getLogger('redisToSnmpTrap')
-        self.set_logging(configDict)
-        print(configDict)
+        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
+        set_logging(configDict,self.moduleFileNameWithoutPy,self)
         self.listeningIP =  configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
         self.redisServerIp = configDict["redisServerIp"]
         self.redisServerPort = configDict["redisServerPort"]
-        #self.redisServer = await aioredis.create_redis_pool('redis://localhost')
-        #self.redisServer = aioredis.create_redis_pool((configDict["redisServerIp"],configDict["redisServerPort"]))
         self.requestCounter = 0
 
 
@@ -62,12 +42,8 @@ class restHttpServer():
         self.requestCounter += 1
         self.moduleLogger.info ("handler: peerIP:{} headers:{} counter:{} ".format(peerIP,request.headers,self.requestCounter))
         data = {'headers': dict(request.headers)}
-        #print(data)
         jsonTxt = await request.text() #
-        #self.moduleLogger.info (jsonTxt)
-        #self.redisServer = await aioredis.create_redis_pool('redis://localhost')
         self.redisServer = await aioredis.create_redis((self.redisServerIp,self.redisServerPort))
-        #print(self.redisServer)
         redisKey = "rtbrickLogging-{}-{}".format(peerIP,self.requestCounter )
         self.moduleLogger.info ("redisKey:{},jsonTxt:{}".format(redisKey,jsonTxt))
         await self.redisServer.setex(redisKey, 60,  jsonTxt )
@@ -102,9 +78,7 @@ if __name__ == "__main__":
                             help="config file")
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
-    #print(cliArgsDict)
-    configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"restServerForRtBrickSnmpTrapsToRedis")
-    myRestHttpServer = restHttpServer(configDict)
+    myRestHttpServer = restHttpServer(cliArgsDict)
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(myRestHttpServer.run_forever())

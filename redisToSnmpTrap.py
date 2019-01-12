@@ -16,38 +16,19 @@ from pysmi.codegen import PySnmpCodeGen
 from pysmi.compiler import MibCompiler
 
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
+from bdsSnmpAdapterManager import set_logging
 
 
 class redisToSnmpTrapForwarder:
 
 
-    def set_logging(self,configDict):
-        logging.root.handlers = []
-        self.moduleLogger = logging.getLogger('redisToSnmpTrap')
-        logFile = configDict['rotatingLogFile'] + "redisToSnmpTrap.log"
-        #
-        #logging.basicConfig(filename=logFile, filemode='w', level=logging.DEBUG)
-        rotateHandler = RotatingFileHandler(logFile, maxBytes=1000000,backupCount=2)  #1M rotating log
-        formatter = logging.Formatter('%(asctime)s : %(name)s : %(levelname)s : %(message)s')
-        rotateHandler.setFormatter(formatter)
-        logging.getLogger("").addHandler(rotateHandler)
-        #
-        self.loggingLevel = configDict['loggingLevel']
-        if self.loggingLevel in ["debug", "info", "warning"]:
-            if self.loggingLevel == "debug": logging.getLogger().setLevel(logging.DEBUG)
-            if self.loggingLevel == "info": logging.getLogger().setLevel(logging.INFO)
-            if self.loggingLevel == "warning": logging.getLogger().setLevel(logging.WARNING)
-        self.moduleLogger.info("self.loggingLevel: {}".format(self.loggingLevel))
-
-
 
     def __init__(self,cliArgsDict):
-        self.moduleLogger = logging.getLogger('redisToSnmpTrap')
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"redisToSnmpTrap")
-        self.set_logging(configDict)
+        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
+        set_logging(configDict,self.moduleFileNameWithoutPy,self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
         self.redisServer = redis.StrictRedis(host=configDict["redisServerIp"], port=configDict["redisServerPort"], db=0,decode_responses=True)
-
         self.moduleLogger.info("original configDict: {}".format(configDict))
         configDict["mibSources"] = [source.strip() for source in configDict["mibSources"].split(',') if len(source) > 0 ]
         self.moduleLogger.debug("configDict['mibSources']: {}".format(configDict["mibSources"]))
@@ -136,7 +117,6 @@ class redisToSnmpTrapForwarder:
                         ntforg.UdpTransportTarget((self.snmpTrapServer, self.snmpTrapPort)),
                         'trap',
                         ntforg.MibVariable('RTBRICK-SYSLOG-MIB', 'rtbrickSyslogTrap'),
-                        #( ntforg.MibVariable('SNMPv2-MIB', 'sysUpTime', 0), 0 ),
                         ( ntforg.MibVariable('RTBRICK-SYSLOG-MIB', 'syslogMsgNumber',   0), self.trapCounter ),
                         ( ntforg.MibVariable('RTBRICK-SYSLOG-MIB', 'syslogMsgFacility', 0), syslogMsgFacility ),
                         ( ntforg.MibVariable('RTBRICK-SYSLOG-MIB', 'syslogMsgSeverity', 0), syslogMsgSeverity ),

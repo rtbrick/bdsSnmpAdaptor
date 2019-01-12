@@ -15,6 +15,7 @@ from bdsMappingFunctions import bdsMappingFunctions
 import time
 import redis
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
+from bdsSnmpAdapterManager import set_logging
 from bdsSnmpTableModules.confd_global_interface_container import confd_global_interface_container
 from bdsSnmpTableModules.ffwd_default_interface_logical import ffwd_default_interface_logical
 from bdsSnmpTableModules.confd_local_system_software_info_confd import confd_local_system_software_info_confd
@@ -23,33 +24,10 @@ from bdsSnmpTableModules.confd_global_startup_status_confd import confd_global_s
 class bdsSnmpTables():
 
 
-    def set_logging(self,configDict):
-        logging.root.handlers = []
-        self.moduleLogger = logging.getLogger('bdsSnmpTables')
-        logFile = configDict['rotatingLogFile']
-        #
-        #logging.basicConfig(filename=logFile, filemode='w', level=logging.DEBUG)
-        rotateHandler = RotatingFileHandler(logFile, maxBytes=1000000,backupCount=2)  #1M rotating log
-        formatter = logging.Formatter('%(asctime)s : %(name)s : %(levelname)s : %(message)s')
-        rotateHandler.setFormatter(formatter)
-        logging.getLogger("").addHandler(rotateHandler)
-        #
-        self.loggingLevel = configDict['loggingLevel']
-        if self.loggingLevel in ["debug", "info", "warning"]:
-            if self.loggingLevel == "debug": logging.getLogger().setLevel(logging.DEBUG)
-            if self.loggingLevel == "info": logging.getLogger().setLevel(logging.INFO)
-            if self.loggingLevel == "warning": logging.getLogger().setLevel(logging.WARNING)
-        self.moduleLogger.info("self.loggingLevel: {}".format(self.loggingLevel))
-
     def __init__(self,cliArgsDict):
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"bdsAccessToRedis")
-        self.set_logging(configDict)
-        if configDict["loggingLevel"] == "debug":
-            self.moduleLogger.setLevel(logging.DEBUG)       # FIXME set level from cliargs
-        elif configDict["loggingLevel"] == "warning":
-            self.moduleLogger.setLevel(logging.WARNING)       # FIXME set level from cliargs
-        else:
-            self.moduleLogger.setLevel(logging.INFO)       # FIXME set level from cliargs
+        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
+        set_logging(configDict,self.moduleFileNameWithoutPy,self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
         self.redisServer = redis.Redis(host=configDict["redisServerIp"], port=configDict["redisServerPort"], db=0)
 

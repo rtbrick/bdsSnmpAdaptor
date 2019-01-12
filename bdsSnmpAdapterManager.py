@@ -13,6 +13,27 @@ import redis
 import time
 
 
+PROCESS_LIST = [ "restServer" ,"redisToSnmpTrap" , "getOidFromRedis" , "bdsSnmpTables" , "bdsAccessToRedis" ]
+GLOBAL_LOG_DICT = {"bdsAccessToRedis": {"logExtension": "bdsAccessToRedis.log"}}
+
+def set_logging(configDict,moduleFileNameWithoutPy,moduleObj):
+    logging.root.handlers = []
+    moduleObj.moduleLogger = logging.getLogger(moduleFileNameWithoutPy)
+    logFile = configDict['rotatingLogFile'] + moduleFileNameWithoutPy + ".log"
+    #
+    #logging.basicConfig(filename=logFile, filemode='w', level=logging.DEBUG)
+    rotateHandler = RotatingFileHandler(logFile, maxBytes=1000000,backupCount=2)  #1M rotating log
+    formatter = logging.Formatter('%(asctime)s : %(name)s : %(levelname)s : %(message)s')
+    rotateHandler.setFormatter(formatter)
+    logging.getLogger("").addHandler(rotateHandler)
+    #
+    moduleObj.loggingLevel = configDict['loggingLevel']
+    if moduleObj.loggingLevel in ["debug", "info", "warning"]:
+        if moduleObj.loggingLevel == "debug": logging.getLogger().setLevel(logging.DEBUG)
+        if moduleObj.loggingLevel == "info": logging.getLogger().setLevel(logging.INFO)
+        if moduleObj.loggingLevel == "warning": logging.getLogger().setLevel(logging.WARNING)
+
+
 
 def loadBdsSnmpAdapterConfigFile(configFile,moduleName):
     data = {}
@@ -68,9 +89,9 @@ class bdsSnmpAdapterManager:
             # for redisKey in redisKeys:
             #     modulStatusDict = self.redisServer.hgetall(redisKey)
             #     print ("{}:{}".format(redisKey,modulStatusDict))
-            processList = [ "restServer" ,"redisToSnmpTrap" , "getOidFromRedis" , "bdsSnmpTables" , "bdsAccessToRedis" ]
+            #processList = [ "restServer" ,"redisToSnmpTrap" , "getOidFromRedis" , "bdsSnmpTables" , "bdsAccessToRedis" ]
             print ("#"*60)
-            for processString in processList:
+            for processString in PROCESS_LIST:
                 redisKey = "BSA_status_" + processString
                 modulStatusDict = self.redisServer.hgetall(redisKey)
                 print ("{:20s}{}".format(processString,modulStatusDict))
@@ -89,15 +110,6 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--configFile",
                             default="/etc/bdsSnmpAdapterConfig.yml", type=str,
                             help="config file")
-    # parser.add_argument("--logging", choices=['debug', 'warning', 'info'],
-    #                     default='info', type=str,
-    #                     help="Define logging level(debug=highest)")
-    # parser.add_argument('--redisServerIp', default='127.0.0.1',
-    #                     help='redis server IP address, default is 127.0.0.1', type=str)
-    # parser.add_argument('--redisServerPort', default=6379,
-    #                     help='redis Server port, default is 6379', type=int)
-    # parser.add_argument('-e', '--expiryTimer', default=60,
-    #                     help='redis key expiry timer setting', type=int)
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
     #cliArgsDict["redisServer"] = redis.Redis(host=cliArgsDict["redisServerIp"], port=cliArgsDict["redisServerPort"], db=0)

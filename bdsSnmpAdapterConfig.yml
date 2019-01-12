@@ -15,7 +15,7 @@ bdsSnmpAdapter:
     usmUserTuples: "engine,user,authkey,privkey"
                   # "80000a4c010a090150,usr-sha-aes128,authkey1,privkey1
                   # one entry per SNMP v§ server
-  restServerForRtBrickSnmpTrapsToRedis:
+  restServer:
     listeningIP: 0.0.0.0  #REST listening IP address
     listeningPort: 5000 #REST listening port
   redisToSnmpTrap:

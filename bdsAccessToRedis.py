@@ -13,34 +13,17 @@ from copy import deepcopy
 import redis
 import time
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
+from bdsSnmpAdapterManager import set_logging
 
 
 class bdsAccessToRedis():
 
 
-    def set_logging(self,configDict):
-        logging.root.handlers = []
-        self.moduleLogger = logging.getLogger('bdsAccessToRedis')
-        logFile = configDict['rotatingLogFile']
-        #
-        #logging.basicConfig(filename=logFile, filemode='w', level=logging.DEBUG)
-        rotateHandler = RotatingFileHandler(logFile, maxBytes=1000000,backupCount=2)  #1M rotating log
-        formatter = logging.Formatter('%(asctime)s : %(name)s : %(levelname)s : %(message)s')
-        rotateHandler.setFormatter(formatter)
-        logging.getLogger("").addHandler(rotateHandler)
-        #
-        self.loggingLevel = configDict['loggingLevel']
-        if self.loggingLevel in ["debug", "info", "warning"]:
-            if self.loggingLevel == "debug": logging.getLogger().setLevel(logging.DEBUG)
-            if self.loggingLevel == "info": logging.getLogger().setLevel(logging.INFO)
-            if self.loggingLevel == "warning": logging.getLogger().setLevel(logging.WARNING)
-        self.moduleLogger.info("self.loggingLevel: {}".format(self.loggingLevel))
-
-
     def __init__(self,cliArgsDict):
-        self.moduleLogger = logging.getLogger('bdsAccessToRedis')
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"bdsAccessToRedis")
-        self.set_logging(configDict)
+        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
+        #self.moduleLogger = logging.getLogger(self.moduleFileNameWithoutPy)
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
+        set_logging(configDict,self.moduleFileNameWithoutPy,self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
         self.redisServer = redis.Redis(host=configDict["redisServerIp"], port=configDict["redisServerPort"], db=0)
         self.rtbrickHost = configDict['rtbrickHost']
@@ -50,7 +33,6 @@ class bdsAccessToRedis():
         self.responseSequence = 0
         #'logging': 'warning'
         # do more stuff here. e.g. connecectivity checks etc
-
 
 
     def getJson(self,bdsRequestDict):
@@ -83,6 +65,10 @@ class bdsAccessToRedis():
         except Exception as e:
             return False,e
         else:
+            if self.response.status_code != 200:
+                self.moduleLogger.error ("received {} for {}".format(self.response.status_code,url))
+            else:
+                self.moduleLogger.info ("received {} for {}".format(self.response.status_code,url))
             self.moduleLogger.debug (self.response)
             if len(self.response.text) > 0:
                 try:

@@ -18,6 +18,7 @@ from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integ
 from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress
 import redis
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
+from bdsSnmpAdapterManager import set_logging
 import asyncio
 import aioredis
 
@@ -74,30 +75,13 @@ class oidDbItem():
 
 class snmpBackEnd:
 
-    def set_logging(self,configDict):
-        logging.root.handlers = []
-        self.moduleLogger = logging.getLogger('snmpBackEnd')
-        logFile = configDict['rotatingLogFile'] + "snmpBackEnd.log"
-        #
-        #logging.basicConfig(filename=logFile, filemode='w', level=logging.DEBUG)
-        rotateHandler = RotatingFileHandler(logFile, maxBytes=1000000,backupCount=2)  #1M rotating log
-        formatter = logging.Formatter('%(asctime)s : %(name)s : %(levelname)s : %(message)s')
-        rotateHandler.setFormatter(formatter)
-        logging.getLogger("").addHandler(rotateHandler)
-        #
-        self.loggingLevel = configDict['loggingLevel']
-        if self.loggingLevel in ["debug", "info", "warning"]:
-            if self.loggingLevel == "debug": logging.getLogger().setLevel(logging.DEBUG)
-            if self.loggingLevel == "info": logging.getLogger().setLevel(logging.INFO)
-            if self.loggingLevel == "warning": logging.getLogger().setLevel(logging.WARNING)
-        self.moduleLogger.info("self.loggingLevel: {}".format(self.loggingLevel))
 
     def __init__(self,cliArgsDict):
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"getOidFromRedis")
-        self.set_logging(configDict)
+        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
+        set_logging(configDict,self.moduleFileNameWithoutPy,self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
         self.redisServer = redis.StrictRedis(host=configDict["redisServerIp"], port=configDict["redisServerPort"], db=0,decode_responses=True)
-        #self.redisServer = configDict["redisServer"]
         self.requestCounter = 0
 
 
@@ -241,27 +225,13 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
 
 class snmpFrontEnd:
 
-    def set_logging(self,configDict):
-        logging.root.handlers = []
-        self.moduleLogger = logging.getLogger('snmpBackEnd')
-        logFile = configDict['rotatingLogFile'] + "snmpBackEnd.log"
-        #
-        #logging.basicConfig(filename=logFile, filemode='w', level=logging.DEBUG)
-        rotateHandler = RotatingFileHandler(logFile, maxBytes=1000000,backupCount=2)  #1M rotating log
-        formatter = logging.Formatter('%(asctime)s : %(name)s : %(levelname)s : %(message)s')
-        rotateHandler.setFormatter(formatter)
-        logging.getLogger("").addHandler(rotateHandler)
-        #
-        self.loggingLevel = configDict['loggingLevel']
-        if self.loggingLevel in ["debug", "info", "warning"]:
-            if self.loggingLevel == "debug": logging.getLogger().setLevel(logging.DEBUG)
-            if self.loggingLevel == "info": logging.getLogger().setLevel(logging.INFO)
-            if self.loggingLevel == "warning": logging.getLogger().setLevel(logging.WARNING)
-        self.moduleLogger.info("self.loggingLevel: {}".format(self.loggingLevel))
 
     def __init__(self,cliArgsDict):
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"getOidFromRedis")
-        self.set_logging(configDict)
+
+        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
+        set_logging(configDict,self.moduleFileNameWithoutPy,self)
+
         self.redisServerIp = configDict["redisServerIp"]
         self.redisServerPort = configDict["redisServerPort"]
         #self.redisServer = redis.StrictRedis(host=configDict["redisServerIp"], port=configDict["redisServerPort"], db=0,decode_responses=True)
