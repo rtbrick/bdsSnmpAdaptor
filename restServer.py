@@ -50,6 +50,8 @@ class restHttpServer():
         print(configDict)
         self.listeningIP =  configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
+        self.redisServerIp = configDict["redisServerIp"]
+        self.redisServerPort = configDict["redisServerPort"]
         #self.redisServer = await aioredis.create_redis_pool('redis://localhost')
         #self.redisServer = aioredis.create_redis_pool((configDict["redisServerIp"],configDict["redisServerPort"]))
         self.requestCounter = 0
@@ -64,7 +66,7 @@ class restHttpServer():
         jsonTxt = await request.text() #
         #self.moduleLogger.info (jsonTxt)
         #self.redisServer = await aioredis.create_redis_pool('redis://localhost')
-        self.redisServer = await aioredis.create_redis((configDict["redisServerIp"],configDict["redisServerPort"]))
+        self.redisServer = await aioredis.create_redis((self.redisServerIp,self.redisServerPort))
         #print(self.redisServer)
         redisKey = "rtbrickLogging-{}-{}".format(peerIP,self.requestCounter )
         self.moduleLogger.info ("redisKey:{},jsonTxt:{}".format(redisKey,jsonTxt))
@@ -80,7 +82,7 @@ class restHttpServer():
         await site.start()
         while True:
             await asyncio.sleep(1)
-            self.redisServer = await aioredis.create_redis((configDict["redisServerIp"],configDict["redisServerPort"]))
+            self.redisServer = await aioredis.create_redis((self.redisServerIp,self.redisServerPort))
             statusDict = {"running":1,"recv":self.requestCounter} #add uptime
             for key in statusDict.keys():
                 await self.redisServer.hmset ("BSA_status_restServer",key,statusDict[key])

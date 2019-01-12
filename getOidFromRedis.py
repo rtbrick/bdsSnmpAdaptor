@@ -19,6 +19,7 @@ from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress
 import redis
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 import asyncio
+import aioredis
 
 class oidDbItem():
 
@@ -261,7 +262,9 @@ class snmpFrontEnd:
     def __init__(self,cliArgsDict):
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"getOidFromRedis")
         self.set_logging(configDict)
-        self.redisServer = redis.StrictRedis(host=configDict["redisServerIp"], port=configDict["redisServerPort"], db=0,decode_responses=True)
+        self.redisServerIp = configDict["redisServerIp"]
+        self.redisServerPort = configDict["redisServerPort"]
+        #self.redisServer = redis.StrictRedis(host=configDict["redisServerIp"], port=configDict["redisServerPort"], db=0,decode_responses=True)
         self.moduleLogger.debug("configDict:{}".format(configDict))
         #
         self.listeningAddress = configDict["listeningIP"]
@@ -301,23 +304,25 @@ class snmpFrontEnd:
         print('SNMP agent is running at {}:{}'.format(self.listeningAddress,
                                                         self.listeningPort))
         try:
-            await self.snmpEngine.transportDispatcher.runDispatcher()
+            await self.snmpEngine.transportDispatcher.runDispatcher() #FIXME ME, Blocking task
         except:
             self.snmpEngine.transportDispatcher.closeDispatcher()
             raise
 
     async def statusUpdates(self):
         while True:
-            statusDict = {"running":1,"recv":0 } #add uptime
-            self.redisServer.hmset("BSA_status_getOidFromRedis",statusDict)
-            self.redisServer.expire("BSA_status_getOidFromRedis",4 )
-            print(statusDict)
+            self.redisServer = await aioredis.create_redis((self.redisServerIp,self.redisServerPort))
+            statusDict = {"running":1,"recv":0} #add uptime
+            for key in statusDict.keys():
+                await self.redisServer.hmset ("BSA_status_getOidFromRedis",key,statusDict[key])
+            await self.redisServer.expire ("BSA_status_getOidFromRedis", 4)
+            self.redisServer.close()
             await asyncio.sleep(1)
 
 
     async def run_forever(self):
         await asyncio.gather(
-            self.runSnmpFrontEnd(),
+            self.runSnmpFrontEnd(),     #FIXME ME, Blocking task
             self.statusUpdates()
             )
 
