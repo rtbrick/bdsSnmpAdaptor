@@ -16,6 +16,7 @@ import time
 import redis
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
+from bdsSnmpAdapterManager import BSA_STATUS_KEY
 from bdsSnmpTableModules.confd_global_interface_container import confd_global_interface_container
 from bdsSnmpTableModules.ffwd_default_interface_logical import ffwd_default_interface_logical
 from bdsSnmpTableModules.confd_local_system_software_info_confd import confd_local_system_software_info_confd
@@ -100,8 +101,10 @@ class bdsSnmpTables():
     def run_forever(self):
         while True:
             statusDict = {"running":1,"sent":self.requestCounter} #add uptime
-            self.redisServer.hmset("BSA_status_bdsSnmpTables",statusDict)
-            self.redisServer.expire("BSA_status_bdsSnmpTables",4)
+            self.redisServer.hmset(BSA_STATUS_KEY+self.moduleFileNameWithoutPy,statusDict)
+            self.redisServer.expire(BSA_STATUS_KEY+self.moduleFileNameWithoutPy,4)
+            #self.redisServer.hmset("BSA_status_bdsSnmpTables",statusDict)
+            #self.redisServer.expire("BSA_status_bdsSnmpTables",4)
             for bdsSnmpTableModule in self.bdsSnmpTableModules:
                 bdsSnmpTableModule.setOids(self)
             time.sleep(0.1)

@@ -19,6 +19,7 @@ from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress
 import redis
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
+from bdsSnmpAdapterManager import BSA_STATUS_KEY
 import asyncio
 import aioredis
 

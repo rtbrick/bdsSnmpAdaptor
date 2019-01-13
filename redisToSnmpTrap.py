@@ -17,10 +17,10 @@ from pysmi.compiler import MibCompiler
 
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
+from bdsSnmpAdapterManager import BSA_STATUS_KEY
 
 
 class redisToSnmpTrapForwarder:
-
 
 
     def __init__(self,cliArgsDict):
@@ -80,10 +80,14 @@ class redisToSnmpTrapForwarder:
 
     def run_forever(self):
         self.moduleLogger.info('entering infinite while loop for processing rtbrickLogging-*-* keys from redis')
+        whileCounter = 0
         while True:
-            statusDict = {"running":1,"sent":self.trapCounter} #add uptime
-            self.redisServer.hmset("BSA_status_redisToSnmpTrap",statusDict)
-            self.redisServer.expire("BSA_status_redisToSnmpTrap",4)
+            whileCounter += 1
+            if whileCounter >= 500:
+                statusDict = {"running":1,"sent":self.trapCounter} #add uptime   #FIXME do this only once per minute
+                self.redisServer.hmset(BSA_STATUS_KEY+self.moduleFileNameWithoutPy,statusDict)
+                self.redisServer.expire(BSA_STATUS_KEY+self.moduleFileNameWithoutPy,4)
+                whileCounter = 0
             for key in self.redisServer.scan_iter("rtbrickLogging-*-*"):
                 self.moduleLogger.debug ("processing redis key {}::{}".format(key,self.redisServer.get(key)))
                 try:

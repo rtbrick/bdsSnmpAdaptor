@@ -14,6 +14,7 @@ import redis
 import time
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
+from bdsSnmpAdapterManager import BSA_STATUS_KEY
 
 
 class bdsAccessToRedis():
@@ -21,7 +22,6 @@ class bdsAccessToRedis():
 
     def __init__(self,cliArgsDict):
         self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
-        #self.moduleLogger = logging.getLogger(self.moduleFileNameWithoutPy)
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
         set_logging(configDict,self.moduleFileNameWithoutPy,self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
@@ -85,8 +85,10 @@ class bdsAccessToRedis():
     def run_forever(self):
         while True:
             statusDict = {"running":1,"recv":self.responseSequence} #add uptime
-            self.redisServer.hmset("BSA_status_bdsAccessToRedis",statusDict)
-            self.redisServer.expire("BSA_status_bdsAccessToRedis",4)
+            self.redisServer.hmset(BSA_STATUS_KEY+self.moduleFileNameWithoutPy,statusDict)
+            self.redisServer.expire(BSA_STATUS_KEY+self.moduleFileNameWithoutPy,4)
+            #self.redisServer.hmset("BSA_status_bdsAccessToRedis",statusDict)
+            #self.redisServer.expire("BSA_status_bdsAccessToRedis",4)
             redisKeys = self.redisServer.scan_iter("bdsTableRequest-*")
             redisKeysAsList = list(redisKeys)
             redisKeysAsList.sort()

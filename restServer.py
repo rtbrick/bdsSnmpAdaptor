@@ -25,8 +25,32 @@ from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
 
 class restHttpServer():
+    """asyncio rest server for incoming logging messages from the RtBrick System append
+       stores the json text in redis.
 
-    def __init__(self,configDict):
+      :param cliArgsDict["configFile"]: defines the configfile which is used to load the configDict via function loadBdsSnmpAdapterConfigFile
+      :type cliArgsDict["configFile"]: str
+      :param configDict["listeningIP"]: defines the IPv4 address on which the server listens. use 0.0.0.0 for all interfaces.
+      :type configDict["listeningIP"]: str
+      :param configDict["listeningPort"]: defines the TCP Port address on which the server listens.
+      :type configDict["listeningPort"]: int
+      :param configDict["redisServerIp"]: defines the IPv4 address on which the redis server listens.
+      :type configDict["redisServerIp"]: str
+      :param configDict["redisServerPort"]: defines the TCP Port address on which the redis server listens.
+      :type configDict["redisServerPort"]: int
+
+
+    """
+    #: Doc comment for class attribute Foo.bar.
+    #: It can have multiple lines
+
+    def __init__(self,cliArgsDict):
+
+        """
+
+        """
+
+
         self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
         set_logging(configDict,self.moduleFileNameWithoutPy,self)
@@ -38,6 +62,13 @@ class restHttpServer():
 
 
     async def handler(self,request):
+
+        """| Coroutine that accepts a Request instance as its only argument.
+           | Stores the json body as string in redis key rtbrickLogging-<client-ip>-<request#>. ###FIXME overrun int
+           | Returnes 200 with a copy of the incoming header dict.
+
+        """
+
         peerIP = request._transport_peername[0]
         self.requestCounter += 1
         self.moduleLogger.info ("handler: peerIP:{} headers:{} counter:{} ".format(peerIP,request.headers,self.requestCounter))
@@ -51,6 +82,11 @@ class restHttpServer():
 
 
     async def run_forever(self):
+
+        """| starts the aiohttp Web Server
+           | runs then in an infinite loop which stores every second a status K/V dataset in redis
+
+        """
         server = web.Server(self.handler)
         runner = web.ServerRunner(server)
         await runner.setup()
@@ -61,8 +97,8 @@ class restHttpServer():
             self.redisServer = await aioredis.create_redis((self.redisServerIp,self.redisServerPort))
             statusDict = {"running":1,"recv":self.requestCounter} #add uptime
             for key in statusDict.keys():
-                await self.redisServer.hmset ("BSA_status_restServer",key,statusDict[key])
-            await self.redisServer.expire ("BSA_status_restServer", 4)
+                await self.redisServer.hmset (BSA_STATUS_KEY+self.moduleFileNameWithoutPy,key,statusDict[key])
+            await self.redisServer.expire (BSA_STATUS_KEY+self.moduleFileNameWithoutPy, 4)
             self.redisServer.close()
 
 

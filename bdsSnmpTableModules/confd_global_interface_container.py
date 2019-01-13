@@ -1,7 +1,44 @@
 from bdsMappingFunctions import bdsMappingFunctions
 import logging
 
+
 class confd_global_interface_container(object):
+
+    """
+
+    .. code-block:: text
+       :caption: IF-MIB
+       :name: IF-MIB
+
+        IfEntry ::=
+            SEQUENCE {
+                ifIndex                 InterfaceIndex,             calculated from interface_name
+                ifDescr                 DisplayString,              interface_name
+                ifType                  IANAifType,                 set to 6
+                ifMtu                   Integer32,                  layer2_mtu
+                ifSpeed                 Gauge32,
+                ifPhysAddress           PhysAddress,
+                ifAdminStatus           INTEGER,
+                ifOperStatus            INTEGER,
+                ifLastChange            TimeTicks,
+                ifInOctets              Counter32,
+                ifInUcastPkts           Counter32,
+                ifInNUcastPkts          Counter32,  -- deprecated
+                ifInDiscards            Counter32,
+                ifInErrors              Counter32,
+                ifInUnknownProtos       Counter32,
+                ifOutOctets             Counter32,
+                ifOutUcastPkts          Counter32,
+                ifOutNUcastPkts         Counter32,  -- deprecated
+                ifOutDiscards           Counter32,
+                ifOutErrors             Counter32,
+                ifOutQLen               Gauge32,    -- deprecated
+                ifSpecific              OBJECT IDENTIFIER -- deprecated
+            }
+
+
+
+    """
 
     @classmethod
     def setOids(self,bdsSnmpTableObject):
@@ -31,8 +68,8 @@ class confd_global_interface_container(object):
                                  expiryTimer = expiryTimer )
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.3."+str(ifIndex),
                                  fullOidDict = { "name" : "ifType","pysnmpBaseType" : "Integer32",
-                                               #"value" : ifTypeMap[int(ifObject["attribute"]["encapsulation_type"])]},
-                                               "value" : 77777},
+                                               "value" : ifTypeMap[int(ifObject["attribute"]["encapsulation_type"])]},
+                                               #"value" : 77777},
                                  expiryTimer = expiryTimer )
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.4."+str(ifIndex),
                                  fullOidDict = {"name":"ifMtu","pysnmpBaseType":"Integer32",
@@ -40,8 +77,8 @@ class confd_global_interface_container(object):
                                  expiryTimer = expiryTimer )
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.5."+str(ifIndex),
                                  fullOidDict = {"name":"ifSpeed","pysnmpBaseType":"Gauge32",
-                                               #"value": ifObject["attribute"]["bandwidth"]      },
-                                               "value": 0  },
+                                               "value": ifObject["attribute"]["bandwidth"]      },
+                                               #"value": 0  },
                                  expiryTimer = expiryTimer )
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.6."+str(ifIndex),
                                  fullOidDict = {"name":"ifPhysAddress","pysnmpBaseType":"OctetString","pysnmpRepresentation":"hexValue",
@@ -50,14 +87,14 @@ class confd_global_interface_container(object):
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.7."+str(ifIndex),
                                  fullOidDict = {"name":"ifAdminStatus",
                                       "pysnmpBaseType":"Integer32",
-                                               #"value":ifObject["attribute"]["admin_status"] },
-                                               "value": 1  },
+                                               "value":ifObject["attribute"]["admin_status"] },
+                                               #"value": 1  },
                                  expiryTimer = expiryTimer )
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.8."+str(ifIndex),
                                  fullOidDict = {"name":"ifOperStatus",
                                       "pysnmpBaseType":"Integer32",
-                                               #"value": ifOperStatusMap[int(ifObject["attribute"]["link_status"])]    },
-                                               "value" : 1 },
+                                               "value": ifOperStatusMap[int(ifObject["attribute"]["link_status"])]    },
+                                               #"value" : 1 },
                                  expiryTimer = expiryTimer )
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.9."+str(ifIndex),
                                  fullOidDict = {"name":"ifLastChange",
