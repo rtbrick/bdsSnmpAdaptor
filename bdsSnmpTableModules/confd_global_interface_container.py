@@ -1,44 +1,120 @@
+import os
+import sys
+sys.path.insert(0, os.path.abspath('..'))
+
 from bdsMappingFunctions import bdsMappingFunctions
 import logging
+import pytablewriter
+import yaml
 
+
+TABLE_HEADER = ["sub OID","OID name", "OID type", "BDS attr", "mapping"]
+TABLE_MATRIX = [
+    ["1","ifIndex","InterfaceIndex","interface_name","bdsMappingFunctions.ifIndexFromIfName"],
+    ["2","ifDescr","DisplayString","interface_name"],
+    ["3","ifType","IANAifType","encapsulation_type","ifTypeMap = {1:6}"],
+    ["4","ifMtu","Integer32","layer2_mtu",""],
+    ["5","ifSpeed","Gauge32","bandwidth",""],
+    ["6","ifPhysAddress","PhysAddress","mac_address",""],
+    ["7","ifAdminStatus","INTEGER","admin_status",""],
+    ["8","ifOperStatus","INTEGER","link_status","ifOperStatusMap {0:2,1:1,2:3,3:3}"],
+    ["9","ifLastChange","TimeTicks,","",""],
+    ["10","ifInOctets","Counter32","",""],
+    ["11","ifInUcastPkts","Counter32","",""],
+    ["13","ifInDiscards","Counter32","",""],
+    ["14","ifInErrors","Counter32","",""],
+    ["15","ifInUnknownProtos","Counter32","",""],
+    ["16","ifOutOctets","Counter32","",""],
+    ["17","ifOutUcastPkts","Counter32","",""],
+    ["19","ifOutDiscards","Counter32","",""],
+    ["20","ifOutErrors","Counter32","",""],
+    ]
 
 class confd_global_interface_container(object):
 
     """
 
     .. code-block:: text
-       :caption: IF-MIB
-       :name: IF-MIB
+       :caption: setOids settings
+       :name: setOids
 
-        IfEntry ::=
-            SEQUENCE {
-                ifIndex                 InterfaceIndex,             calculated from interface_name
-                ifDescr                 DisplayString,              interface_name
-                ifType                  IANAifType,                 set to 6
-                ifMtu                   Integer32,                  layer2_mtu
-                ifSpeed                 Gauge32,
-                ifPhysAddress           PhysAddress,
-                ifAdminStatus           INTEGER,
-                ifOperStatus            INTEGER,
-                ifLastChange            TimeTicks,
-                ifInOctets              Counter32,
-                ifInUcastPkts           Counter32,
-                ifInNUcastPkts          Counter32,  -- deprecated
-                ifInDiscards            Counter32,
-                ifInErrors              Counter32,
-                ifInUnknownProtos       Counter32,
-                ifOutOctets             Counter32,
-                ifOutUcastPkts          Counter32,
-                ifOutNUcastPkts         Counter32,  -- deprecated
-                ifOutDiscards           Counter32,
-                ifOutErrors             Counter32,
-                ifOutQLen               Gauge32,    -- deprecated
-                ifSpecific              OBJECT IDENTIFIER -- deprecated
+        self.bdsTableDict = {"bdsRequest": {"process": "confd",
+                                            "urlSuffix": "bds/table/walk?format=raw",
+                                            "table": "global.interface.container"}}
+        oidSegment = "1.3.6.1.2.1.2.2."
+        redisKeyPattern = "bdsTableInfo-confd-global.interface.container"
+
+    .. code-block:: json
+       :caption: global.interface.container
+       :name: global.interface.container example
+
+          {
+            "table": {
+                    "table_name": "global.interface.container"
+                },
+                "objects": [
+                    {
+                        "sequence": 5,
+                        "update": true,
+                        "attribute": {
+                            "interface_name": "ifc-0/0/1/1",
+                            "interface_description": "Container interface for ifp-0/1/1",
+                            "encapsulation_type": "01",
+                            "bandwidth": "00000000",
+                            "layer2_mtu": "0024",
+                            "admin_status": "01",
+                            "link_status": "01",
+                            "mac_address": "02fe1b2b3a4d",
+                            "physical_interfaces": [
+                                "ifp-0/1/1"
+                            ]
+                        }
+                    }
+                ]
             }
 
-
++-------+-----------------+--------------+------------------+-------------------------------------+
+|sub OID|    OID name     |   OID type   |     BDS attr     |               mapping               |
++=======+=================+==============+==================+=====================================+
+|      1|ifIndex          |InterfaceIndex|interface_name    |bdsMappingFunctions.ifIndexFromIfName|
++-------+-----------------+--------------+------------------+-------------------------------------+
+|      2|ifDescr          |DisplayString |interface_name    |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|      3|ifType           |IANAifType    |encapsulation_type|ifTypeMap = {1:6}                    |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|      4|ifMtu            |Integer32     |layer2_mtu        |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|      5|ifSpeed          |Gauge32       |bandwidth         |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|      6|ifPhysAddress    |PhysAddress   |mac_address       |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|      7|ifAdminStatus    |INTEGER       |admin_status      |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|      8|ifOperStatus     |INTEGER       |link_status       |ifOperStatusMap {0:2,1:1,2:3,3:3}    |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|      9|ifLastChange     |TimeTicks,    |                  |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|     10|ifInOctets       |Counter32     |                  |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|     11|ifInUcastPkts    |Counter32     |                  |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|     13|ifInDiscards     |Counter32     |                  |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|     14|ifInErrors       |Counter32     |                  |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|     15|ifInUnknownProtos|Counter32     |                  |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|     16|ifOutOctets      |Counter32     |                  |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|     17|ifOutUcastPkts   |Counter32     |                  |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|     19|ifOutDiscards    |Counter32     |                  |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
+|     20|ifOutErrors      |Counter32     |                  |                                     |
++-------+-----------------+--------------+------------------+-------------------------------------+
 
     """
+
 
     @classmethod
     def setOids(self,bdsSnmpTableObject):
@@ -69,7 +145,6 @@ class confd_global_interface_container(object):
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.3."+str(ifIndex),
                                  fullOidDict = { "name" : "ifType","pysnmpBaseType" : "Integer32",
                                                "value" : ifTypeMap[int(ifObject["attribute"]["encapsulation_type"])]},
-                                               #"value" : 77777},
                                  expiryTimer = expiryTimer )
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.4."+str(ifIndex),
                                  fullOidDict = {"name":"ifMtu","pysnmpBaseType":"Integer32",
@@ -106,3 +181,18 @@ class confd_global_interface_container(object):
                 logging.debug('set {} to processed with timout 50'.format(bdsTableRedisKey))
         else:
             logging.error('insonsistent redis keys: len redisKeysAsList > 1: {}'.format(redisKeysAsList))
+
+
+if __name__ == "__main__":
+
+    writer = pytablewriter.MarkdownTableWriter()
+    writer.table_name = "MIB conversation table"
+    writer.header_list = TABLE_HEADER
+    writer.value_matrix = TABLE_MATRIX
+    translationTable = writer.write_table()
+
+    writer = pytablewriter.RstGridTableWriter()
+    writer.table_name = "MIB conversation table"
+    writer.header_list = TABLE_HEADER
+    writer.value_matrix = TABLE_MATRIX
+    translationTable = writer.write_table()

@@ -8,17 +8,11 @@ OID-Mapping
 1.3.6.1.2.1.2.2(phy)
 ====================
 
-http://www.circitor.fr/Mibs/Html/I/IF-MIB.php
+MIB Info http://www.circitor.fr/Mibs/Html/I/IF-MIB.php
 
 .. currentmodule:: confd_global_interface_container
 
 .. autoclass:: confd_global_interface_container
-
-  ================================== =
-  methods
-  ================================== =
-
-  .. automethod:: setOids
 
 .. module:: ffwd_default_interface_logical
 

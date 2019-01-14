@@ -1,7 +1,10 @@
 from bdsMappingFunctions import bdsMappingFunctions
 import logging
 
+
 class confd_global_startup_status_confd(object):
+
+
 
 
     @classmethod
