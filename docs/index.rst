@@ -9,16 +9,10 @@ Welcome to bdsSnmpAdapter's documentation!
 .. toctree::
   :hidden:
 
+  overview
   modules
   oids
 
-Overview
-========
-
-.. figure::  images/module_overview.pdf
-   :align:   center
-
-   overview of modules
 
 Indices and tables
 ==================

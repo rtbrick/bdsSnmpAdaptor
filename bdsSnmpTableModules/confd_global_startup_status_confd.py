@@ -4,13 +4,40 @@ import logging
 
 class confd_global_startup_status_confd(object):
 
+    """
 
+    .. code-block:: text
+       :caption: setOids settings
+       :name: setOids
+
+        self.bdsTableDict = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk?format=raw', 'table': 'global.startup.status.confd'}}
+        oidSegment = "1.3.6.1.4.1.50058.1.3.1."
+        redisKeyPattern = "bdsTableInfo-confd-global.startup.status.confd"
+
+    .. code-block:: json
+       :caption: global.startup.status.confd
+       :name: global.startup.status.confd example
+
+          {}
+
+
+
+.. csv-table:: oid mapping
+    :header: "#", "name", "pysnmpBaseType", "BDS attr", "mapping"
+    :widths: 4, 19, 16, 25, 39
+
+    1, "moduleName", "OctetString", "module_name",
+    2, "bdName", "OctetString", "bd_name",
+    3, "upTime", "OctetString", "encapsulation_type",
+    4, "startupStatus", "OctetString", "startup_status",
+
+    """
 
 
     @classmethod
     def setOids(self,bdsSnmpTableObject):
         self.bdsTableDict = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk?format=raw', 'table': 'global.startup.status.confd'}}
-        oidSegment = "1.3.6.1.4.1.50058.1.3.1."
+        oidSegment = "1.3.6.1.4.1.50058.1.103.1."
         expiryTimer = 60
         redisKeyPattern = "bdsTableInfo-confd-global.startup.status.confd"
         redisKeysAsList = list(bdsSnmpTableObject.redisServer.scan_iter(redisKeyPattern))

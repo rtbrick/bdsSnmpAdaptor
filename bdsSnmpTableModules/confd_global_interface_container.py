@@ -7,29 +7,6 @@ import logging
 import pytablewriter
 import yaml
 
-
-TABLE_HEADER = ["sub OID","OID name", "OID type", "BDS attr", "mapping"]
-TABLE_MATRIX = [
-    ["1","ifIndex","InterfaceIndex","interface_name","bdsMappingFunctions.ifIndexFromIfName"],
-    ["2","ifDescr","DisplayString","interface_name"],
-    ["3","ifType","IANAifType","encapsulation_type","ifTypeMap = {1:6}"],
-    ["4","ifMtu","Integer32","layer2_mtu",""],
-    ["5","ifSpeed","Gauge32","bandwidth",""],
-    ["6","ifPhysAddress","PhysAddress","mac_address",""],
-    ["7","ifAdminStatus","INTEGER","admin_status",""],
-    ["8","ifOperStatus","INTEGER","link_status","ifOperStatusMap {0:2,1:1,2:3,3:3}"],
-    ["9","ifLastChange","TimeTicks,","",""],
-    ["10","ifInOctets","Counter32","",""],
-    ["11","ifInUcastPkts","Counter32","",""],
-    ["13","ifInDiscards","Counter32","",""],
-    ["14","ifInErrors","Counter32","",""],
-    ["15","ifInUnknownProtos","Counter32","",""],
-    ["16","ifOutOctets","Counter32","",""],
-    ["17","ifOutUcastPkts","Counter32","",""],
-    ["19","ifOutDiscards","Counter32","",""],
-    ["20","ifOutErrors","Counter32","",""],
-    ]
-
 class confd_global_interface_container(object):
 
     """
@@ -39,8 +16,8 @@ class confd_global_interface_container(object):
        :name: setOids
 
         self.bdsTableDict = {"bdsRequest": {"process": "confd",
-                                            "urlSuffix": "bds/table/walk?format=raw",
-                                            "table": "global.interface.container"}}
+                                    "urlSuffix": "bds/table/walk?format=raw",
+                                    "table": "global.interface.container"}}
         oidSegment = "1.3.6.1.2.1.2.2."
         redisKeyPattern = "bdsTableInfo-confd-global.interface.container"
 
@@ -58,7 +35,7 @@ class confd_global_interface_container(object):
                         "update": true,
                         "attribute": {
                             "interface_name": "ifc-0/0/1/1",
-                            "interface_description": "Container interface for ifp-0/1/1",
+                            "interface_description": "Cont If ifp-0/1/1",
                             "encapsulation_type": "01",
                             "bandwidth": "00000000",
                             "layer2_mtu": "0024",
@@ -73,47 +50,33 @@ class confd_global_interface_container(object):
                 ]
             }
 
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|sub OID|    OID name     |   OID type   |     BDS attr     |               mapping               |
-+=======+=================+==============+==================+=====================================+
-|      1|ifIndex          |InterfaceIndex|interface_name    |bdsMappingFunctions.ifIndexFromIfName|
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|      2|ifDescr          |DisplayString |interface_name    |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|      3|ifType           |IANAifType    |encapsulation_type|ifTypeMap = {1:6}                    |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|      4|ifMtu            |Integer32     |layer2_mtu        |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|      5|ifSpeed          |Gauge32       |bandwidth         |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|      6|ifPhysAddress    |PhysAddress   |mac_address       |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|      7|ifAdminStatus    |INTEGER       |admin_status      |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|      8|ifOperStatus     |INTEGER       |link_status       |ifOperStatusMap {0:2,1:1,2:3,3:3}    |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|      9|ifLastChange     |TimeTicks,    |                  |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|     10|ifInOctets       |Counter32     |                  |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|     11|ifInUcastPkts    |Counter32     |                  |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|     13|ifInDiscards     |Counter32     |                  |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|     14|ifInErrors       |Counter32     |                  |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|     15|ifInUnknownProtos|Counter32     |                  |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|     16|ifOutOctets      |Counter32     |                  |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|     17|ifOutUcastPkts   |Counter32     |                  |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|     19|ifOutDiscards    |Counter32     |                  |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
-|     20|ifOutErrors      |Counter32     |                  |                                     |
-+-------+-----------------+--------------+------------------+-------------------------------------+
+
+.. csv-table:: oid mapping
+    :header: "#", "name", "pysnmpBaseType", "BDS attr", "mapping"
+    :widths: 4, 19, 16, 25, 39
+
+    1, "ifIndex", "Integer32", "interface_name", "bdsMappingFunctions.ifIndexFromIfName"
+    2, "ifDescr", "DisplayString", "interface_name",
+    3, "ifType", "IANAifType", "encapsulation_type", "ifTypeMap: {1:6}"
+    4, "ifMtu", "Integer32", "layer2_mtu",
+    5, "ifSpeed", "Gauge32", "bandwidth",
+    6, "ifPhysAddress", "PhysAddress", "mac_address",
+    7, "ifAdminStatus", "INTEGER", "admin_status",
+    8, "ifOperStatus", "INTEGER", "link_status", "ifOperStatusMap {0:2, 1:1, 2:3, 3:3}"
+    9, "ifLastChange", "TimeTicks", ,
+    10, "ifInOctets", "Counter32", ,
+    11, "ifInUcastPkts", "Counter32", ,
+    13, "ifInDiscards", "Counter32", ,
+    14, "ifInErrors", "Counter32", ,
+    15, "ifInUnknownProtos", "Counter32", ,
+    16, "ifOutOctets", "Counter32", ,
+    17, "ifOutUcastPkts", "Counter32", ,
+    19, "ifOutDiscards", "Counter32", ,
+    20, "ifOutErrors", "Counter32", ,
 
     """
+
+    #9, "ifLastChange", "TimeTicks,"", ,
 
 
     @classmethod
@@ -153,7 +116,6 @@ class confd_global_interface_container(object):
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.5."+str(ifIndex),
                                  fullOidDict = {"name":"ifSpeed","pysnmpBaseType":"Gauge32",
                                                "value": ifObject["attribute"]["bandwidth"]      },
-                                               #"value": 0  },
                                  expiryTimer = expiryTimer )
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.6."+str(ifIndex),
                                  fullOidDict = {"name":"ifPhysAddress","pysnmpBaseType":"OctetString","pysnmpRepresentation":"hexValue",
@@ -163,13 +125,11 @@ class confd_global_interface_container(object):
                                  fullOidDict = {"name":"ifAdminStatus",
                                       "pysnmpBaseType":"Integer32",
                                                "value":ifObject["attribute"]["admin_status"] },
-                                               #"value": 1  },
                                  expiryTimer = expiryTimer )
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.8."+str(ifIndex),
                                  fullOidDict = {"name":"ifOperStatus",
                                       "pysnmpBaseType":"Integer32",
                                                "value": ifOperStatusMap[int(ifObject["attribute"]["link_status"])]    },
-                                               #"value" : 1 },
                                  expiryTimer = expiryTimer )
                     bdsSnmpTableObject.setOidHash (fullOid = "1.3.6.1.2.1.2.2.1.9."+str(ifIndex),
                                  fullOidDict = {"name":"ifLastChange",
@@ -185,13 +145,37 @@ class confd_global_interface_container(object):
 
 if __name__ == "__main__":
 
+
+    TABLE_HEADER = ["sub OID","OID name", "OID type", "BDS attr", "mapping"]
+    TABLE_MATRIX = [
+        ["1","ifIndex","InterfaceIndex","interface_name","bdsMappingFunctions.ifIndexFromIfName"],
+        ["2","ifDescr","DisplayString","interface_name"],
+        ["3","ifType","IANAifType","encapsulation_type","ifTypeMap = {1:6}"],
+        ["4","ifMtu","Integer32","layer2_mtu",""],
+        ["5","ifSpeed","Gauge32","bandwidth",""],
+        ["6","ifPhysAddress","PhysAddress","mac_address",""],
+        ["7","ifAdminStatus","INTEGER","admin_status",""],
+        ["8","ifOperStatus","INTEGER","link_status","ifOperStatusMap {0:2,1:1,2:3,3:3}"],
+        ["9","ifLastChange","TimeTicks,","",""],
+        ["10","ifInOctets","Counter32","",""],
+        ["11","ifInUcastPkts","Counter32","",""],
+        ["13","ifInDiscards","Counter32","",""],
+        ["14","ifInErrors","Counter32","",""],
+        ["15","ifInUnknownProtos","Counter32","",""],
+        ["16","ifOutOctets","Counter32","",""],
+        ["17","ifOutUcastPkts","Counter32","",""],
+        ["19","ifOutDiscards","Counter32","",""],
+        ["20","ifOutErrors","Counter32","",""],
+        ]
+
     writer = pytablewriter.MarkdownTableWriter()
     writer.table_name = "MIB conversation table"
     writer.header_list = TABLE_HEADER
     writer.value_matrix = TABLE_MATRIX
     translationTable = writer.write_table()
 
-    writer = pytablewriter.RstGridTableWriter()
+    #writer = pytablewriter.RstGridTableWriter()
+    writer = pytablewriter.RstCsvTableWriter()
     writer.table_name = "MIB conversation table"
     writer.header_list = TABLE_HEADER
     writer.value_matrix = TABLE_MATRIX

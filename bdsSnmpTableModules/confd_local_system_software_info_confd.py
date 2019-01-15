@@ -3,10 +3,41 @@ import logging
 
 class confd_local_system_software_info_confd(object):
 
+    """
+
+    .. code-block:: text
+       :caption: setOids settings
+       :name: setOids
+
+        self.bdsTableDict = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk?format=raw', 'table': 'local.system.software.info.confd'}}
+        oidSegment = "1.3.6.1.4.1.50058.1.101.1."
+        redisKeyPattern = "bdsTableInfo-confd-local.system.software.info.confd"
+
+    .. code-block:: json
+       :caption: local.system.software.info.confd
+       :name: local.system.software.info.confd example
+
+          {}
+
+.. csv-table:: oid mapping
+    :header: "#", "name", "pysnmpBaseType", "BDS attr", "mapping"
+    :widths: 4, 19, 16, 25, 39
+
+    1, "name", "OctetString", "library",
+    2, "commitId", "OctetString", "commit_id",
+    3, "commitDate", "OctetString", "commit_date",
+    4, "packageDate", "OctetString", "package_date",
+    5, "vcCheckout", "OctetString", "vc_checkout",
+    6, "branch", "OctetString", "branch",
+    7, "libraryVersion", "OctetString", "version",
+    8, "sourcePath", "OctetString", "source_path",
+
+    """
+
     @classmethod
     def setOids(self,bdsSnmpTableObject):
         self.bdsTableDict = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk?format=raw', 'table': 'local.system.software.info.confd'}}
-        oidSegment = "1.3.6.1.4.1.50058.1.1.1."
+        oidSegment = "1.3.6.1.4.1.50058.1.101.1."
         expiryTimer = 60
         redisKeyPattern = "bdsTableInfo-confd-local.system.software.info.confd"
         redisKeysAsList = list(bdsSnmpTableObject.redisServer.scan_iter(redisKeyPattern))
