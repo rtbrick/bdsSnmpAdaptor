@@ -10,27 +10,6 @@ import yaml
 import pprint
 from copy import deepcopy
 
-# class bdsSourceFunctions():
-# 
-#     def __init__():
-#         pass
-# 
-#     @classmethod
-#     def getIfNumber(bdsAccessDict):
-#         oidDictForBdsAccess = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk', 'table': 'global.interface.container'}}
-#         bdsSuccess,responseJSON = bdsAccess.getJson(oidDictForBdsAccess,bdsAccessDict)
-#         containerIfs = 
-
-
-#     @classmethod
-#     def stringFromSoftwareInfo(self,responseJSON):
-#         returnString = "RtBrick Fullstack:"
-#         for swModule in responseJSON["objects"]:
-#             if swModule["attribute"]["library"] in ["libbds","libconfd","libisis","lwip","libfwdd","libbgp","bd"]:
-#                 returnString += (" {}:{}".format(swModule["attribute"]["library"],
-#                                                     swModule["attribute"]["version"]))
-#         return returnString
-#         
 
 class bdsMappingFunctions():
 
@@ -46,7 +25,7 @@ class bdsMappingFunctions():
                                                     swModule["attribute"]["version"]))
         return returnString
 
-    @classmethod        
+    @classmethod
     def ifIndexFromIfName(self,ifNameString):
         ifIndexList = ifNameString.split("-")[1].split("/")
         if len(ifIndexList) == 5:
@@ -56,7 +35,7 @@ class bdsMappingFunctions():
                 ifIndex = int(ifIndexList[0])*4096*128*128*16 + int(ifIndexList[1])*4096*128*128 + int(ifIndexList[2])*4096*128 + int(ifIndexList[3])*4096 + int(ifIndexList[4])
             return ifIndex
         elif len(ifIndexList) == 4:
-            ifIndex = int(ifIndexList[0])*4096*128*128*16 + int(ifIndexList[1])*4096*128*128 + int(ifIndexList[2])*4096*128 + int(ifIndexList[3])*4096 
+            ifIndex = int(ifIndexList[0])*4096*128*128*16 + int(ifIndexList[1])*4096*128*128 + int(ifIndexList[2])*4096*128 + int(ifIndexList[3])*4096
             return ifIndex
         else:
             return None
@@ -296,7 +275,3 @@ if __name__ == '__main__':
     responseJSON = json.loads(jsonString)
     versionStr = bdsMappingFunctions.stringFromSoftwareInfo (responseJSON)
     print(versionStr)
-
-
-
-

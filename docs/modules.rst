@@ -1,12 +1,31 @@
+.. module:: bdsSnmpTables
 .. _MODULES:
 
 Modules
 *******
 
-Overview
-========
+Module-Overview
+===============
 
-.. figure::  images/module_overview.pdf
+bdsSnmpAdapter utilizes 6 discrete python modules, which run as separate
+linux processes:
+
+- 3 processes support SNMP get/next information retrieve:
+
+  - bdsAccessToRedis
+  - bdsSnmpTables
+  - getOidFromRedi
+
+- 2 processes support the generation of SNMP notifications:
+
+  - restServer
+  - redisToSnmpTrap
+
+- 1 management process, which collects control information from the above:
+
+  - bdsSnmpAdapterManager
+
+.. figure::  images/moduleOverview.pdf
    :align:   center
 
    overview of modules

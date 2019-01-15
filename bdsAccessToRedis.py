@@ -67,20 +67,21 @@ class bdsAccessToRedis():
         else:
             if self.response.status_code != 200:
                 self.moduleLogger.error ("received {} for {}".format(self.response.status_code,url))
+                return False,"status_code != 200"
             else:
                 self.moduleLogger.info ("received {} for {}".format(self.response.status_code,url))
-            self.moduleLogger.debug (self.response)
-            if len(self.response.text) > 0:
-                try:
-                    responseJSON = json.loads(self.response.text)
-                    responseString = json.dumps(responseJSON,indent=4)
-                    self.moduleLogger.debug (responseString)
-                except Exception as e:
-                    return False,e
+                self.moduleLogger.debug (self.response)
+                if len(self.response.text) > 0:
+                    try:
+                        responseJSON = json.loads(self.response.text)
+                        responseString = json.dumps(responseJSON,indent=4)
+                        self.moduleLogger.debug (responseString)
+                    except Exception as e:
+                        return False,e
+                    else:
+                        return True,responseString
                 else:
-                    return True,responseString
-            else:
-                return False,"json length error"
+                    return False,"json length error"
 
     def run_forever(self):
         while True:
@@ -102,9 +103,12 @@ class bdsAccessToRedis():
                 self.responseSequence += 1
                 redisKeyForResponse = "bdsTableInfo-{}-{}".format(bdsProcess,bdsTable)
                 self.redisServer.set(redisKeyForResponse,"requested",ex=3)     #prevents further bdsTableRequests requests on same table
-                self.moduleLogger.debug ("bdsRequestDict:{}".format(bdsRequestDict))
                 resultFlag,responseJSON = self.getJson(bdsRequestDict)
-                self.redisServer.set(redisKeyForResponse,responseJSON,ex=60)
+                try:
+                    self.redisServer.set(redisKeyForResponse,responseJSON,ex=60)
+                except Exception as e:
+                    self.moduleLogger.error ("cannot write to redis key:{} value:{} with Exception {}".format(redisKeyForResponse,responseJSON,e ))
+                    print ("cannot write to redis key:{} value:{} with Exception {}".format(redisKeyForResponse,responseJSON,e ))   #TEMP
                 self.redisServer.delete(key)
             time.sleep(0.001)
 

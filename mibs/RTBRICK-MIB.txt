@@ -27,9 +27,9 @@ rtbrick MODULE-IDENTITY
 --  rtbrick enterprise-specific management objects
 --
 
-bdsTables                  OBJECT IDENTIFIER ::= { rtbrick 1 }
-syslogMib                  OBJECT IDENTIFIER ::= { rtbrick 2 }
-rtbrickTraps               OBJECT IDENTIFIER ::= { rtbrick 3 }
+bdsTables                  OBJECT IDENTIFIER ::= { rtbrick 101 }
+syslogMib                  OBJECT IDENTIFIER ::= { rtbrick 102 }
+rtbrickTraps               OBJECT IDENTIFIER ::= { rtbrick 103 }
     rtbrickSyslogNotifications     OBJECT IDENTIFIER ::= { rtbrickTraps 1 }
 
 END

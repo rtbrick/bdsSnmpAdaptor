@@ -21,6 +21,7 @@ from bdsSnmpTableModules.confd_global_interface_container import confd_global_in
 from bdsSnmpTableModules.ffwd_default_interface_logical import ffwd_default_interface_logical
 from bdsSnmpTableModules.confd_local_system_software_info_confd import confd_local_system_software_info_confd
 from bdsSnmpTableModules.confd_global_startup_status_confd import confd_global_startup_status_confd
+from bdsSnmpTableModules.confd_global_rtbrick_hostname_config import confd_global_rtbrick_hostname_config
 
 class bdsSnmpTables():
 
@@ -37,7 +38,8 @@ class bdsSnmpTables():
             confd_global_interface_container,
             ffwd_default_interface_logical,
             confd_local_system_software_info_confd,
-            confd_global_startup_status_confd
+            confd_global_startup_status_confd,
+            confd_global_rtbrick_hostname_config
             ]
 
 

@@ -41,31 +41,6 @@ class ffwd_default_interface_logical(object):
             ]
         }
 
-.. csv-table:: oid mapping
-    :header: "#", "name", "pysnmpBaseType", "BDS attr", "mapping"
-    :widths: 4, 19, 16, 25, 39
-
-    1, "ifIndex", "Integer32", "interface_name",
-                     "bdsMappingFunctions.ifIndexFromIfName"
-    2, "ifDescr", "DisplayString", "interface_name",
-    3, "ifType", "Integer32",6 ,static (hard coded)
-    4, "ifMtu", "Integer32", ,
-    5, "ifSpeed", "Gauge32", ,
-    6, "ifPhysAddress", "PhysAddress", ,
-    7, "ifAdminStatus", "INTEGER", "admin_status",
-    8, "ifOperStatus", "INTEGER", "link_status",
-                     "ifOperStatusMap {0:2, 1:1, 2:3, 3:3}"
-    9, "ifLastChange", "TimeTicks", ,
-    10, "ifInOctets", "Counter32", ,
-    11, "ifInUcastPkts", "Counter32", ,
-    13, "ifInDiscards", "Counter32", ,
-    14, "ifInErrors", "Counter32", ,
-    15, "ifInUnknownProtos", "Counter32", ,
-    16, "ifOutOctets", "Counter32", ,
-    17, "ifOutUcastPkts", "Counter32", ,
-    19, "ifOutDiscards", "Counter32", ,
-    20, "ifOutErrors", "Counter32", ,
-
     """
 
 
