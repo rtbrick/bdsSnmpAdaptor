@@ -1,38 +1,51 @@
 from bdsMappingFunctions import bdsMappingFunctions
 import logging
 
+BDSTABLEDICT = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk?format=raw', 'table': 'global.rtbrick.hostname.config'}}
+OIDSEGMENT = "1.3.6.1.2.1.1."
+REDISKEYPATTERN = "bdsTableInfo-confd-global.rtbrick.hostname.config"
+
+
 class confd_global_rtbrick_hostname_config(object):
 
     """
 
-.. code-block:: text
-   :caption: setOids settings
-   :name: setOids
 
-    self.bdsTableDict = {'bdsRequest': {'process': 'confd',
-                          'urlSuffix': '/bds/table/walk?format=raw',
-                          'table': 'global.rtbrick.hostname.config'}}
-    oidSegment = "1.3.6.1.2.1.1."
-    redisKeyPattern = "bdsTableInfo-confd-global.rtbrick.hostname.config"
+.. literalinclude:: ../bdsSnmpTableModules/confd_global_interface_container.py
+   :caption: bds request and iod settings
+   :name: bds request and iod settings
+   :language: text
+   :dedent: 0
+   :lines: 4-6
 
 .. code-block:: json
    :caption: local.system.software.info.confd
    :name: local.system.software.info.confd example
 
    {
+    "table": {
+        "table_name": "global.rtbrick.hostname.config"
+    },
+    "objects": [
+        {
+            "sequence": 1,
+            "update": true,
+            "attribute": {
+                "system_hostname": "Basesim",
+                "rtbrick_hostname": "Basesim",
+                "rtbrick_podname": "rtbrick-pod"
+            }
+        }
+    ]
    }
-
-    attribute: system_hostname (1), type: string (9), length: 8, value: Basesim
-    attribute: rtbrick_hostname (2), type: string (9), length: 8, value: Basesim
-    attribute: rtbrick_podname (3), type: string (9), length: 12, value: rtbrick-pod
 
     """
 
     @classmethod
     def setOids(self,bdsSnmpTableObject):
-        self.bdsTableDict = {'bdsRequest': {'process': 'confd', 'urlSuffix': '/bds/table/walk?format=raw', 'table': 'global.rtbrick.hostname.config'}}
-        oidSegment = "1.3.6.1.2.1.1."
-        redisKeyPattern = "bdsTableInfo-confd-global.rtbrick.hostname.config"
+        self.bdsTableDict = BDSTABLEDICT
+        oidSegment = OIDSEGMENT
+        redisKeyPattern = REDISKEYPATTERN
         expiryTimer = 60
         redisKeysAsList = list(bdsSnmpTableObject.redisServer.scan_iter(redisKeyPattern))
         if len(redisKeysAsList) == 0:

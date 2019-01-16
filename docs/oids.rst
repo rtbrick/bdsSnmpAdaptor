@@ -4,7 +4,6 @@ OID-Mapping
 ***********
 
 
-
 .. module:: global_rtbrick_hostname_config
 
 confd_global_rtbrick_hostname_config
@@ -17,7 +16,7 @@ confd_global_rtbrick_hostname_config
 .. module:: confd_global_rtbrick_hostname_config
 
 
-1.3.6.1.2.1.1
+1.3.6.1.2.1.5
 -------------
 MIB Info: http://www.circitor.fr/Mibs/Html/S/SNMPv2-MIB.php
 
@@ -25,7 +24,7 @@ MIB Info: http://www.circitor.fr/Mibs/Html/S/SNMPv2-MIB.php
     :header: "#", "name", "pysnmp type", "BDS attr", "mapping"
     :widths: 4, 19, 16, 25, 39
 
-    1, "name", "OctetString", "system_hostname",
+    1, "sysName", "OctetString", "system_hostname",
 
 confd_global_interface_container
 ================================
@@ -114,7 +113,7 @@ confd_local_system_software_info_confd
 
 .. module:: confd_global_startup_status_confd
 
-1.3.6.1.4.1.50058.1.101
+1.3.6.1.4.1.50058.101.1
 -----------------------
 
 MIB Info: RTBRICK-SYS-SW-INFO-TABLE-MIB
@@ -126,7 +125,17 @@ confd_global_startup_status_confd
 
 .. autoclass:: confd_global_startup_status_confd
 
-1.3.6.1.4.1.50058.1.103
+1.3.6.1.2.1.1
+-------------
+MIB Info: http://www.circitor.fr/Mibs/Html/S/SNMPv2-MIB.php
+
+.. csv-table:: oid mapping
+    :header: "#", "name", "pysnmp type", "BDS attr", "mapping"
+    :widths: 4, 19, 16, 25, 39
+
+    1, "sysDesc", "OctetString", "system_hostname",
+
+1.3.6.1.4.1.50058.101.3
 -----------------------
 
 MIB Info: RTBRICK-STARTUP-STATS-TABLE-MIB
