@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
 import requests
 import asyncio
 import time
@@ -13,7 +14,7 @@ import yaml
 import pprint
 from pysnmp.entity import engine, config
 from pysnmp.entity.rfc3413 import cmdrsp, context
-from pysnmp.carrier.asyncore.dgram import udp
+from pysnmp.carrier.asyncio.dgram import udp
 from pysnmp.smi import instrum
 from pysnmp.proto.api import v2c
 from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integer32
@@ -123,7 +124,7 @@ class snmpFrontEnd:
 
     def __init__(self,cliArgsDict):
 
-        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
+        self.moduleFileNameWithoutPy = os.path.basename(sys.modules[__name__].__file__).split(".")[0]
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
         set_logging(configDict,self.moduleFileNameWithoutPy,self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
@@ -159,17 +160,6 @@ class snmpFrontEnd:
         cmdrsp.NextCommandResponder(self.snmpEngine, snmpContext)
         self.snmpEngine.transportDispatcher.jobStarted(1)
 
-    async def runSnmpFrontEnd(self):
-        logging.debug('SNMP agent is running at {}:{}'.format(self.listeningAddress,
-                                                        self.listeningPort))
-        print('SNMP agent is running at {}:{}'.format(self.listeningAddress,
-                                                        self.listeningPort))
-        try:
-            await self.snmpEngine.transportDispatcher.runDispatcher() #FIXME ME, Blocking task
-        except:
-            self.snmpEngine.transportDispatcher.closeDispatcher()
-            raise
-
     async def backgroundMessages (self):
         while True:
             print ("background message: {}".format(time.time()))
@@ -178,7 +168,6 @@ class snmpFrontEnd:
 
     async def run_forever(self):
         await asyncio.gather(
-            self.runSnmpFrontEnd(),     #FIXME ME, Blocking task
             self.backgroundMessages(),
             self.backgroundMessages()
             )
