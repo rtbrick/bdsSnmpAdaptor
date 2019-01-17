@@ -30,6 +30,6 @@ rtbrick MODULE-IDENTITY
 bdsTables                  OBJECT IDENTIFIER ::= { rtbrick 101 }
 syslogMib                  OBJECT IDENTIFIER ::= { rtbrick 102 }
 rtbrickTraps               OBJECT IDENTIFIER ::= { rtbrick 103 }
-    rtbrickSyslogNotifications     OBJECT IDENTIFIER ::= { rtbrickTraps 1 }
+rtbrickSyslogNotifications     OBJECT IDENTIFIER ::= { rtbrickTraps 1 }
 
 END
