@@ -33,7 +33,7 @@ SYSLOGMSGTEXT     = "1.3.6.1.4.1.50058.102.1.1.4.0"
 
 class asyncioTrapGenerator():
 
-    def __init__(self,cliArgsDict):
+    def __init__(self,cliArgsDict,restHttpServerObj):
         self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
         set_logging(configDict,self.moduleFileNameWithoutPy,self)
@@ -53,6 +53,7 @@ class asyncioTrapGenerator():
         self.snmpTrapPort = configDict["snmpTrapPort"]
         self.trapCounter = 0
         self.snmpEngine = SnmpEngine()
+        self.restHttpServerObj = restHttpServerObj
 
     async def sendTrap(self,bdsLogDict):
         self.moduleLogger.debug ("sendTrap bdsLogDict: {}".format(bdsLogDict))
@@ -93,9 +94,19 @@ class asyncioTrapGenerator():
             )
         )
         if errorIndication:
-            print(errorIndication)
+            self.moduleLogger.error (errorIndication)
 
-    async def closeSnmpEngine(self):            
+    async def run_forever(self):
+
+        while True:
+            await asyncio.sleep(0.001)
+            if len (self.restHttpServerObj.bdsLogsToBeProcessedList) > 0:
+                bdsLogToBeProcessed = self.restHttpServerObj.bdsLogsToBeProcessedList.pop(0)
+                self.moduleLogger.debug ("bdsLogToBeProcessed: {}".format(bdsLogToBeProcessed))
+                await self.sendTrap(bdsLogToBeProcessed)
+
+
+    async def closeSnmpEngine(self):
         self.snmpEngine.transportDispatcher.closeDispatcher()
 
 
@@ -111,7 +122,8 @@ class restHttpServer():
         self.listeningIP =  configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
         self.requestCounter = 0
-        self.snmpTrapGenerator = asyncioTrapGenerator(cliArgsDict)
+        self.bdsLogsToBeProcessedList = []
+        self.snmpTrapGenerator = asyncioTrapGenerator(cliArgsDict,self)
 
 
     async def handler(self,request):
@@ -122,7 +134,8 @@ class restHttpServer():
         """
         peerIP = request._transport_peername[0]
         self.requestCounter += 1
-        self.moduleLogger.info ("handler: peerIP:{} headers:{} counter:{} ".format(peerIP,request.headers,self.requestCounter))
+        self.moduleLogger.info ("handler: incoming request peerIP:{}".format(peerIP,request.headers,self.requestCounter))
+        #self.moduleLogger.debug ("handler: peerIP:{} headers:{} counter:{} ".format(peerIP,request.headers,self.requestCounter))
         data = {'headers': dict(request.headers)}
         jsonTxt = await request.text() #
         try:
@@ -130,25 +143,26 @@ class restHttpServer():
         except Exception as e:
             self.moduleLogger.error ("connot convert json to dict:{} {}".format(jsonTxt,e))
         else:
-            await self.snmpTrapGenerator.sendTrap(bdsLogDict)
+            self.bdsLogsToBeProcessedList.append(bdsLogDict)
+            #await self.snmpTrapGenerator.sendTrap(bdsLogDict)
         return web.json_response(data)
 
 
+    async def backgroundLogging (self):
+        while True:
+            self.moduleLogger.debug ("restServer Running - process list length: {}".format(len(self.bdsLogsToBeProcessedList)))
+            await asyncio.sleep(1)
+
     async def run_forever(self):
-
-        """| starts the aiohttp Web Server
-           | runs then in an infinite loop which stores every second a status K/V dataset in redis
-
-        """
         server = web.Server(self.handler)
         runner = web.ServerRunner(server)
         await runner.setup()
         site = web.TCPSite(runner, self.listeningIP , self.listeningPort )
         await site.start()
-        while True:
-            await asyncio.sleep(1)
-            print ("restServer Running - sent traps: {}".format(self.requestCounter))
-
+        await asyncio.gather(
+            self.snmpTrapGenerator.run_forever(),
+            self.backgroundLogging()
+            )
 
 if __name__ == "__main__":
     epilogTXT = """
@@ -162,7 +176,7 @@ if __name__ == "__main__":
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
     myRestHttpServer = restHttpServer(cliArgsDict)
-    #mySnmpTrapGenerator = asyncioTrapGenerator(cliArgsDict)
+    #mySnmpTrapGenerator = asyncioTrapGenerator(cliArgsDict,myRestHttpServer)
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(myRestHttpServer.run_forever())
