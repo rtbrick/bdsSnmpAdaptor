@@ -24,8 +24,8 @@ from bdsSnmpAdapterManager import set_logging
 from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integer32
 from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress, Unsigned32
 
-from pysnmp.entity.rfc3413.oneliner.ntforg import NotificationOriginator
-pprint.pprint(NotificationOriginator.__dict__)
+#from pysnmp.entity.rfc3413.oneliner.ntforg import NotificationOriginator
+#pprint.pprint(NotificationOriginator.__dict__)
 
 from pysnmp.smi import builder, view, compiler, rfc1902
 
@@ -65,7 +65,6 @@ class asyncioTrapGenerator():
         self.snmpTrapPort = configDict["snmpTrapPort"]
         self.trapCounter = 0
         self.snmpEngine = SnmpEngine()
-        self.NotificationOriginator = NotificationOriginator()
         self.restHttpServerObj = restHttpServerObj
 
     async def sendTrap(self,bdsLogDict):
