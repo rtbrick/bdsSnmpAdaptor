@@ -1,0 +1,14 @@
+bdsSnmpAdapter:
+  loggingLevel: debug
+  rotatingLogFile: /tmp/bdsSnmpAdapter_   #FIXME store this at permament location
+  rtbrickHost: 192.168.56.22 #Define IP address of RtBrick Host, please make sure that ctrld on port 19091 runs on this system"
+  rtbrickCtrldPort: 19091  #Define the port on which ctrld listens"
+  rtbrickContainerName: Basesim #Define the name of RtBrick Container")
+  getOidFromRedis:
+    listeningIP: 0.0.0.0  #SNMP get/getNext listening IP address
+    listeningPort: 161 #SNMP get/getNext listening port
+    version: 2c # specify snmp version type=str, choices=['2c', '3']
+    community: public # v2c community
+    usmUserTuples: "engine,user,authkey,privkey"
+                  # "80000a4c010a090150,usr-sha-aes128,authkey1,privkey1
+                  # one entry per SNMP v§ server

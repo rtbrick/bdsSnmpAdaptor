@@ -3,6 +3,8 @@
 
 import sys
 import requests
+#import asyncio
+#import aiohttp
 import json
 import logging
 from logging.handlers import RotatingFileHandler
@@ -14,31 +16,39 @@ import redis
 import time
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
-from bdsSnmpAdapterManager import BSA_STATUS_KEY
+from oidDb import oidDb
+from mappingFuncModules.confd_local_system_software_info_confd import confd_local_system_software_info_confd
 
+REQUEST_MAPPING_DICTS = {
+   "confd_local.system.software.info.confd" : {
+       "mappingFunc": confd_local_system_software_info_confd,
+       "bdsRequestDict": {'process': 'confd',
+                          'urlSuffix':'/bds/table/walk?format=raw',
+                         'table':'local.system.software.info.confd'}
+    }
+  }
 
-class bdsAccessToRedis():
-
+class bdsAccess():
 
     def __init__(self,cliArgsDict):
         self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
         set_logging(configDict,self.moduleFileNameWithoutPy,self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
-        self.redisServer = redis.Redis(host=configDict["redisServerIp"], port=configDict["redisServerPort"], db=0)
         self.rtbrickHost = configDict['rtbrickHost']
         self.rtbrickCtrldPort = configDict['rtbrickCtrldPort']
         self.rtbrickContainerName = configDict['rtbrickContainerName']
         self.expirytimer = 50 ### FIXME
         self.responseSequence = 0
+        self.requestMappingDict = REQUEST_MAPPING_DICTS
+        self.responseJsonDicts = {}
+        self.oidDb = oidDb
         #'logging': 'warning'
         # do more stuff here. e.g. connecectivity checks etc
 
 
-    def getJson(self,bdsRequestDict):
+    def getJson(self,bdsRequestDict):  #confd_local.system.software.info.confd
         bdsProcess = bdsRequestDict['process']
-        #self.rtbrickHost = bdsAccessDict[bdsProcess]["host"]
-        #self.rtbrickCtrldPort = bdsAccessDict[bdsProcess]["port"]
         bdsSuffix = bdsRequestDict['urlSuffix']
         bdsTable = bdsRequestDict['table']
         if "attributes" in bdsRequestDict.keys():
@@ -49,19 +59,17 @@ class bdsAccessToRedis():
                            "objects":[{"attribute":attributeDict}]}
         else:
             requestData = {"table":{"table_name":bdsTable}}
-        #"http://192.168.56.22:19091/api/application-rest-proxy/Basesim/confd/bds/object/walk"
         url = "http://{}:{}/api/application-rest-proxy/{}/{}/{}".format(self.rtbrickHost,
                                        self.rtbrickCtrldPort,
                                        self.rtbrickContainerName,
                                        bdsProcess,
                                        bdsSuffix)
         headers = {'Content-Type': 'application/json'}
-        #self.moduleLogger.info ("POST {}".format(url))
         self.moduleLogger.debug ("POST {} {}".format(url,json.dumps(requestData)))
         try:
             self.response = requests.post(url,
                 data=json.dumps(requestData),
-                headers= headers,timeout=1)
+                headers= headers,timeout=5)
         except Exception as e:
             return False,e
         else:
@@ -83,34 +91,27 @@ class bdsAccessToRedis():
                 else:
                     return False,"json length error"
 
+
+
+
     def run_forever(self):
         while True:
-            statusDict = {"running":1,"recv":self.responseSequence} #add uptime
-            self.redisServer.hmset(BSA_STATUS_KEY+self.moduleFileNameWithoutPy,statusDict)
-            self.redisServer.expire(BSA_STATUS_KEY+self.moduleFileNameWithoutPy,4)
-            #self.redisServer.hmset("BSA_status_bdsAccessToRedis",statusDict)
-            #self.redisServer.expire("BSA_status_bdsAccessToRedis",4)
-            redisKeys = self.redisServer.scan_iter("bdsTableRequest-*")
-            redisKeysAsList = list(redisKeys)
-            redisKeysAsList.sort()
-            for key in redisKeysAsList:
-                #key format bdsRequests-requesterIP-number
-                self.moduleLogger.debug ("working on {}::{}".format(key.decode(),self.redisServer.get(key).decode()))
-                bdsRequestAsJsonString = self.redisServer.get(key)
-                bdsRequestDict = json.loads(bdsRequestAsJsonString)['bdsRequest']
+            for bdsRequestDictKey in self.requestMappingDict.keys():
+                bdsRequestDict = self.requestMappingDict[bdsRequestDictKey]["bdsRequestDict"]
+                mappingfunc = self.requestMappingDict[bdsRequestDictKey]["mappingFunc"]
+                self.moduleLogger.debug ("working on {}".format(bdsRequestDictKey))
                 bdsProcess = bdsRequestDict['process']
                 bdsTable = bdsRequestDict['table']
-                self.responseSequence += 1
-                redisKeyForResponse = "bdsTableInfo-{}-{}".format(bdsProcess,bdsTable)
-                self.redisServer.set(redisKeyForResponse,"requested",ex=3)     #prevents further bdsTableRequests requests on same table
-                resultFlag,responseJSON = self.getJson(bdsRequestDict)
-                try:
-                    self.redisServer.set(redisKeyForResponse,responseJSON,ex=60)
-                except Exception as e:
-                    self.moduleLogger.error ("cannot write to redis key:{} value:{} with Exception {}".format(redisKeyForResponse,responseJSON,e ))
-                    print ("cannot write to redis key:{} value:{} with Exception {}".format(redisKeyForResponse,responseJSON,e ))   #TEMP
-                self.redisServer.delete(key)
-            time.sleep(0.001)
+                resultFlag,responseJsonString = self.getJson(bdsRequestDict)
+                if resultFlag:
+                    redisKeyForResponse = "{}_{}".format(bdsProcess,bdsTable)
+                    responseAsDict = json.loads(responseJsonString)
+                    self.moduleLogger.debug ("received {}".format(responseAsDict))
+                    self.responseJsonDicts[redisKeyForResponse] = responseAsDict
+                    self.moduleLogger.debug("self.responseJsonDicts[{}] {}"\
+                                  .format(redisKeyForResponse,responseAsDict))
+                    mappingfunc.setOids(responseAsDict,self.oidDb)
+            time.sleep(5)
 
 
 if __name__ == "__main__":
@@ -122,10 +123,10 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-f", "--configFile",
-                            default="/etc/bdsSnmpAdapterConfig.yml", type=str,
+                            default="./bdsAccessConfig.yml", type=str,
                             help="config file")
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
     logging.debug(cliArgsDict)
-    myBdsAccess = bdsAccessToRedis(cliArgsDict)
+    myBdsAccess = bdsAccess(cliArgsDict)
     myBdsAccess.run_forever()

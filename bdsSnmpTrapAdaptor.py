@@ -20,13 +20,25 @@ from aiohttp.web import Application, Response, StreamResponse, run_app
 import aioredis
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
+
 from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integer32
-from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress
+from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress, Unsigned32
+
+from pysnmp.entity.rfc3413.oneliner.ntforg import NotificationOriginator
+pprint.pprint(NotificationOriginator.__dict__)
+
+from pysnmp.smi import builder, view, compiler, rfc1902
+
 import asyncio
-from pysnmp.hlapi.asyncio import *
+from pysnmp.hlapi.asyncio import SnmpEngine,CommunityData
+from pysnmp.hlapi.asyncio import UdpTransportTarget,ContextData
+from pysnmp.hlapi.asyncio import NotificationType,ObjectIdentity
+from pysnmp.hlapi.asyncio import sendNotification
+
 
 RTBRICKSYSLOGTRAP = "1.3.6.1.4.1.50058.103.1.1"
-SYSLOGMSGNUMBER   = "1.3.6.1.4.1.50058.102.1.1.0"
+SYSLOGMSG         = "1.3.6.1.4.1.50058.102.1.1.0"
+SYSLOGMSGNUMBER   = "1.3.6.1.4.1.50058.102.1.1.1.0"
 SYSLOGMSGFACILITY = "1.3.6.1.4.1.50058.102.1.1.2.0"
 SYSLOGMSGSEVERITY = "1.3.6.1.4.1.50058.102.1.1.3.0"
 SYSLOGMSGTEXT     = "1.3.6.1.4.1.50058.102.1.1.4.0"
@@ -53,6 +65,7 @@ class asyncioTrapGenerator():
         self.snmpTrapPort = configDict["snmpTrapPort"]
         self.trapCounter = 0
         self.snmpEngine = SnmpEngine()
+        self.NotificationOriginator = NotificationOriginator()
         self.restHttpServerObj = restHttpServerObj
 
     async def sendTrap(self,bdsLogDict):
@@ -77,6 +90,8 @@ class asyncioTrapGenerator():
                     syslogMsgFacility,
                     syslogMsgSeverity,
                     syslogMsgText))
+
+
         errorIndication, errorStatus, errorIndex, varBinds = await sendNotification(
             self.snmpEngine,
             CommunityData(self.community, mpModel=0),
@@ -87,7 +102,7 @@ class asyncioTrapGenerator():
                 ObjectIdentity(RTBRICKSYSLOGTRAP)
             ).addVarBinds(
                 ('1.3.6.1.6.3.1.1.4.3.0',RTBRICKSYSLOGTRAP),
-                (SYSLOGMSGNUMBER, Integer32(self.trapCounter)),
+                (SYSLOGMSGNUMBER, Unsigned32(self.trapCounter)),
                 (SYSLOGMSGFACILITY, OctetString(syslogMsgFacility)),
                 (SYSLOGMSGSEVERITY, Integer32(syslogMsgSeverity)),
                 (SYSLOGMSGTEXT, OctetString(syslogMsgText))
@@ -110,7 +125,7 @@ class asyncioTrapGenerator():
         self.snmpEngine.transportDispatcher.closeDispatcher()
 
 
-class restHttpServer():
+class asyncioRestServer():
 
 
     def __init__(self,cliArgsDict):
@@ -175,8 +190,7 @@ if __name__ == "__main__":
                             help="config file")
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
-    myRestHttpServer = restHttpServer(cliArgsDict)
-    #mySnmpTrapGenerator = asyncioTrapGenerator(cliArgsDict,myRestHttpServer)
+    myRestHttpServer = asyncioRestServer(cliArgsDict)
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(myRestHttpServer.run_forever())

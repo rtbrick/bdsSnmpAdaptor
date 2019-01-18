@@ -34,10 +34,13 @@ class SnmpBackEnd:
         set_logging(configDict, self.moduleFileNameWithoutPy, self)
 
     def snmpGet(self, oid=""):
-        self.moduleLogger.debug('snmpGET {}'.format(oid))
+        self.moduleLogger.debug('snmpGet {}'.format(oid))
+        print('snmpGet {}'.format(oid))
         return {oid: v2c.NoSuchObject()}
 
     def snmpGetForNext(self,oid=''):
+        self.moduleLogger.debug('snmpGetForNext {}'.format(oid))
+        print('snmpGetForNext {}'.format(oid))
         return {oid: v2c.NoSuchObject()}
 
     def getOidsStringsForNextVars(self, oid=''):
@@ -95,7 +98,6 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
     def readNextVars(self, varBinds, acInfo=(None, None)):
         logging.debug('SNMP request is GET-NEXT {}'.format(
             ', '.join(str(x[0]) for x in varBinds)))
-
         try:
             _snmpBackEnd = self._snmpBackEnd
 
@@ -167,10 +169,18 @@ class SnmpFrontEnd:
                     (self.listeningAddress, self.listeningPort)
                 )
             )
+            print (
+                  'SnmpEngine udp transport in server mode: {} {}'.format(
+                     self.listeningAddress, self.listeningPort)
+                  )
 
         except Exception as exc:
             logging.error('SNMP transport error: {}'.format(exc))
             raise
+
+        else:
+            snmpTransport = config.getTransport
+            print ('SNMP engine transport: {}'.format(snmpTransport))
 
         config.addV1System(self.snmpEngine, 'read-subtree', self.community)
 
@@ -192,11 +202,10 @@ class SnmpFrontEnd:
     async def backgroundMessages(self):
         while True:
             print("background message: {}".format(time.time()))
-            await asyncio.sleep(1)
+            await asyncio.sleep(10)
 
     async def run_forever(self):
         await asyncio.gather(
-            self.backgroundMessages(),
             self.backgroundMessages()
         )
 
