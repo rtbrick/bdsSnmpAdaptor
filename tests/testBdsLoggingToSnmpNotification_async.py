@@ -29,7 +29,7 @@ async def sendRequests():
                             "_rtbrick_pod":"rtbrick-pod"}
             #print (testJsonDict)
             #async with session.post(url, json={'test': 'object'})
-            async with session.post(url, json=testJsonDict) as resp:
+            async with session.post(url, headers=headers,json=testJsonDict) as resp:
                 params = await resp.json()
 
 loop = asyncio.get_event_loop()

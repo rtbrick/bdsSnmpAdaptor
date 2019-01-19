@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import requests
-#import asyncio
-#import aiohttp
+#import requests
+import asyncio
+import aiohttp
 import json
 import logging
 from logging.handlers import RotatingFileHandler
@@ -16,15 +16,22 @@ import redis
 import time
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
-from oidDb import oidDb
+from oidDb import OidDb
 from mappingFuncModules.confd_local_system_software_info_confd import confd_local_system_software_info_confd
+from mappingFuncModules.confd_global_startup_status_confd import confd_global_startup_status_confd
 
 REQUEST_MAPPING_DICTS = {
    "confd_local.system.software.info.confd" : {
        "mappingFunc": confd_local_system_software_info_confd,
        "bdsRequestDict": {'process': 'confd',
-                          'urlSuffix':'/bds/table/walk?format=raw',
+                          'urlSuffix':'bds/table/walk?format=raw',
                          'table':'local.system.software.info.confd'}
+    },
+   "confd_global_startup_status_confd" : {
+       "mappingFunc": confd_global_startup_status_confd,
+       "bdsRequestDict": {'process': 'confd',
+                          'urlSuffix':'bds/table/walk?format=raw',
+                         'table':'global.startup.status.confd'}
     }
   }
 
@@ -42,12 +49,12 @@ class bdsAccess():
         self.responseSequence = 0
         self.requestMappingDict = REQUEST_MAPPING_DICTS
         self.responseJsonDicts = {}
-        self.oidDb = oidDb
+        self.oidDb = OidDb()
         #'logging': 'warning'
         # do more stuff here. e.g. connecectivity checks etc
 
 
-    def getJson(self,bdsRequestDict):  #confd_local.system.software.info.confd
+    async def getJson(self,bdsRequestDict):
         bdsProcess = bdsRequestDict['process']
         bdsSuffix = bdsRequestDict['urlSuffix']
         bdsTable = bdsRequestDict['table']
@@ -55,64 +62,62 @@ class bdsAccess():
             attributeDict={}
             for attribute in bdsRequestDict['attributes']:
                 attributeDict[attribute]=bdsRequestDict['attributes'][attribute]
-            requestData = {"table":{"table_name":bdsTable},
-                           "objects":[{"attribute":attributeDict}]}
+            requestData = {'table':{'table_name':bdsTable},
+                           'objects':[{'attribute':attributeDict}]}
         else:
-            requestData = {"table":{"table_name":bdsTable}}
+            requestData = {'table':{'table_name':bdsTable}}
         url = "http://{}:{}/api/application-rest-proxy/{}/{}/{}".format(self.rtbrickHost,
                                        self.rtbrickCtrldPort,
                                        self.rtbrickContainerName,
                                        bdsProcess,
                                        bdsSuffix)
-        headers = {'Content-Type': 'application/json'}
-        self.moduleLogger.debug ("POST {} {}".format(url,json.dumps(requestData)))
         try:
-            self.response = requests.post(url,
-                data=json.dumps(requestData),
-                headers= headers,timeout=5)
+            headers = {'Content-Type': 'application/json'}
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url,timeout=5,
+                                       headers = headers,
+                                       json = requestData) as response:
+                    responseJsonDict = await response.json(content_type='application/json')
         except Exception as e:
+            print("Exception: #{}#".format(e))
             return False,e
         else:
-            if self.response.status_code != 200:
-                self.moduleLogger.error ("received {} for {}".format(self.response.status_code,url))
-                return False,"status_code != 200"
+            if response.status != 200:
+                self.moduleLogger.error ("received {} for {}".format(response.status,url))
+                return False,"status != 200"
             else:
-                self.moduleLogger.info ("received {} for {}".format(self.response.status_code,url))
-                self.moduleLogger.debug (self.response)
-                if len(self.response.text) > 0:
-                    try:
-                        responseJSON = json.loads(self.response.text)
-                        responseString = json.dumps(responseJSON,indent=4)
-                        self.moduleLogger.debug (responseString)
-                    except Exception as e:
-                        return False,e
-                    else:
-                        return True,responseString
-                else:
-                    return False,"json length error"
+                self.moduleLogger.info ("received {} for {}".format(response.status,url))
+                self.moduleLogger.debug (response)
+                return True,responseJsonDict
 
 
-
-
-    def run_forever(self):
+    async def run_forever(self):
         while True:
             for bdsRequestDictKey in self.requestMappingDict.keys():
+                print(bdsRequestDictKey)
                 bdsRequestDict = self.requestMappingDict[bdsRequestDictKey]["bdsRequestDict"]
                 mappingfunc = self.requestMappingDict[bdsRequestDictKey]["mappingFunc"]
                 self.moduleLogger.debug ("working on {}".format(bdsRequestDictKey))
                 bdsProcess = bdsRequestDict['process']
                 bdsTable = bdsRequestDict['table']
-                resultFlag,responseJsonString = self.getJson(bdsRequestDict)
+                resultFlag,responseJsonDict = await self.getJson(bdsRequestDict)
                 if resultFlag:
-                    redisKeyForResponse = "{}_{}".format(bdsProcess,bdsTable)
-                    responseAsDict = json.loads(responseJsonString)
-                    self.moduleLogger.debug ("received {}".format(responseAsDict))
-                    self.responseJsonDicts[redisKeyForResponse] = responseAsDict
+                    responseTableKey = "{}_{}".format(bdsProcess,bdsTable)
+                    self.responseJsonDicts[responseTableKey] = responseJsonDict
                     self.moduleLogger.debug("self.responseJsonDicts[{}] {}"\
-                                  .format(redisKeyForResponse,responseAsDict))
-                    mappingfunc.setOids(responseAsDict,self.oidDb)
-            time.sleep(5)
-
+                                  .format(responseTableKey,responseJsonDict))
+                    await mappingfunc.setOids(responseJsonDict,self.oidDb)
+            #print(self.oidDb)
+            await asyncio.sleep(1)
+            print(self.oidDb)
+            print("#### after insertOid")
+            self.oidDb.deleteOidsWithPrefix("1.3.6.1.4.1.50058.101.3.")
+            print(self.oidDb)
+            print("#### after delete 1.3.6.1.4.1.50058.101.3.")
+            self.oidDb.deleteOidsWithPrefix("1.3.6.1.4.1.50058.101.")
+            print(self.oidDb)
+            print("#### after delete 1.3.6.1.4.1.50058.101.")
+            await asyncio.sleep(10)
 
 if __name__ == "__main__":
 
@@ -129,4 +134,9 @@ if __name__ == "__main__":
     cliArgsDict = vars(cliargs)
     logging.debug(cliArgsDict)
     myBdsAccess = bdsAccess(cliArgsDict)
-    myBdsAccess.run_forever()
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(myBdsAccess.run_forever())
+    except KeyboardInterrupt:
+        pass
+    loop.close()

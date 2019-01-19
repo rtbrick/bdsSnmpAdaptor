@@ -93,14 +93,14 @@ class asyncioTrapGenerator():
 
         errorIndication, errorStatus, errorIndex, varBinds = await sendNotification(
             self.snmpEngine,
-            CommunityData(self.community, mpModel=0),
+            CommunityData(self.community, mpModel=1),    # mpModel defines version
             UdpTransportTarget((self.snmpTrapServer, self.snmpTrapPort)),
             ContextData(),
             'trap',
             NotificationType(
                 ObjectIdentity(RTBRICKSYSLOGTRAP)
             ).addVarBinds(
-                ('1.3.6.1.6.3.1.1.4.3.0',RTBRICKSYSLOGTRAP),
+                #('1.3.6.1.6.3.1.1.4.3.0',RTBRICKSYSLOGTRAP),
                 (SYSLOGMSGNUMBER, Unsigned32(self.trapCounter)),
                 (SYSLOGMSGFACILITY, OctetString(syslogMsgFacility)),
                 (SYSLOGMSGSEVERITY, Integer32(syslogMsgSeverity)),

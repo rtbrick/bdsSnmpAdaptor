@@ -12,38 +12,84 @@ from copy import deepcopy
 
 
 
-class oidDb():
+class OidDb():
+
+    """ Database for chained oidDbItems
+        You must use insertOid and deleteOidsWithPrefix to set or del oidItems
+        in self.oidDict in order to maintain the chain links.
+
+    """
 
     def __init__(self):
-        self.firstItem = None
-        self.oidDict = {}
+        self.firstItem = None    # root of the DB chain
+        self.oidDict = {}        # this dict holds all OID items in this # DB
+        self.lock = False        # not implemented yet, locker for insertOid
+
 
     def insertOid(self,newOidItem):
-        self.oidDict[newOidItem.oid] = newOidItem
-        if self.firstItem == None:
-            self.firstItem = newOidItem
-        else:
-            if newOidItem < self.firstItem:
-                tempItem = self.firstItem
+        if newOidItem.oid in self.oidDict.keys():
+            #logging.debug("is in in self.oidDict.keys")
+            self.oidDict[newOidItem.oid].value = newOidItem.value
+        else:    # new oid to sorted data structure will be added
+            self.oidDict[newOidItem.oid] = newOidItem
+            if self.firstItem == None:
                 self.firstItem = newOidItem
-                self.firstItem.nextOidObj = tempItem
             else:
-                iterItem = self.firstItem
-                endFlag = False
-                while iterItem < newOidItem:
-                    lastIterItem = iterItem
-                    if iterItem.nextOidObj == None:
-                        endFlag = True
-                        break
+                if newOidItem < self.firstItem:
+                    tempItem = self.firstItem
+                    self.firstItem = newOidItem
+                    self.firstItem.nextOidObj = tempItem
+                else:
+                    iterItem = self.firstItem
+                    cacheIterItem = iterItem
+                    endFlag = False
+                    i = 0
+                    while iterItem < newOidItem:
+                        i += 1
+                        cacheIterItem = iterItem
+                        if iterItem.nextOidObj == None:
+                            endFlag = True
+                            break
+                        else:
+                            iterItem = iterItem.nextOidObj
+                    if endFlag:
+                        cacheIterItem.nextOidObj = newOidItem
+                    else:
+                        cacheIterItem.nextOidObj = newOidItem
+                        newOidItem.nextOidObj = iterItem
+
+    def deleteOidsWithPrefix(self,oidPrefix):
+        deleteOidStringList = []
+        iterItem = self.firstItem
+        while iterItem is not None:
+            if iterItem == self.firstItem:
+                if iterItem.oid.startswith(oidPrefix):
+                    self.firstItem = iterItem.nextOidObj
+                    nextItem = iterItem.nextOidObj
+                    self.oidDict.pop(iterItem.oid,None)
+                    del(iterItem)
+                    iterItem = nextItem
+                else:
+                    iterItem = iterItem.nextOidObj
+            else:
+                if iterItem.nextOidObj != None:
+                    if iterItem.nextOidObj.oid.startswith(oidPrefix):
+                        #print("match this {} next {}".format(iterItem.oid,iterItem.nextOidObj.oid))
+                        deleteItem = iterItem.nextOidObj
+                        iterItem.nextOidObj = iterItem.nextOidObj.nextOidObj
+                        #if iterItem.nextOidObj != None:
+                            #print("set this {} next {}".format(iterItem.oid,iterItem.nextOidObj.oid))
+                        #else:
+                            #print("set this {} next {}".format(iterItem.oid,None))
+                        #print("del {}".format(deleteItem.oid))
+                        self.oidDict.pop(deleteItem.oid,None)
+                        del(deleteItem)
                     else:
                         iterItem = iterItem.nextOidObj
-                if endFlag:
-                    lastIterItem.nextOidObj = newOidItem
                 else:
-                    lastIterItem.nextOidObj = newOidItem
-                    newOidItem.nextOidObj = iterItem
+                    iterItem = iterItem.nextOidObj
 
-    def getFirstItem(self,oid):
+    def getFirstItem(self):
         return self.firstItem
 
     def getObjFromOid(self,oid):
@@ -73,6 +119,15 @@ class oidDb():
             logging.debug('getNextOid returns 0.0 as no firstItem')
             return "0.0"
 
+    def setLock(self):
+        self.lock = True
+
+    def releaseLock(self):
+        self.lock = False
+
+    def isLocked(self):
+        return self.lock
+
     def __str__(self):
         returnStr = ""
         iterItem = self.firstItem
@@ -81,7 +136,11 @@ class oidDb():
             iterItem = iterItem.nextOidObj
         return returnStr
 
-class oidDbItem():
+class OidDbItem():
+
+    """ Database Item, which pysnmp attributes required for get and getnext.
+
+    """
 
     def __init__(self,oid=None,name=None,pysnmpBaseType=None,pysnmpRepresentation=None,
                       value=None,bdsRequest=None,bdsEvalString=None):
@@ -104,7 +163,7 @@ class oidDbItem():
     def __lt__(self,oid2):
         if isinstance(oid2,str):
             oid2AsList = [ int(x) for x in oid2.split(".")]
-        elif isinstance(oid2,oidDbItem):
+        elif isinstance(oid2,OidDbItem):
             oid2AsList = oid2.oidAsList
         pos = 0
         while pos < len(self.oidAsList) and pos < len(oid2AsList):
@@ -146,8 +205,8 @@ class oidDbItem():
         returnStr +=     "oid           :{}\n".format(self.oid)
         returnStr +=     "name          :{}\n".format(self.name)
         returnStr +=     "pysnmp type   :{}\n".format(self.pysnmpBaseType)
-        if self.Value != None:
-            returnStr += "value         :{}\n".format(self.Value)
+        if self.value != None:
+            returnStr += "value         :{}\n".format(self.value)
         if self.pysnmpRepresentation:
             returnStr += "pysnmp fmt    :{}\n".format(self.pysnmpRepresentation)
         if self.bdsRequest:
@@ -158,28 +217,3 @@ class oidDbItem():
             returnStr += "nextOid       :{}\n".format(self.nextOidObj.oid)
         returnStr += "#"*60 + "\n"
         return returnStr
-
-if __name__ == '__main__':
-
-    myOidDb = oidDb()
-    oidDefDict1 = {"oid":"1.3.6.1.2.1.1.2.0","name":"sysObjectID","pysnmpBaseType":"ObjectIdentifier",
-                  "value": "0.0"}
-    oidDefDict2 = {"oid":"1.3.6.1.2.1.1.4.0","name":"sysUpTime","pysnmpBaseType":"OctetString",
-                  "value": "this value is configurable in snmpOidMapping.yml e.g. tbd@test.de"}
-    myOid1 = oidDbItem(**oidDefDict1)
-    #print(myOid1)
-    myOid2 = oidDbItem(**oidDefDict2)
-    result = myOid1 < myOid2
-    assert result == True
-    myOidDb.insertOid(myOid1)
-    myOidDb.insertOid(myOid2)
-
-    oidDefDict = {"oid":"1.3.6.1.2.1.1.3.0","name":"sysContact","pysnmpBaseType":"OctetString",
-                  "bdsRequest": {"process":"confd",
-                                 "urlSuffix":"/bds/table/walk",
-                                  "table":"global.confd.startup.status"},
-                  "bdsEvalString" :'responseJSON["objects"][0]["attribute"]["up_time"]' }
-    myOidDb.insertOid(oidDbItem(**oidDefDict))
-    print(myOidDb.getObjFromOid("1.3.6.1.2.1.1.2.0"))
-    print(myOidDb.getObjFromOid("1.3.6.1.2.1.1.3.0"))
-    print(myOidDb.getObjFromOid("1.3.6.1.2.1.1.4.0"))

@@ -1,6 +1,10 @@
+import os
+import sys
+sys.path.insert(0, os.path.abspath('..'))
 from bdsMappingFunctions import bdsMappingFunctions
 import logging
-
+from oidDb import OidDbItem
+import asyncio
 
 class confd_global_startup_status_confd(object):
 
@@ -11,24 +15,31 @@ class confd_global_startup_status_confd(object):
 
 
     @classmethod
-    def setOids(self,bdsJsonResponseDict,targetOidDb):
+    async def setOids(self,bdsJsonResponseDict,targetOidDb):
+        oidSegment = "1.3.6.1.4.1.50058.101.3.1."
+        targetOidDb.setLock()
+        targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
         for bdsJsonObject in bdsJsonResponseDict["objects"]:
-            indexString = ifObject["attribute"]["module_name"]
+            indexString = bdsJsonObject["attribute"]["module_name"]
             indexCharList = [str(ord(c)) for c in indexString]
             index = str(len(indexCharList)) + "." + ".".join(indexCharList)
-            bdsSnmpTableObject.setOidHash (fullOid = oidSegment+"1."+str(index),
-                         fullOidDict = {"name":"moduleName", "pysnmpBaseType":"OctetString",
-                                       "value":indexString },
-                         expiryTimer = expiryTimer )
-            bdsSnmpTableObject.setOidHash (fullOid = oidSegment+"2."+str(index),
-                         fullOidDict = {"name":"bdName", "pysnmpBaseType":"OctetString",
-                                       "value":ifObject["attribute"]["bd_name"] },
-                         expiryTimer = expiryTimer )
-            bdsSnmpTableObject.setOidHash (fullOid = oidSegment+"3."+str(index),
-                         fullOidDict = {"name":"upTime", "pysnmpBaseType":"OctetString",
-                                       "value":ifObject["attribute"]["up_time"] },
-                         expiryTimer = expiryTimer )
-            bdsSnmpTableObject.setOidHash (fullOid = oidSegment+"4."+str(index),
-                         fullOidDict = {"name":"startupStatus", "pysnmpBaseType":"OctetString",
-                                       "value":ifObject["attribute"]["startup_status"] },
-                         expiryTimer = expiryTimer )
+            targetOidDb.insertOid(newOidItem = OidDbItem(
+                oid = oidSegment+"1."+str(index),
+                name="moduleName",
+                pysnmpBaseType="OctetString",
+                value=indexString))
+            targetOidDb.insertOid(newOidItem = OidDbItem(
+                oid = oidSegment+"2."+str(index),
+                name="bdName", pysnmpBaseType="OctetString",
+                value=bdsJsonObject["attribute"]["bd_name"]))
+            targetOidDb.insertOid(newOidItem = OidDbItem(
+                oid = oidSegment+"3."+str(index),
+                name="upTime", pysnmpBaseType="OctetString",  # FIXME change type
+                value=bdsJsonObject["attribute"]["up_time"])) # FIXME calc time
+            targetOidDb.insertOid(newOidItem = OidDbItem(
+                oid = oidSegment+"4."+str(index),
+                name="upTime", pysnmpBaseType="OctetString",
+                value=bdsJsonObject["attribute"]["startup_status"]))
+        #logging.debug(len(targetOidDb.oidDict.keys()))
+        #logging.debug(targetOidDb)
+        targetOidDb.releaseLock()
