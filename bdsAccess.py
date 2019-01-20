@@ -40,11 +40,8 @@ REQUEST_MAPPING_DICTS = {
 class BdsAccess():
 
     def __init__(self,cliArgsDict):
-        self.moduleFileNameWithoutPy, _ = os.path.splitext(
-            os.path.basename(sys.modules[__name__].__file__)
-        )
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
-        set_logging(configDict,self.moduleFileNameWithoutPy,self)
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"bdsAccess")
+        set_logging(configDict,"bdsAccess",self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
         self.rtbrickHost = configDict['rtbrickHost']
         self.rtbrickCtrldPort = configDict['rtbrickCtrldPort']
@@ -53,7 +50,7 @@ class BdsAccess():
         self.responseSequence = 0
         self.requestMappingDict = REQUEST_MAPPING_DICTS
         self.responseJsonDicts = {}
-        self.oidDb = OidDb()
+        self.oidDb = OidDb(cliArgsDict)
         #'logging': 'warning'
         # do more stuff here. e.g. connecectivity checks etc
 
@@ -101,10 +98,9 @@ class BdsAccess():
         while True:
             await StaticAndPredefinedOids.setOids(self.oidDb)
             for bdsRequestDictKey in self.requestMappingDict.keys():
-                print(bdsRequestDictKey)
+                self.moduleLogger.debug ("working on {}".format(bdsRequestDictKey))
                 bdsRequestDict = self.requestMappingDict[bdsRequestDictKey]["bdsRequestDict"]
                 mappingfunc = self.requestMappingDict[bdsRequestDictKey]["mappingFunc"]
-                self.moduleLogger.debug ("working on {}".format(bdsRequestDictKey))
                 bdsProcess = bdsRequestDict['process']
                 bdsTable = bdsRequestDict['table']
                 resultFlag,responseJsonDict = await self.getJson(bdsRequestDict)

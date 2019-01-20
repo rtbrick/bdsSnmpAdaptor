@@ -9,7 +9,8 @@ import argparse
 import yaml
 import pprint
 from copy import deepcopy
-
+from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
+from bdsSnmpAdapterManager import set_logging
 
 
 class OidDb():
@@ -20,7 +21,11 @@ class OidDb():
 
     """
 
-    def __init__(self):
+    def __init__(self,cliArgsDict):
+        configDict = loadBdsSnmpAdapterConfigFile(
+            cliArgsDict["configFile"], "oidDb")
+        set_logging(configDict,"oidDb",self)
+        self.moduleLogger.debug("configDict:{}".format(configDict))
         self.firstItem = None    # root of the DB chain
         self.oidDict = {}        # this dict holds all OID items in this # DB
         self.lock = False        # not implemented yet, locker for insertOid
@@ -28,9 +33,10 @@ class OidDb():
 
     def insertOid(self,newOidItem):
         if newOidItem.oid in self.oidDict.keys():
-            #logging.debug("is in in self.oidDict.keys")
+            self.moduleLogger.debug(f"updating {newOidItem.oid}")
             self.oidDict[newOidItem.oid].value = newOidItem.value
         else:    # new oid to sorted data structure will be added
+            self.moduleLogger.debug(f"creating {newOidItem.oid}")
             self.oidDict[newOidItem.oid] = newOidItem
             if self.firstItem == None:
                 self.firstItem = newOidItem
@@ -66,6 +72,7 @@ class OidDb():
                 if iterItem.oid.startswith(oidPrefix):
                     self.firstItem = iterItem.nextOidObj
                     nextItem = iterItem.nextOidObj
+                    self.moduleLogger.debug(f"deleting {iterItem.oid}")
                     self.oidDict.pop(iterItem.oid,None)
                     del(iterItem)
                     iterItem = nextItem
@@ -74,14 +81,9 @@ class OidDb():
             else:
                 if iterItem.nextOidObj != None:
                     if iterItem.nextOidObj.oid.startswith(oidPrefix):
-                        #print("match this {} next {}".format(iterItem.oid,iterItem.nextOidObj.oid))
                         deleteItem = iterItem.nextOidObj
                         iterItem.nextOidObj = iterItem.nextOidObj.nextOidObj
-                        #if iterItem.nextOidObj != None:
-                            #print("set this {} next {}".format(iterItem.oid,iterItem.nextOidObj.oid))
-                        #else:
-                            #print("set this {} next {}".format(iterItem.oid,None))
-                        #print("del {}".format(deleteItem.oid))
+                        self.moduleLogger.debug(f"deleting {deleteItem.oid}")
                         self.oidDict.pop(deleteItem.oid,None)
                         del(deleteItem)
                     else:
@@ -94,30 +96,44 @@ class OidDb():
 
     def getObjFromOid(self,oid):
         if oid in self.oidDict.keys():
+            self.moduleLogger.debug(f"getObjFromOid found in oidDict.keys")
             return self.oidDict[oid]
         else:
+            self.moduleLogger.warning(f"getObjFromOid did NOT found in oidDict.keys")
             return None
 
     def getNextOid(self,searchOid):
-        logging.debug('getNextOid entry {}'.format(searchOid))
+        #print(f'getNextOid searchOid:{searchOid}')
+        self.moduleLogger.debug(f'getNextOid searchOid:{searchOid}')
         if self.firstItem:
-            if searchOid in self.oidDict.keys():
-                logging.debug('getNextOid found {}'.format(self.oidDict[searchOid].oid))
+            if searchOid in self.oidDict.keys():      #directMatches
+                self.moduleLogger.debug('getNextOid found {}'.format(self.oidDict[searchOid].oid))
                 if self.oidDict[searchOid].nextOidObj:
-                    logging.debug('getNextOid returns {}'.format(self.oidDict[searchOid].nextOidObj.oid))
+                    self.moduleLogger.debug('getNextOid returns {}'.format(self.oidDict[searchOid].nextOidObj.oid))
                     return self.oidDict[searchOid].nextOidObj.oid
                 else:
-                    logging.debug('getNextOid returns None as no nextOidObj')
+                    self.moduleLogger.warning('getNextOid returns None as not nextOidObj')
                     return None
-            elif self.firstItem.oid.startswith(searchOid):
-                logging.debug('getNextOid returns start oid {}'.format(self.firstItem.oid))
-                return self.firstItem.oid
-            else:
-                logging.debug('getNextOid returns 0.0 as no start')
-                return None
+            else:     # find first oid which is greater than searchOid
+                        # elif self.firstItem.oid.startswith(searchOid):   # Fixme
+                        #     self.moduleLogger.debug('getNextOid returns start oid {}'.format(self.firstItem.oid))
+                        #     return self.firstItem.oid
+                if self.firstItem > OidDbItem(oid=searchOid):
+                    return self.firstItem.oid
+                else:
+                    #print(f'iterItem = self.firstItem')
+                    iterItem = self.firstItem
+                    while iterItem < OidDbItem(oid=searchOid) and iterItem.nextOidObj != None :
+                        print (iterItem.oid,searchOid)
+                        if iterItem.nextOidObj > OidDbItem(oid=searchOid):
+                            return iterItem.nextOidObj.oid
+                        else:
+                            iterItem = iterItem.nextOidObj
+                    self.moduleLogger.warning('getNextOid None as none oid is greater')
+                    return None
         else:
-            logging.debug('getNextOid returns None as no firstItem')
-            return "0.0"
+            lself.moduleLogger.warning('getNextOid returns None as no firstItem')
+            return None
 
     def setLock(self):
         self.lock = True
@@ -182,7 +198,7 @@ class OidDbItem():
     def __gt__(self,oid2):
         if isinstance(oid2,str):
             oid2AsList = [ int(x) for x in oid2.split(".")]
-        elif isinstance(oid2,oidObj):
+        elif isinstance(oid2,OidDbItem):
             oid2AsList = oid2.oidAsList
         pos = 0
         while pos < len(self.oidAsList) and pos < len(oid2AsList):
