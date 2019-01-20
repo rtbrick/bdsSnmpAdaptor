@@ -32,6 +32,31 @@ class confd_local_system_software_info_confd(object):
                 oid = oidSegment+"3."+str(index),
                 name="commitDate", pysnmpBaseType="OctetString",
                 value=bdsJsonObject["attribute"]["commit_date"]))
-        #logging.debug(len(targetOidDb.oidDict.keys()))
-        #logging.debug(targetOidDb)
+            targetOidDb.insertOid(newOidItem = OidDbItem(
+                oid = oidSegment+"4."+str(index),
+                name="packageDate", pysnmpBaseType="OctetString",
+                value=bdsJsonObject["attribute"]["package_date"]))
+            targetOidDb.insertOid(newOidItem = OidDbItem(
+                oid = oidSegment+"5."+str(index),
+                name="vcCheckout", pysnmpBaseType="OctetString",
+                value=bdsJsonObject["attribute"]["vc_checkout"]))
+            targetOidDb.insertOid(newOidItem = OidDbItem(
+                oid = oidSegment+"6."+str(index),
+                name="branch", pysnmpBaseType="OctetString",
+                value=bdsJsonObject["attribute"]["branch"]))
+            targetOidDb.insertOid(newOidItem = OidDbItem(
+                oid = oidSegment+"7."+str(index),
+                name="libraryVersion", pysnmpBaseType="OctetString",
+                value=bdsJsonObject["attribute"]["version"]))
+            targetOidDb.insertOid(newOidItem = OidDbItem(
+                oid = oidSegment+"8."+str(index),
+                name="sourcePath", pysnmpBaseType="OctetString",
+                value=bdsJsonObject["attribute"]["source_path"]))
+        # in addition the SW Info Flag is set by
+        # creating an abbreviated string over all modules
+        swString = bdsMappingFunctions.stringFromSoftwareInfo (bdsJsonResponseDict)
+        targetOidDb.insertOid(newOidItem = OidDbItem(
+            oid = "1.3.6.1.2.1.1.1.0",
+            name="sysDescr", pysnmpBaseType="OctetString",
+            value=swString ))
         targetOidDb.releaseLock()

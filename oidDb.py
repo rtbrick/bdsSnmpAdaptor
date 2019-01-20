@@ -107,16 +107,16 @@ class OidDb():
                     logging.debug('getNextOid returns {}'.format(self.oidDict[searchOid].nextOidObj.oid))
                     return self.oidDict[searchOid].nextOidObj.oid
                 else:
-                    logging.debug('getNextOid returns 0.0 as no nextOidObj')
-                    return "0.0"
+                    logging.debug('getNextOid returns None as no nextOidObj')
+                    return None
             elif self.firstItem.oid.startswith(searchOid):
                 logging.debug('getNextOid returns start oid {}'.format(self.firstItem.oid))
                 return self.firstItem.oid
             else:
                 logging.debug('getNextOid returns 0.0 as no start')
-                return "0.0"
+                return None
         else:
-            logging.debug('getNextOid returns 0.0 as no firstItem')
+            logging.debug('getNextOid returns None as no firstItem')
             return "0.0"
 
     def setLock(self):
@@ -143,7 +143,7 @@ class OidDbItem():
     """
 
     def __init__(self,oid=None,name=None,pysnmpBaseType=None,pysnmpRepresentation=None,
-                      value=None,bdsRequest=None,bdsEvalString=None):
+                      value=None,bdsRequest=None):
         self.oid = oid
         self.oidAsList = [ int(x) for x in self.oid.split(".")]   #for compare
         self.name = name
@@ -151,7 +151,6 @@ class OidDbItem():
         self.pysnmpRepresentation = pysnmpRepresentation
         self.value = value
         self.bdsRequest = bdsRequest
-        self.bdsEvalString = bdsEvalString
         self.nextOidObj = None
 
     def getNextOid(self):
@@ -211,8 +210,6 @@ class OidDbItem():
             returnStr += "pysnmp fmt    :{}\n".format(self.pysnmpRepresentation)
         if self.bdsRequest:
             returnStr += "bdsRequest    :{}\n".format(self.bdsRequest)
-        if self.bdsEvalString:
-            returnStr += "bdsEvalString :{}\n".format(self.bdsEvalString)
         if self.nextOidObj:
             returnStr += "nextOid       :{}\n".format(self.nextOidObj.oid)
         returnStr += "#"*60 + "\n"

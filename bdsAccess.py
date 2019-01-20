@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
 #import requests
 import asyncio
 import aiohttp
@@ -17,6 +18,7 @@ import time
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
 from oidDb import OidDb
+from staticAndPredefinedOids import StaticAndPredefinedOids
 from mappingFuncModules.confd_local_system_software_info_confd import confd_local_system_software_info_confd
 from mappingFuncModules.confd_global_startup_status_confd import confd_global_startup_status_confd
 
@@ -35,10 +37,12 @@ REQUEST_MAPPING_DICTS = {
     }
   }
 
-class bdsAccess():
+class BdsAccess():
 
     def __init__(self,cliArgsDict):
-        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
+        self.moduleFileNameWithoutPy, _ = os.path.splitext(
+            os.path.basename(sys.modules[__name__].__file__)
+        )
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
         set_logging(configDict,self.moduleFileNameWithoutPy,self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
@@ -53,6 +57,8 @@ class bdsAccess():
         #'logging': 'warning'
         # do more stuff here. e.g. connecectivity checks etc
 
+    def getOidDb(self):
+        return self.oidDb
 
     async def getJson(self,bdsRequestDict):
         bdsProcess = bdsRequestDict['process']
@@ -93,6 +99,7 @@ class bdsAccess():
 
     async def run_forever(self):
         while True:
+            await StaticAndPredefinedOids.setOids(self.oidDb)
             for bdsRequestDictKey in self.requestMappingDict.keys():
                 print(bdsRequestDictKey)
                 bdsRequestDict = self.requestMappingDict[bdsRequestDictKey]["bdsRequestDict"]
@@ -108,16 +115,7 @@ class bdsAccess():
                                   .format(responseTableKey,responseJsonDict))
                     await mappingfunc.setOids(responseJsonDict,self.oidDb)
             #print(self.oidDb)
-            await asyncio.sleep(1)
-            print(self.oidDb)
-            print("#### after insertOid")
-            self.oidDb.deleteOidsWithPrefix("1.3.6.1.4.1.50058.101.3.")
-            print(self.oidDb)
-            print("#### after delete 1.3.6.1.4.1.50058.101.3.")
-            self.oidDb.deleteOidsWithPrefix("1.3.6.1.4.1.50058.101.")
-            print(self.oidDb)
-            print("#### after delete 1.3.6.1.4.1.50058.101.")
-            await asyncio.sleep(10)
+            await asyncio.sleep(60)
 
 if __name__ == "__main__":
 
@@ -133,7 +131,7 @@ if __name__ == "__main__":
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
     logging.debug(cliArgsDict)
-    myBdsAccess = bdsAccess(cliArgsDict)
+    myBdsAccess = BdsAccess(cliArgsDict)
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(myBdsAccess.run_forever())

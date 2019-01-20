@@ -21,30 +21,8 @@ from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integ
 from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
-
-
-class SnmpBackEnd:
-
-    def __init__(self, cliArgsDict):
-        self.moduleFileNameWithoutPy, _ = os.path.splitext(
-            os.path.basename(sys.modules[__name__].__file__)
-        )
-        configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict["configFile"], self.moduleFileNameWithoutPy)
-        set_logging(configDict, self.moduleFileNameWithoutPy, self)
-
-    def snmpGet(self, oid=""):
-        self.moduleLogger.debug('snmpGet {}'.format(oid))
-        print('snmpGet {}'.format(oid))
-        return {oid: v2c.NoSuchObject()}
-
-    def snmpGetForNext(self,oid=''):
-        self.moduleLogger.debug('snmpGetForNext {}'.format(oid))
-        print('snmpGetForNext {}'.format(oid))
-        return {oid: v2c.NoSuchObject()}
-
-    def getOidsStringsForNextVars(self, oid=''):
-        return []
+from bdsAccess import BdsAccess
+from oidDb import OidDb
 
 
 class MibInstrumController(instrum.AbstractMibInstrumController):
@@ -59,92 +37,87 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
     if sys.version_info[0] < 3:
         SNMP_TYPE_MAP[unicode] = v2c.OctetString
 
-    def setSnmpBackEnd(self, _snmpBackEnd):
-        logging.debug ("MibInstrumController snmpBackEnd: {}".format(SnmpBackEnd))  # Temp
-        self._snmpBackEnd = _snmpBackEnd
+    def createVarbindFromOidDbItem(self,_oidDbItem):
+        baseType = _oidDbItem.pysnmpBaseType      #FIXME catch exception
+        if _oidDbItem.value != None:
+            if _oidDbItem.pysnmpRepresentation:
+                evalString = "{}({}='{}')".format(_oidDbItem.pysnmpBaseType,
+                                                  _oidDbItem.pysnmpRepresentation,
+                                                  _oidDbItem.value)
+            else:
+                evalString = "{}('{}')".format(_oidDbItem.pysnmpBaseType,
+                                               _oidDbItem.value)
+            self.moduleLogger.debug("createVarbindFromOidDbItem evalString {})".format(evalString))
+            returnValue = eval(evalString )
+            self.moduleLogger.debug("createVarbindFromOidDbItem returning oid {} with value {} ".format(_oidDbItem.oid,returnValue))
+            return (_oidDbItem.oid, returnValue)
+        else:
+            return (_oidDbItem.oid, v2c.NoSuchObject())
+
+    def setOidDbAndLogger(self, _oidDb):
+        self._oidDb = _oidDb
+        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
+        configDict = loadBdsSnmpAdapterConfigFile(
+            cliArgsDict["configFile"], self.moduleFileNameWithoutPy)
+        set_logging(configDict, self.moduleFileNameWithoutPy, self)
+        self.moduleLogger.debug(f"MibInstrumController set _oidDB: firstItem {self._oidDb.firstItem}")
         return self
 
     def readVars(self, varBinds, acInfo=(None, None)):
-        logging.debug('SNMP request is GET {}'.format(', '.join(str(x[0]) for x in varBinds)))
-
-        try:
-            _snmpBackEnd = self._snmpBackEnd   # FIXME
-
-        except AttributeError:
-            logging.error('readVars _snmpBackEnd not initialized')
-            return [(varBind[0], v2c.NoSuchObject()) for varBind in varBinds]
-
-        rspVarBinds = []
+        collonSeparatedVarbindList = [ ', '.join(str(x[0]) for x in varBinds )]
+        self.moduleLogger.debug(f'readVars: {collonSeparatedVarbindList}')
 
         for oid, value in varBinds:
             try:
-                valueDict = _snmpBackEnd.snmpGet(oid=str(oid))
+                oidDbItemObj = self._oidDb.getObjFromOid(str(oid))
 
             except Exception as exc:
-                logging.error('BDS failure: {}'.format(exc))
-                valueDict = None
+                print('oidDb failure: {}'.format(exc))
+                valueDict = None                               # FIXME
 
             else:
-                if valueDict is None:
-                    logging.error('BDS return None: {}')
-                    value = v2c.NoSuchObject()
+                self.moduleLogger.debug(f'oidDb returned\n{oidDbItemObj}for oid: {oid}')
+                if oidDbItemObj is None:
+                    self.moduleLogger.warning(f'_oidDb return None for oid: {oid}')
+                    value = [ v2c.NoSuchObject() ]
 
                 else:
-                    value = valueDict[str(oid)]
-                    rspVarBinds.append((oid, value))
+                    self.moduleLogger.debug(f'createVarbindFromOidDbItem with {oidDbItemObj.oid}')
+                    return [ self.createVarbindFromOidDbItem(oidDbItemObj) ]
 
-        return rspVarBinds
 
     def readNextVars(self, varBinds, acInfo=(None, None)):
-        logging.debug('SNMP request is GET-NEXT {}'.format(
-            ', '.join(str(x[0]) for x in varBinds)))
-        try:
-            _snmpBackEnd = self._snmpBackEnd
-
-        except AttributeError:
-            logging.error('readNextVars _snmpBackEnd not initialized')
-            return [(varBind[0], v2c.NoSuchObject()) for varBind in varBinds]   #CHECK
+        collonSeparatedVarbindList = [ ', '.join(str(x[0]) for x in varBinds )]
+        print(f'readNextVars: {collonSeparatedVarbindList}')
 
         rspVarBinds = []
         oidStrings = []
 
         for oid, value in varBinds:
-            logging.debug('for {},{} in varBinds'.format(oid, value))
-            oidStrings = _snmpBackEnd.getOidsStringsForNextVars(oid=str(oid))
-
-        if len(oidStrings) > 0:
-            nextOid = oidStrings[0]
-
+            self.moduleLogger.debug('for {},{} in varBinds'.format(oid, value))
+            nextOidString = self._oidDb.getNextOid(str(oid))
+            print(f'nextOidString: {nextOidString}')
             try:
-                valueDict = _snmpBackEnd.snmpGetForNext(oid=str(nextOid))
 
-            except Exception as exc:
-                logging.error('BDS failure: {}'.format(exc))
-                valueDict = None
+                oidDbItemObj = self._oidDb.getObjFromOid(nextOidString)
+
+            except Exception as e:
+                print('oidDb failure: {}'.format(e))
 
             else:
-                if valueDict is None:
-                    logging.error('BDS return None: {}')
-                    value = v2c.NoSuchObject()
+                print(f'oidDb returned\n{oidDbItemObj}for oid: {nextOidString}')
+                if oidDbItemObj is None:
+                    print('return [ ("0.0", v2c.EndOfMibView()) ]')
+                    return [ ("0.0", v2c.EndOfMibView()) ]
 
                 else:
-                    value = valueDict[str(nextOid)]
-                    rspVarBinds.append((nextOid, value))
-                    logging.debug('rspVarBinds.append {} {}'.format(nextOid, value))
-                    return rspVarBinds
-
-        else:
-            value = v2c.EndOfMibView()
-            rspVarBinds.append(("0.0", value))     #FIXME use endOfMib Constant
-            return rspVarBinds
-
+                    print(f'createVarbindFromOidDbItem with {oidDbItemObj.oid}')
+                    return [ self.createVarbindFromOidDbItem(oidDbItemObj) ]
 
 class SnmpFrontEnd:
 
     def __init__(self,cliArgsDict):
-        self.moduleFileNameWithoutPy, _ = os.path.splitext(
-            os.path.basename(sys.modules[__name__].__file__)
-        )
+        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
         configDict = loadBdsSnmpAdapterConfigFile(
             cliArgsDict["configFile"], self.moduleFileNameWithoutPy)
         set_logging(configDict,self.moduleFileNameWithoutPy,self)
@@ -157,9 +130,10 @@ class SnmpFrontEnd:
         if self.snmpVersion == "2c":
             self.community = configDict["community"]
 
-        self.snmpBackEnd = SnmpBackEnd(cliArgsDict)
-        self.snmpEngine = engine.SnmpEngine()
 
+        self.snmpEngine = engine.SnmpEngine()
+        self.bdsAccess = BdsAccess(cliArgsDict) # Instantiation of the BDS Access Service
+        self.oidDb = self.bdsAccess.getOidDb()
         # UDP over IPv4
         try:
             config.addTransport(
@@ -191,22 +165,16 @@ class SnmpFrontEnd:
         snmpContext.unregisterContextName(v2c.OctetString(''))
         snmpContext.registerContextName(
             v2c.OctetString(''),  # Context Name
-            MibInstrumController().setSnmpBackEnd(self.snmpBackEnd)
+            MibInstrumController().setOidDbAndLogger(self.oidDb)
         )
-
         cmdrsp.GetCommandResponder(self.snmpEngine, snmpContext)
         cmdrsp.NextCommandResponder(self.snmpEngine, snmpContext)
 
         self.snmpEngine.transportDispatcher.jobStarted(1)
 
-    async def backgroundMessages(self):
-        while True:
-            print("background message: {}".format(time.time()))
-            await asyncio.sleep(10)
-
     async def run_forever(self):
         await asyncio.gather(
-            self.backgroundMessages()
+            self.bdsAccess.run_forever()
         )
 
 
@@ -220,7 +188,7 @@ if __name__ == "__main__":
         epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument("-f", "--configFile",
-                        default="asyncioTestConfig.yml", type=str,
+                        default="bdsSnmpRetrieveAdapter.yml", type=str,
                         help="config file")
 
     cliargs = parser.parse_args()
