@@ -188,7 +188,7 @@ if __name__ == "__main__":
         epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument("-f", "--configFile",
-                        default="bdsSnmpRetrieveAdapter.yml", type=str,
+                        default="bdsSnmpRetrieveAdaptor.yml", type=str,
                         help="config file")
 
     cliargs = parser.parse_args()
