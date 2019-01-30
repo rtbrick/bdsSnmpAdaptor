@@ -21,6 +21,8 @@ from oidDb import OidDb
 from staticAndPredefinedOids import StaticAndPredefinedOids
 from mappingFuncModules.confd_local_system_software_info_confd import confd_local_system_software_info_confd
 from mappingFuncModules.confd_global_startup_status_confd import confd_global_startup_status_confd
+from mappingFuncModules.confd_global_interface_container import confd_global_interface_container
+from mappingFuncModules.ffwd_default_interface_logical import ffwd_default_interface_logical
 
 REQUEST_MAPPING_DICTS = {
    "confd_local.system.software.info.confd" : {
@@ -34,8 +36,21 @@ REQUEST_MAPPING_DICTS = {
        "bdsRequestDict": {'process': 'confd',
                           'urlSuffix':'bds/table/walk?format=raw',
                          'table':'global.startup.status.confd'}
+    },
+   "confd_global_interface_container" : {
+       "mappingFunc": confd_global_interface_container,
+       "bdsRequestDict": {'process': 'confd',
+                          'urlSuffix':'bds/table/walk?format=raw',
+                         'table':'global.interface.container'}
+    },
+   "ffwd_default_interface_logical" : {
+       "mappingFunc": ffwd_default_interface_logical,
+       "bdsRequestDict": {'process': 'fwdd-hald',      ## Check
+                          'urlSuffix':'bds/table/walk?format=raw',
+                          'table':'default.interface.logical'}
     }
   }
+
 
 class BdsAccess():
 
