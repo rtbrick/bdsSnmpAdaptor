@@ -37,6 +37,21 @@ class bdsMappingFunctions():
         elif len(ifIndexList) == 4:
             ifIndex = int(ifIndexList[0])*4096*128*128*16 + int(ifIndexList[1])*4096*128*128 + int(ifIndexList[2])*4096*128 + int(ifIndexList[3])*4096
             return ifIndex
+        elif len(ifIndexList) == 3:
+            ifIndex = int(ifIndexList[0])*4096*128*128 + int(ifIndexList[1])*4096*128 + int(ifIndexList[2])*4096
+            return ifIndex
+        else:
+            return None
+
+    @classmethod
+    def stripIfPrefixFromIfName(self,ifNameString):
+        ifIndexList = ifNameString.split("-")[1].split("/")
+        if len(ifIndexList) == 5:
+            return "/".join(ifIndexList)
+        elif len(ifIndexList) == 4:
+            return "/".join(ifIndexList[1:])
+        elif len(ifIndexList) == 3:
+            return "/".join(ifIndexList)
         else:
             return None
 

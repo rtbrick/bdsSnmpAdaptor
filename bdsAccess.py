@@ -23,6 +23,7 @@ from mappingFuncModules.confd_local_system_software_info_confd import confd_loca
 from mappingFuncModules.confd_global_startup_status_confd import confd_global_startup_status_confd
 from mappingFuncModules.confd_global_interface_container import confd_global_interface_container
 from mappingFuncModules.ffwd_default_interface_logical import ffwd_default_interface_logical
+from mappingFuncModules.fwdd_global_interface_physical_statistics import fwdd_global_interface_physical_statistics
 
 REQUEST_MAPPING_DICTS = {
    "confd_local.system.software.info.confd" : {
@@ -43,11 +44,17 @@ REQUEST_MAPPING_DICTS = {
                           'urlSuffix':'bds/table/walk?format=raw',
                          'table':'global.interface.container'}
     },
-   "ffwd_default_interface_logical" : {
-       "mappingFunc": ffwd_default_interface_logical,
+   # "ffwd_default_interface_logical" : {
+   #     "mappingFunc": ffwd_default_interface_logical,
+   #     "bdsRequestDict": {'process': 'fwdd-hald',      ## Check
+   #                        'urlSuffix':'bds/table/walk?format=raw',
+   #                        'table':'default.interface.logical'}
+   #  }
+   "fwdd_global_interface_physical_statistics" : {
+       "mappingFunc": fwdd_global_interface_physical_statistics,
        "bdsRequestDict": {'process': 'fwdd-hald',      ## Check
                           'urlSuffix':'bds/table/walk?format=raw',
-                          'table':'default.interface.logical'}
+                          'table':'global.interface.physical.statistics'}
     }
   }
 

@@ -91,6 +91,34 @@ class OidDb():
                 else:
                     iterItem = iterItem.nextOidObj
 
+    def deleteOidsFromBdsMappingFunc(self,bdsMappingFunc):
+        deleteOidStringList = []
+        iterItem = self.firstItem
+        while iterItem is not None:
+            if iterItem == self.firstItem:
+                if iterItem.bdsMappingFunc == bdsMappingFunc:
+                    self.firstItem = iterItem.nextOidObj
+                    nextItem = iterItem.nextOidObj
+                    self.moduleLogger.debug(f"deleting {iterItem.oid}")
+                    self.oidDict.pop(iterItem.oid,None)
+                    del(iterItem)
+                    iterItem = nextItem
+                else:
+                    iterItem = iterItem.nextOidObj
+            else:
+                if iterItem.nextOidObj != None:
+                    if iterItem.bdsMappingFunc == bdsMappingFunc:
+                        deleteItem = iterItem.nextOidObj
+                        iterItem.nextOidObj = iterItem.nextOidObj.nextOidObj
+                        self.moduleLogger.debug(f"deleting {deleteItem.oid}")
+                        self.oidDict.pop(deleteItem.oid,None)
+                        del(deleteItem)
+                    else:
+                        iterItem = iterItem.nextOidObj
+                else:
+                    iterItem = iterItem.nextOidObj
+
+
     def getFirstItem(self):
         return self.firstItem
 
@@ -158,8 +186,9 @@ class OidDbItem():
 
     """
 
-    def __init__(self,oid=None,name=None,pysnmpBaseType=None,pysnmpRepresentation=None,
+    def __init__(self,bdsMappingFunc=None,oid=None,name=None,pysnmpBaseType=None,pysnmpRepresentation=None,
                       value=None,bdsRequest=None):
+        self.bdsMappingFunc = bdsMappingFunc
         self.oid = oid
         self.oidAsList = [ int(x) for x in self.oid.split(".")]   #for compare
         self.name = name
