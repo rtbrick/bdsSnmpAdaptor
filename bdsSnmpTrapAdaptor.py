@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-#  \author    Stefan Lieberth / Maik Pfeil
-#  \version   3.3.01
+#
+# This file is part of bdsSnmpAdaptor software.
+#
+# Copyright (C) 2017-2019, RtBrick Inc
+# License: BSD License 2.0
 
 import asyncio
 import logging
