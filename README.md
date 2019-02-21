@@ -1,3 +1,6 @@
+# license information
+Copyright (C) 2017-2019, RtBrick Inc
+
 # bdsSnmpAdaptor
 
 SNMP front end to (Rt)Brick-Data-Store Information.
