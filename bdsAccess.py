@@ -18,7 +18,6 @@ import argparse
 import yaml
 import pprint
 from copy import deepcopy
-import redis
 import time
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging

@@ -14,7 +14,6 @@ from logging.handlers import RotatingFileHandler
 import argparse
 import yaml
 import pprint
-import redis
 import time
 
 
