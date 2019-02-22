@@ -70,8 +70,9 @@ class BdsAccess():
         set_logging(configDict,"bdsAccess",self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
         self.rtbrickHost = configDict['rtbrickHost']
-        self.rtbrickCtrldPort = configDict['rtbrickCtrldPort']
-        self.rtbrickContainerName = configDict['rtbrickContainerName']
+        self.rtbrickPorts = (configDict['rtbrickPorts'])
+        #self.rtbrickCtrldPort = configDict['rtbrickCtrldPort']
+        #self.rtbrickContainerName = configDict['rtbrickContainerName']
         self.expirytimer = 50 ### FIXME
         self.responseSequence = 0
         self.requestMappingDict = REQUEST_MAPPING_DICTS
@@ -95,11 +96,18 @@ class BdsAccess():
                            'objects':[{'attribute':attributeDict}]}
         else:
             requestData = {'table':{'table_name':bdsTable}}
-        url = "http://{}:{}/api/application-rest-proxy/{}/{}/{}".format(self.rtbrickHost,
-                                       self.rtbrickCtrldPort,
-                                       self.rtbrickContainerName,
-                                       bdsProcess,
+
+        rtbrickProcessPortDict = [ x for x in self.rtbrickPorts if list(x.keys())[0] == bdsProcess ][0]
+        rtbrickPort = int(rtbrickProcessPortDict[bdsProcess])
+        url = "http://{}:{}/{}".format(self.rtbrickHost,
+                                       rtbrickPort,
                                        bdsSuffix)
+
+        # url = "http://{}:{}/api/application-rest-proxy/{}/{}/{}".format(self.rtbrickHost,
+        #                                self.rtbrickCtrldPort,
+        #                                self.rtbrickContainerName,
+        #                                bdsProcess,
+        #                                bdsSuffix)
         try:
             headers = {'Content-Type': 'application/json'}
             async with aiohttp.ClientSession() as session:
