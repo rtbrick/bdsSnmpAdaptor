@@ -237,7 +237,7 @@ class OidDbItem():
             self.encodedValue = eval(evalString )
         except Exception as e:
             self.encodedValue = None
-            raise Exception(f'cannot encode value - evalString {evalString}')
+            raise Exception(f'cannot encode value for {self.name} - evalString {evalString}')
         self.bdsRequest = bdsRequest
         self.nextOidObj = None
 
