@@ -92,6 +92,9 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
 
 
     def readNextVars(self, varBinds, acInfo=(None, None)):
+        """ process get next request
+
+        """
         collonSeparatedVarbindList = [ ', '.join(str(x[0]) for x in varBinds )]
         print(f'readNextVars: {collonSeparatedVarbindList}')
 
@@ -99,7 +102,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         oidStrings = []
 
         for oid, value in varBinds:
-            self.moduleLogger.debug('for {},{} in varBinds'.format(oid, value))
+            self.moduleLogger.debug('entry for-loop {},{} in varBinds'.format(oid, value))
             nextOidString = self._oidDb.getNextOid(str(oid))
             print(f'nextOidString: {nextOidString}')
             try:

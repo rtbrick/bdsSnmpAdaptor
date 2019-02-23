@@ -19,8 +19,9 @@ IFOPERSTATUSMAP = {
             3:3   # testing(3)   -- in some test mode
             }
 
-IFMTU_LAMBDA = lambda a : int(a,16)
-IFSPEED_LAMBDA = lambda a : int(a,16)
+HEX_STRING_LAMBDA = lambda x : int(x,16)
+IFMTU_LAMBDA = lambda x : int(x,16)
+IFSPEED_LAMBDA = lambda x : int(x,16)
 
 
 class confd_global_interface_container(object):

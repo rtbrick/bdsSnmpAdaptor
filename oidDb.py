@@ -138,7 +138,7 @@ class OidDb():
             return None
 
     def getNextOid(self,searchOid):
-        #print(f'getNextOid searchOid:{searchOid}')
+        print(f'getNextOid searchOid:{searchOid}')
         self.moduleLogger.debug(f'getNextOid searchOid:{searchOid}')
         if self.firstItem:
             if searchOid in self.oidDict.keys():      #directMatches
@@ -167,7 +167,7 @@ class OidDb():
                     self.moduleLogger.warning('getNextOid None as none oid is greater')
                     return None
         else:
-            lself.moduleLogger.warning('getNextOid returns None as no firstItem')
+            self.moduleLogger.warning('getNextOid returns None as no firstItem')
             return None
 
     def setLock(self):
@@ -228,18 +228,18 @@ class OidDbItem():
         self.pysnmpBaseType = pysnmpBaseType
         self.pysnmpRepresentation = pysnmpRepresentation
         self.value = value
-        if self.pysnmpRepresentation:
-            evalString = "{}({}='{}')".format(self.pysnmpBaseType,
-                                              self.pysnmpRepresentation,
-                                              self.value)
-        else:
-            evalString = "{}('{}')".format(self.pysnmpBaseType,
-                                           self.value)
-        try:
-            self.encodedValue = eval(evalString )
-        except Exception as e:
-            self.encodedValue = None
-            raise Exception(f'cannot encode value for {self.name} - evalString {evalString}')
+        # if self.pysnmpRepresentation:
+        #     evalString = "{}({}='{}')".format(self.pysnmpBaseType,
+        #                                       self.pysnmpRepresentation,
+        #                                       self.value)
+        # else:
+        #     evalString = "{}('{}')".format(self.pysnmpBaseType,
+        #                                    self.value)
+        # try:
+        #     self.encodedValue = eval(evalString )
+        # except Exception as e:
+        #     self.encodedValue = None
+        #     raise Exception(f'cannot encode value for {self.name} - evalString {evalString}')
         self.bdsRequest = bdsRequest
         self.nextOidObj = None
 
