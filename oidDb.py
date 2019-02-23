@@ -21,8 +21,8 @@ from bdsSnmpAdapterManager import set_logging
 class OidDb():
 
     """ Database for chained oidDbItems
-        You must use insertOid and deleteOidsWithPrefix to set or del oidItems
-        in self.oidDict in order to maintain the chain links.
+        Use insertOid and deleteOidsWithPrefix to set or del oidItems
+        in self.oidDict in order to maintain the chain structure.
 
     """
 
@@ -38,10 +38,10 @@ class OidDb():
 
     def insertOid(self,newOidItem):
         if newOidItem.oid in self.oidDict.keys():
-            self.moduleLogger.debug(f"updating {newOidItem.oid}")
+            self.moduleLogger.debug(f"updating {newOidItem.oid} {newOidItem.value}")
             self.oidDict[newOidItem.oid].value = newOidItem.value
         else:    # new oid to sorted data structure will be added
-            self.moduleLogger.debug(f"creating {newOidItem.oid}")
+            self.moduleLogger.debug(f"creating {newOidItem.oid} {newOidItem.value}")
             self.oidDict[newOidItem.oid] = newOidItem
             if self.firstItem == None:
                 self.firstItem = newOidItem
@@ -193,6 +193,32 @@ class OidDbItem():
 
     def __init__(self,bdsMappingFunc=None,oid=None,name=None,pysnmpBaseType=None,pysnmpRepresentation=None,
                       value=None,bdsRequest=None):
+        """ Database Item, which pysnmp attributes required for get and getnext.
+
+        Args:
+            bdsMappingFunc(string): used to mark, which mapping function owns this oid. (used for delete)
+            oid(string): oid as string, separated by dots.
+            name(string): name of the oid, should map with MIB identifier name, altough this is not enforced
+            pysnmpBaseType(string): used for conversion of value, options are defined in pysnmp.proto.rfc1902
+            pysnmpRepresentation(string): used to siganal hexValue representation for stringsself.
+            value: object that holds the value of the oid. Type is flexible, subject to oidself
+            bdsRequest: obsolete ###FIXME deprecate
+
+        Examples:
+          OidDbItem(
+            bdsMappingFunc = "confd_global_interface_container",
+            oid = oidSegment+"1."+str(index),
+            name="ifIndex",
+            pysnmpBaseType="Integer32",
+            value=int(index)))
+
+        raise:
+
+        Todo:
+            * Verify value type, by cross-checking with pysnmpBaseType
+
+
+        """
         self.bdsMappingFunc = bdsMappingFunc
         self.oid = oid
         self.oidAsList = [ int(x) for x in self.oid.split(".")]   #for compare
@@ -200,6 +226,18 @@ class OidDbItem():
         self.pysnmpBaseType = pysnmpBaseType
         self.pysnmpRepresentation = pysnmpRepresentation
         self.value = value
+        if self.pysnmpRepresentation:
+            evalString = "{}({}='{}')".format(self.pysnmpBaseType,
+                                              self.pysnmpRepresentation,
+                                              self.value)
+        else:
+            evalString = "{}('{}')".format(self.pysnmpBaseType,
+                                           self.value)
+        try:
+            self.encodedValue = eval(evalString )
+        except Exceptions as e:
+            self.encodedValue = None
+            raise Exception(f'cannot encode value - evalString {evalString}')     
         self.bdsRequest = bdsRequest
         self.nextOidObj = None
 
