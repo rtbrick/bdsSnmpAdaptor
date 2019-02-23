@@ -16,6 +16,8 @@ import pprint
 from copy import deepcopy
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
+from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integer32
+from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress
 
 
 class OidDb():
@@ -240,6 +242,21 @@ class OidDbItem():
             raise Exception(f'cannot encode value for {self.name} - evalString {evalString}')
         self.bdsRequest = bdsRequest
         self.nextOidObj = None
+
+    def _encodeValue(self):
+        if self.pysnmpRepresentation:
+            evalString = "{}({}='{}')".format(self.pysnmpBaseType,
+                                              self.pysnmpRepresentation,
+                                              self.value)
+        else:
+            evalString = "{}('{}')".format(self.pysnmpBaseType,
+                                           self.value)
+        try:
+            self.encodedValue = eval(evalString )
+        except Exception as e:
+            self.encodedValue = None
+            raise Exception(f'cannot encode value for {self.name} - evalString {evalString}')
+
 
     def getNextOid(self):
         if self.nextOidObj:
