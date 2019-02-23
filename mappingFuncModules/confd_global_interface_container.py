@@ -19,6 +19,9 @@ IFOPERSTATUSMAP = {
             3:3   # testing(3)   -- in some test mode
             }
 
+IFMTU_LAMBDA = lambda a : int(a,16)
+IFSPEED_LAMBDA = lambda a : int(a,16)
+
 
 class confd_global_interface_container(object):
 
@@ -94,13 +97,13 @@ class confd_global_interface_container(object):
                 oid = oidSegment+"4."+str(index),
                 name="ifMtu",
                 pysnmpBaseType="Integer32",
-                value=bdsJsonObject["attribute"]["layer2_mtu"]))
+                value=IFMTU_LAMBDA(bdsJsonObject["attribute"]["layer2_mtu"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "confd_global_interface_container",
                 oid = oidSegment+"5."+str(index),
                 name="ifSpeed",
                 pysnmpBaseType="Gauge32",
-                value=bdsJsonObject["attribute"]["bandwidth"]))
+                value=IFSPEED_LAMBDA(bdsJsonObject["attribute"]["bandwidth"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "confd_global_interface_container",
                 oid = oidSegment+"6."+str(index),
