@@ -138,10 +138,6 @@ class SnmpFrontEnd:
         self.listeningPort = configDict["listeningPort"]
         self.snmpVersion = configDict["version"]
 
-        if self.snmpVersion == "2c":
-            self.community = configDict["community"]
-
-
         self.snmpEngine = engine.SnmpEngine()
         self.bdsAccess = BdsAccess(cliArgsDict) # Instantiation of the BDS Access Service
         self.oidDb = self.bdsAccess.getOidDb()
@@ -167,10 +163,51 @@ class SnmpFrontEnd:
             snmpTransport = config.getTransport
             print ('SNMP engine transport: {}'.format(snmpTransport))
 
-        config.addV1System(self.snmpEngine, 'read-subtree', self.community)
+        if str(self.snmpVersion) == "2c":
+            self.community = configDict["community"]
+            config.addV1System(self.snmpEngine, 'read-subtree', self.community)
+            # Allow full MIB access for this user / securityModels at VACM
+            config.addVacmUser(self.snmpEngine, 2, 'read-subtree', 'noAuthNoPriv', (1, 3, 6))
+        elif str(self.snmpVersion) == "3":
+            if "usmUsers" in configDict.keys():
+                for usmUserDict in configDict["usmUsers"]:
+                    userName = list(usmUserDict.keys())[0]
+                    d = usmUserDict[userName]
+                    if "authKey" in d.keys():
+                        authKey = d["authKey"]
+                        authProtocol = "SHA"
+                        authProtocolObj = config.usmHMACSHAAuthProtocol
+                        if "authProtocol" in d.keys():
+                            authProtocol = d["authProtocol"]
+                            if authProtocol == "MD5": authProtocolObj = config.usmHMACMD5AuthProtocol
+                        if "privKey" in d.keys():
+                            privKey = d["privKey"]
+                            privProtocol = "AES"
+                            privProtocolObj = config.usmAesCfb128Protocol
+                            if "privProtocol" in d.keys():
+                                privProtocol = d["privProtocol"]
+                                if privProtocol == "DES": privProtocolObj = config.usmDESPrivProtocol
+                        else:
+                            privProtocol = None
+                            privProtocolObj = config.usmNoPrivProtocol
+                            privKey = None
+                    else:
+                        authProtocol = None
+                        authProtocolObj = config.usmNoAuthProtocol
+                        authKey = None
+                        privProtocol = None
+                        privProtocolObj = config.usmNoPrivProtocol
+                        privKey = None
+                    print(userName,authProtocol,authKey,privProtocol,privKey)
+                    config.addV3User(
+                        self.snmpEngine, userName,
+                        authProtocolObj, authKey,
+                        privProtocolObj, privKey)
+            else:
+                raise Exception('snmp v3: missing usmUsers configuration in configfile!')
+        else:
+            raise Exception('incorrect snmp version string, just "2c" and "3" are supported')
 
-        # Allow full MIB access for this user / securityModels at VACM
-        config.addVacmUser(self.snmpEngine, 2, 'read-subtree', 'noAuthNoPriv', (1, 3, 6))
 
         snmpContext = context.SnmpContext(self.snmpEngine)
         snmpContext.unregisterContextName(v2c.OctetString(''))

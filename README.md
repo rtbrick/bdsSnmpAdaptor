@@ -74,3 +74,7 @@ bdsSnmpAdapter:
                                                  # '"80000a4c010a090150,usr-sha-aes128,authkey1,privkey1
                                                  # only one entry is rquired
 ```
+config statement on rtbrick:
+```shell
+set snmp server-ip 10.0.3.20 server-port 5000 server-ep / bd-name confd.rtbrick
+```

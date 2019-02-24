@@ -19,7 +19,6 @@ import sys
 import argparse
 from aiohttp import web
 from aiohttp.web import Application, Response, StreamResponse, run_app
-import aioredis
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
 
@@ -63,7 +62,7 @@ class asyncioTrapGenerator():
             #config.addV1System(self.snmpEngine, 'my-area', self.community )
         elif self.snmpVersion == "3":
             usmUserDataMatrix = [ usmUserTuple.strip().split(",") for usmUserTuple in configDict["usmUserTuples"].split(';') if len(usmUserTuple) > 0 ]
-        self.snmpTrapServer = configDict["snmpTrapServer"]
+        self.snmpTrapTargets = configDict["snmpTrapTargets"]
         self.snmpTrapPort = configDict["snmpTrapPort"]
         self.trapCounter = 0
         self.snmpEngine = SnmpEngine()
@@ -187,7 +186,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-f", "--configFile",
-                            default="./bdsLoggingToSnmpNotification.yml", type=str,
+                            default="./bdsSnmpTrapAdaptor.yml", type=str,
                             help="config file")
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
