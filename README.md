@@ -48,9 +48,14 @@ bdsSnmpAdapter:
     listeningPort: 161 #SNMP get/getNext listening port
     version: 2c # specify snmp version type=str, choices=['2c', '3']
     community: public # v2c community
-    usmUserTuples: "engine,user,authkey,privkey"
-                  # "80000a4c010a090150,usr-sha-aes128,authkey1,privkey1
-                  # one entry per SNMP v§ server
+    usmUsers:
+      - testUser1:
+          authKey: authKey123
+          authProtocol: SHA     #optional (MD5|SHA), default = SHA
+          privKey: privkey123
+          privProtocol: AES     #optional, (DES|AES) default = AES
+      - testUser2:
+          authKey: authKey123
 ```
 
 bdsSnmpTrapAdaptor.yml holds the config attribute for notification
@@ -70,9 +75,12 @@ bdsSnmpAdapter:
     snmpTrapPort: 162 # defines the SNMP trap destination port
     version: 2c # specify snmp version type=str, choices=['2c', '3']
     community: public # v2c community
-    usmUserTuples: "engine,user,authkey,privkey" # usmUserTuples engine,user,authkey,privkey list as comma separated strings
-                                                 # '"80000a4c010a090150,usr-sha-aes128,authkey1,privkey1
-                                                 # only one entry is rquired
+    usmUsers:
+      - testUser1:
+          authKey: authKey123
+          authProtocol: SHA     #optional (MD5|SHA), default = SHA
+          privKey: privkey123
+          privProtocol: AES     #optional, (DES|AES) default = AES
 ```
 config statement on rtbrick:
 ```shell
