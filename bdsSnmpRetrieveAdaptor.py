@@ -137,7 +137,9 @@ class SnmpFrontEnd:
         self.listeningAddress = configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
         self.snmpVersion = configDict["version"]
-
+        # engine_id = OctetString(hexValue='80004fb80567726f6d6d69742')
+        # context_engine_id = v2c.OctetString(hexValue='80004fb80567726f6d6d69742')
+        # self.snmpEngine = engine.SnmpEngine(snmpEngineID=engine_id)
         self.snmpEngine = engine.SnmpEngine()
         self.bdsAccess = BdsAccess(cliArgsDict) # Instantiation of the BDS Access Service
         self.oidDb = self.bdsAccess.getOidDb()
@@ -168,6 +170,12 @@ class SnmpFrontEnd:
             config.addV1System(self.snmpEngine, 'read-subtree', self.community)
             # Allow full MIB access for this user / securityModels at VACM
             config.addVacmUser(self.snmpEngine, 2, 'read-subtree', 'noAuthNoPriv', (1, 3, 6))
+            snmpContext = context.SnmpContext(self.snmpEngine)
+            snmpContext.unregisterContextName(v2c.OctetString(''))
+            snmpContext.registerContextName(
+                v2c.OctetString(''),  # Context Name
+                MibInstrumController().setOidDbAndLogger(self.oidDb)
+            )
         elif str(self.snmpVersion) == "3":
             if "usmUsers" in configDict.keys():
                 for usmUserDict in configDict["usmUsers"]:
@@ -187,10 +195,12 @@ class SnmpFrontEnd:
                             if "privProtocol" in d.keys():
                                 privProtocol = d["privProtocol"]
                                 if privProtocol == "DES": privProtocolObj = config.usmDESPrivProtocol
+                            authString = "authPriv"
                         else:
                             privProtocol = None
                             privProtocolObj = config.usmNoPrivProtocol
                             privKey = None
+                            authString = "authNoPriv"
                     else:
                         authProtocol = None
                         authProtocolObj = config.usmNoAuthProtocol
@@ -198,25 +208,23 @@ class SnmpFrontEnd:
                         privProtocol = None
                         privProtocolObj = config.usmNoPrivProtocol
                         privKey = None
-                    print(userName,authProtocol,authKey,privProtocol,privKey)
+                        authString = "noAuthNoPriv"
+                    print(f"addV3User:   self.snmpEngine, {userName} {authProtocolObj}:{authKey} {privProtocolObj}:{privKey}")
                     config.addV3User(
                         self.snmpEngine, userName,
                         authProtocolObj, authKey,
                         privProtocolObj, privKey)
+                    config.addVacmUser(self.snmpEngine, 3, userName, authString, (1, 3, 6))
+                    print(f"addVacmUser: self.snmpEngine, 3, {userName}, {authString}, (1, 3, 6)")
             else:
                 raise Exception('snmp v3: missing usmUsers configuration in configfile!')
+            #https://github.com/openstack/virtualpdu/blob/master/virtualpdu/pdu/pysnmp_handler.py
+            snmpContext = context.SnmpContext(self.snmpEngine)
         else:
             raise Exception('incorrect snmp version string, just "2c" and "3" are supported')
-
-
-        snmpContext = context.SnmpContext(self.snmpEngine)
-        snmpContext.unregisterContextName(v2c.OctetString(''))
-        snmpContext.registerContextName(
-            v2c.OctetString(''),  # Context Name
-            MibInstrumController().setOidDbAndLogger(self.oidDb)
-        )
         cmdrsp.GetCommandResponder(self.snmpEngine, snmpContext)
         cmdrsp.NextCommandResponder(self.snmpEngine, snmpContext)
+        #cmdrsp.BulkCommandResponder(snmpEngine, snmpContext)  ## TODO
 
         self.snmpEngine.transportDispatcher.jobStarted(1)
 
