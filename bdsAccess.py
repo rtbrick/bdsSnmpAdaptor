@@ -73,6 +73,14 @@ class BdsAccess():
         self.rtbrickPorts = (configDict['rtbrickPorts'])
         #self.rtbrickCtrldPort = configDict['rtbrickCtrldPort']
         #self.rtbrickContainerName = configDict['rtbrickContainerName']
+        self.staticOidDict = {}
+        d = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"bdsSnmpRetrieveAdaptor")
+        if "staticOidContent" in d.keys():
+            for oidName in [ "sysDesc","sysContact","sysName","sysLocation"]:
+                if oidName in d["staticOidContent"].keys():
+                    self.staticOidDict[oidName] = d["staticOidContent"][oidName]
+                else:
+                    self.statitOidDict[oidName] = "to be defined"
         self.expirytimer = 50 ### FIXME
         self.responseSequence = 0
         self.requestMappingDict = REQUEST_MAPPING_DICTS
@@ -130,7 +138,8 @@ class BdsAccess():
 
     async def run_forever(self):
         while True:
-            await StaticAndPredefinedOids.setOids(self.oidDb)
+
+            await StaticAndPredefinedOids.setOids(self.oidDb,self.staticOidDict)
             for bdsRequestDictKey in self.requestMappingDict.keys():
                 self.moduleLogger.debug ("working on {}".format(bdsRequestDictKey))
                 bdsRequestDict = self.requestMappingDict[bdsRequestDictKey]["bdsRequestDict"]

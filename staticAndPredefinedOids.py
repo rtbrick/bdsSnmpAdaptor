@@ -22,7 +22,27 @@ class StaticAndPredefinedOids (object):
     """
 
     @classmethod
-    async def setOids(self,targetOidDb):
+    async def setOids(self,targetOidDb,staticOidDict):
+        targetOidDb.insertOid(newOidItem = OidDbItem(
+            bdsMappingFunc = "StaticAndPredefinedOids",
+            oid = "1.3.6.1.2.1.1.2.0",
+            name="sysObjectID", pysnmpBaseType="ObjectIdentifier",
+            value=".1.3.6.1.4.1.50058" ))
+        targetOidDb.insertOid(newOidItem = OidDbItem(
+            bdsMappingFunc = "StaticAndPredefinedOids",
+            oid = "1.3.6.1.2.1.1.4.0",
+            name="sysContact", pysnmpBaseType="OctetString",
+            value= staticOidDict["sysContact"]))
+        targetOidDb.insertOid(newOidItem = OidDbItem(
+            bdsMappingFunc = "StaticAndPredefinedOids",
+            oid = "1.3.6.1.2.1.1.5.0",
+            name="sysName", pysnmpBaseType="OctetString",
+            value= staticOidDict["sysName"]))
+        targetOidDb.insertOid(newOidItem = OidDbItem(
+            bdsMappingFunc = "StaticAndPredefinedOids",
+            oid = "1.3.6.1.2.1.1.6.0",
+            name="sysLocation", pysnmpBaseType="OctetString",
+            value= staticOidDict["sysLocation"]))
         targetOidDb.insertOid(newOidItem = OidDbItem(
             bdsMappingFunc = "StaticAndPredefinedOids",
             oid = "1.3.6.1.2.1.1.7.0",

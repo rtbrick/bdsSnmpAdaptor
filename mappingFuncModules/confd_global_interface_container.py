@@ -20,7 +20,8 @@ IFOPERSTATUSMAP = {
             }
 
 HEX_STRING_LAMBDA = lambda x : int(x,16)
-IFMTU_LAMBDA = lambda x : int(x,16)
+IFMTU_LAMBDA = lambda x : int("".join([m[2:4]+m[0:2] for m in [x[i:i+4] for i in range(0,len(x),4)]]),16)
+#IFSPEED_LAMBDA = lambda x : int("".join([m[2:4]+m[0:2] for m in [x[i:i+4] for i in range(0,len(x),4)]]),16)
 IFSPEED_LAMBDA = lambda x : int(x,16)
 
 
@@ -131,3 +132,12 @@ class confd_global_interface_container(object):
                 pysnmpBaseType="TimeTicks",
                 value=0 ))   # Fixme
         targetOidDb.releaseLock()
+
+
+if __name__ == "__main__":
+    IFMTU_LAMBDA = lambda x : int("".join([m[2:4]+m[0:2] for m in [x[i:i+4] for i in range(0,len(x),4)]]),16)
+    IFSPEED_LAMBDA = lambda x : int(x,16)
+
+    d = '4e9502f9'
+    m = IFMTU_LAMBDA(d)
+    print(m)

@@ -11,6 +11,16 @@ bdsSnmpAdapter:
     listeningPort: 161 #SNMP get/getNext listening port
     version: 2c # specify snmp version type=str, choices=['2c', '3']
     community: public # v2c community
-    usmUserTuples: "engine,user,authkey,privkey"
-                  # "80000a4c010a090150,usr-sha-aes128,authkey1,privkey1
-                  # one entry per SNMP v§ server
+    # User-based Security Model (USM) for version 3 configurations:
+    # http://snmplabs.com/pysnmp/docs/api-reference.html#security-parameters
+    usmUsers:
+      - testUser1:
+          authProtocol: usmHMACSHAAuthProtocol
+          authKey: authKey123
+          privProtocol: usmDESPrivProtocol
+          privKey: privkey123
+    staticOidContent:
+      sysDesc: sysDesc123
+      sysContact: sysContact123@example.com
+      sysName: sysName123
+      sysLocation: sysLocation123

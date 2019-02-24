@@ -123,6 +123,9 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
                     return [ self.createVarbindFromOidDbItem(oidDbItemObj) ]
 
 class SnmpFrontEnd:
+    """
+
+    """
 
     def __init__(self,cliArgsDict):
         self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
