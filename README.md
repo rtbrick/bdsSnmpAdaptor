@@ -48,6 +48,12 @@ bdsSnmpAdapter:
     listeningPort: 161 #SNMP get/getNext listening port
     version: 2c # specify snmp version type=str, choices=['2c', '3']
     community: public # v2c community
+    #
+    # alternatively v3 config:
+    #
+    version: 3 # specify snmp version type=str, choices=['2c', '3']
+    # User-based Security Model (USM) for version 3 configurations:
+    # http://snmplabs.com/pysnmp/docs/api-reference.html#security-parameters
     usmUsers:
       - testUser1:
           authKey: authKey123
