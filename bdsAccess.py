@@ -81,6 +81,11 @@ class BdsAccess():
                     self.staticOidDict[oidName] = d["staticOidContent"][oidName]
                 else:
                     self.statitOidDict[oidName] = "to be defined"
+            for oidName in [ "engineId"]:
+                if oidName in d["staticOidContent"].keys():
+                    self.staticOidDict[oidName] = d["staticOidContent"][oidName]
+                else:
+                    self.statitOidDict[oidName] = "to be defined"
         self.expirytimer = 50 ### FIXME
         self.responseSequence = 0
         self.requestMappingDict = REQUEST_MAPPING_DICTS

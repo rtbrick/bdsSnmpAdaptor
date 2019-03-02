@@ -23,3 +23,4 @@ bdsSnmpAdapter:
       sysContact: sysContact123@example.com
       sysName: sysName123
       sysLocation: sysLocation123
+      engineId: 80:00:C3:8A:04:73:79:73:4e:61:6d:65_31:32:33

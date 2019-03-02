@@ -32,7 +32,7 @@ class StaticAndPredefinedOids (object):
             bdsMappingFunc = "StaticAndPredefinedOids",
             oid = "1.3.6.1.2.1.1.2.0",
             name="sysObjectID", pysnmpBaseType="ObjectIdentifier",
-            value=".1.3.6.1.4.1.50058.102.1.1.1.2.1" ))     #FIXME get from BDS table
+            value=".1.3.6.1.4.1.50058.102.1.1.1.2.1" ))     #FIXME get from BDS entity table
         targetOidDb.insertOid(newOidItem = OidDbItem(
             bdsMappingFunc = "StaticAndPredefinedOids",
             oid = "1.3.6.1.2.1.1.3.0",
@@ -58,3 +58,5 @@ class StaticAndPredefinedOids (object):
             oid = "1.3.6.1.2.1.1.7.0",
             name="SysServices", pysnmpBaseType="Integer32",
             value=6 ))
+
+        print(f'temp print for engineId: {staticOidDict["engineId"]}')
