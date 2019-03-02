@@ -7,6 +7,8 @@ import logging
 #import yaml
 from oidDb import OidDbItem
 import asyncio
+import struct
+import binascii
 
 
 IFTYPEMAP = {
@@ -19,11 +21,13 @@ IFOPERSTATUSMAP = {
             3:3   # testing(3)   -- in some test mode
             }
 
-HEX_STRING_LAMBDA = lambda x : int(x,16)
-IFMTU_LAMBDA = lambda x : int("".join([m[2:4]+m[0:2] for m in [x[i:i+4] for i in range(0,len(x),4)]]),16)
-#IFSPEED_LAMBDA = lambda x : int("".join([m[2:4]+m[0:2] for m in [x[i:i+4] for i in range(0,len(x),4)]]),16)
-IFSPEED_LAMBDA = lambda x : int(x,16)
+bigEndianFloatStruct = struct.Struct('>f')
+littleEndianShortStruct = struct.Struct('<h')
+IFMTU_LAMBDA = lambda x : int(littleEndianShortStruct.unpack(binascii.unhexlify(x))[0])
+IFSPEED_LAMBDA = lambda x : int(bigEndianFloatStruct.unpack(binascii.unhexlify(x))[0]/100)
 
+#HEX_STRING_LAMBDA = lambda x : int(x,16)
+#IFMTU_LAMBDA = lambda x : int("".join([m[2:4]+m[0:2] for m in [x[i:i+4] for i in range(0,len(x),4)]]),16)
 
 class confd_global_interface_container(object):
 
@@ -72,9 +76,10 @@ class confd_global_interface_container(object):
         oidSegment = "1.3.6.1.2.1.2.2.1."
         targetOidDb.setLock()
         #targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
-        for bdsJsonObject in bdsJsonResponseDict["objects"]:
+        for i,bdsJsonObject in enumerate(bdsJsonResponseDict["objects"]):
             ifName = bdsJsonObject["attribute"]["interface_name"]
             index =  bdsMappingFunctions.ifIndexFromIfName(ifName)
+            #index =  i + 1
             ifPhysicalLocation = bdsMappingFunctions.stripIfPrefixFromIfName(ifName)
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "confd_global_interface_container",
@@ -132,12 +137,3 @@ class confd_global_interface_container(object):
                 pysnmpBaseType="TimeTicks",
                 value=0 ))   # Fixme
         targetOidDb.releaseLock()
-
-
-if __name__ == "__main__":
-    IFMTU_LAMBDA = lambda x : int("".join([m[2:4]+m[0:2] for m in [x[i:i+4] for i in range(0,len(x),4)]]),16)
-    IFSPEED_LAMBDA = lambda x : int(x,16)
-
-    d = '4e9502f9'
-    m = IFMTU_LAMBDA(d)
-    print(m)

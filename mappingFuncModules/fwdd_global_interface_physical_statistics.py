@@ -7,8 +7,15 @@ import logging
 #import yaml
 from oidDb import OidDbItem
 import asyncio
+import struct
+import binascii
+
 
 HEX_STRING_LAMBDA = lambda x : int(x,16)
+
+littleEndianLongLongStruct = struct.Struct('<q')
+LELL_LAMBDA = lambda x : int(littleEndianLongLongStruct.unpack(binascii.unhexlify(x))[0])
+
 
 class fwdd_global_interface_physical_statistics(object):
 
@@ -128,79 +135,80 @@ class fwdd_global_interface_physical_statistics(object):
         oidSegment = "1.3.6.1.2.1.2.2.1."
         targetOidDb.setLock()
         #targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
-        for bdsJsonObject in bdsJsonResponseDict["objects"]:
+        for i,bdsJsonObject in enumerate(bdsJsonResponseDict["objects"]):
             ifName = bdsJsonObject["attribute"]["interface_name"]
             index =  bdsMappingFunctions.ifIndexFromIfName(ifName)
+            #index =  i + 1
             ifPhysicalLocation = bdsMappingFunctions.stripIfPrefixFromIfName(ifName)
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "fwdd_global_interface_physical_statistics",
                 oid = oidSegment+"10."+str(index),
                 name="ifInOctets",
                 pysnmpBaseType="Counter32",
-                value=HEX_STRING_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_in_octets"])))
+                value=LELL_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_in_octets"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "fwdd_global_interface_physical_statistics",
                 oid = oidSegment+"11."+str(index),
                 name="ifInUcastPkts",
                 pysnmpBaseType="Counter32",
-                value=HEX_STRING_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_in_ucast_pkts"])))
+                value=LELL_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_in_ucast_pkts"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "fwdd_global_interface_physical_statistics",
                 oid = oidSegment+"12."+str(index),
                 name="ifInNUcastPkts",
                 pysnmpBaseType="Counter32",
-                value=HEX_STRING_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_in_non_ucast_pkts"])))
+                value=LELL_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_in_non_ucast_pkts"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "fwdd_global_interface_physical_statistics",
                 oid = oidSegment+"13."+str(index),
                 name="ifInDiscards",
                 pysnmpBaseType="Counter32",
-                value=HEX_STRING_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_in_discards"])))
+                value=LELL_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_in_discards"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "fwdd_global_interface_physical_statistics",
                 oid = oidSegment+"14."+str(index),
                 name="ifInErrors",
                 pysnmpBaseType="Counter32",
-                value=HEX_STRING_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_in_errors"])))
+                value=LELL_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_in_errors"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "fwdd_global_interface_physical_statistics",
                 oid = oidSegment+"15."+str(index),
                 name="ifInUnknownProtos",
                 pysnmpBaseType="Counter32",
-                value=HEX_STRING_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_in_unknown_protos"])))
+                value=LELL_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_in_unknown_protos"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "fwdd_global_interface_physical_statistics",
                 oid = oidSegment+"16."+str(index),
                 name="ifOutOctets",
                 pysnmpBaseType="Counter32",
-                value=HEX_STRING_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_out_octets"])))
+                value=LELL_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_out_octets"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "fwdd_global_interface_physical_statistics",
                 oid = oidSegment+"17."+str(index),
                 name="ifOutUcastPkts",
                 pysnmpBaseType="Counter32",
-                value=HEX_STRING_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_out_ucast_pkts"])))
+                value=LELL_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_out_ucast_pkts"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "fwdd_global_interface_physical_statistics",
                 oid = oidSegment+"18."+str(index),
                 name="ifOutNUcastPkts",
                 pysnmpBaseType="Counter32",
-                value=HEX_STRING_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_out_non_ucast_pkts"])))
+                value=LELL_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_out_non_ucast_pkts"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "fwdd_global_interface_physical_statistics",
                 oid = oidSegment+"19."+str(index),
                 name="ifOutDiscards",
                 pysnmpBaseType="Counter32",
-                value=HEX_STRING_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_out_discards"])))
+                value=LELL_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_out_discards"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "fwdd_global_interface_physical_statistics",
                 oid = oidSegment+"20."+str(index),
                 name="ifOutErrors",
                 pysnmpBaseType="Counter32",
-                value=HEX_STRING_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_out_errors"])))
+                value=LELL_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_out_errors"])))
             targetOidDb.insertOid(newOidItem = OidDbItem(
                 bdsMappingFunc = "fwdd_global_interface_physical_statistics",
                 oid = oidSegment+"21."+str(index),
                 name="ifOutQLen",
                 pysnmpBaseType="Gauge32",
-                value=HEX_STRING_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_out_qlen"])))
+                value=LELL_LAMBDA(bdsJsonObject["attribute"]["port_stat_if_out_qlen"])))

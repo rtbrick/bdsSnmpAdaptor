@@ -25,9 +25,19 @@ class StaticAndPredefinedOids (object):
     async def setOids(self,targetOidDb,staticOidDict):
         targetOidDb.insertOid(newOidItem = OidDbItem(
             bdsMappingFunc = "StaticAndPredefinedOids",
+            oid = "1.3.6.1.2.1.1.1.0",
+            name="sysContact", pysnmpBaseType="OctetString",
+            value= staticOidDict["sysDesc"]))
+        targetOidDb.insertOid(newOidItem = OidDbItem(
+            bdsMappingFunc = "StaticAndPredefinedOids",
             oid = "1.3.6.1.2.1.1.2.0",
             name="sysObjectID", pysnmpBaseType="ObjectIdentifier",
-            value=".1.3.6.1.4.1.50058" ))
+            value=".1.3.6.1.4.1.50058.102.1.1.1.2.1" ))     #FIXME get from BDS table
+        targetOidDb.insertOid(newOidItem = OidDbItem(
+            bdsMappingFunc = "StaticAndPredefinedOids",
+            oid = "1.3.6.1.2.1.1.3.0",
+            name="sysUptime", pysnmpBaseType="TimeTicks",
+            value=""))
         targetOidDb.insertOid(newOidItem = OidDbItem(
             bdsMappingFunc = "StaticAndPredefinedOids",
             oid = "1.3.6.1.2.1.1.4.0",

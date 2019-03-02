@@ -13,15 +13,10 @@ bdsSnmpAdapter:
     # User-based Security Model (USM) for version 3 configurations:
     # http://snmplabs.com/pysnmp/docs/api-reference.html#security-parameters
     usmUsers:
-      - testUser1:
-          authKey: authKey123
-          authProtocol: SHA     #optional (MD5|SHA), default = SHA
-          privKey: privkey123
-          privProtocol: AES     #optional, (DES|AES) default = AES
       - testUser2:
           authKey: authKey123
     staticOidContent:
-      sysDesc: sysDesc123
+      sysDesc: bdsSnmpAdaptor v0.5.2
       sysContact: sysContact123@example.com
       sysName: sysName123
       sysLocation: sysLocation123

@@ -47,19 +47,19 @@ REQUEST_MAPPING_DICTS = {
        "bdsRequestDict": {'process': 'confd',
                           'urlSuffix':'bds/table/walk?format=raw',
                          'table':'global.interface.container'}
-    },
+    }
    # "ffwd_default_interface_logical" : {
    #     "mappingFunc": ffwd_default_interface_logical,
    #     "bdsRequestDict": {'process': 'fwdd-hald',      ## Check
    #                        'urlSuffix':'bds/table/walk?format=raw',
    #                        'table':'default.interface.logical'}
-   #  }
-   "fwdd_global_interface_physical_statistics" : {
-       "mappingFunc": fwdd_global_interface_physical_statistics,
-       "bdsRequestDict": {'process': 'fwdd-hald',      ## Check
-                          'urlSuffix':'bds/table/walk?format=raw',
-                          'table':'global.interface.physical.statistics'}
-    }
+   #  },
+   # "fwdd_global_interface_physical_statistics" : {
+   #     "mappingFunc": fwdd_global_interface_physical_statistics,
+   #     "bdsRequestDict": {'process': 'fwdd-hald',      ## Check
+   #                        'urlSuffix':'bds/table/walk?format=raw',
+   #                        'table':'global.interface.physical.statistics'}
+   #   }
   }
 
 

@@ -13,7 +13,7 @@ IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
     Unsigned32                              FROM    SNMPv2-SMI
     TEXTUAL-CONVENTION,DisplayString        FROM    SNMPv2-TC
-    syslogMib,rtbrickSyslogNotifications    FROM    RTBRICK-MIB
+    rtbrickTraps, rtbrickSyslogNotifications    FROM    RTBRICK-MIB
 ;
 
 rtBrickSyslogMIB MODULE-IDENTITY
@@ -23,7 +23,7 @@ rtBrickSyslogMIB MODULE-IDENTITY
     DESCRIPTION  "system_software_info"
     REVISION     "201901040000Z"
     DESCRIPTION  "Initial revision"
-    ::= { syslogMib 1 }
+    ::= { rtbrickTraps 1 }
 
 syslogMessage   OBJECT IDENTIFIER ::= { rtBrickSyslogMIB 1 }
 

@@ -138,7 +138,7 @@ class OidDb():
             return None
 
     def getNextOid(self,searchOid):
-        print(f'getNextOid searchOid:{searchOid}')
+        #print(f'getNextOid searchOid:{searchOid}')
         self.moduleLogger.debug(f'getNextOid searchOid:{searchOid}')
         if self.firstItem:
             if searchOid in self.oidDict.keys():      #directMatches
@@ -159,7 +159,7 @@ class OidDb():
                     #print(f'iterItem = self.firstItem')
                     iterItem = self.firstItem
                     while iterItem < OidDbItem(oid=searchOid) and iterItem.nextOidObj != None :
-                        print (iterItem.oid,searchOid)
+                        #print (iterItem.oid,searchOid)
                         if iterItem.nextOidObj > OidDbItem(oid=searchOid):
                             return iterItem.nextOidObj.oid
                         else:

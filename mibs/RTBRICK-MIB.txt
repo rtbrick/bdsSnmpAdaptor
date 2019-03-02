@@ -18,7 +18,7 @@ rtbrick MODULE-IDENTITY
     CONTACT-INFO "E-mail: Stefan Lieberth <stefan@rtbrick.com>"
     DESCRIPTION
 	"RtBrick top-level MIB tree infrastructure"
-    REVISION     "201804140000Z"
+    REVISION     "201903010000Z"
     DESCRIPTION  "Initial revision"
     ::= { enterprises 50058 }
 
@@ -27,9 +27,9 @@ rtbrick MODULE-IDENTITY
 --  rtbrick enterprise-specific management objects
 --
 
-bdsTables                  OBJECT IDENTIFIER ::= { rtbrick 101 }
-syslogMib                  OBJECT IDENTIFIER ::= { rtbrick 102 }
-rtbrickTraps               OBJECT IDENTIFIER ::= { rtbrick 103 }
+rtbrickTables                  OBJECT IDENTIFIER ::= { rtbrick 101 }
+rtbrickProducts                OBJECT IDENTIFIER ::= { rtbrick 102 }
+rtbrickTraps                   OBJECT IDENTIFIER ::= { rtbrick 103 }
 rtbrickSyslogNotifications     OBJECT IDENTIFIER ::= { rtbrickTraps 1 }
 
 END

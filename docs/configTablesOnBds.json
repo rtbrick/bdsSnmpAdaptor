@@ -1,0 +1,60 @@
+{
+    "object": {
+        "name"      : "bd_snmp_config_object",
+        "codepoint" : 10xx,
+        "module"    : "bds",
+
+        "attribute": [
+            {"name": "global",              "codepoint":  1,    "type": "uint8", "description": "If its a global config"},
+            {"name": "listeningIpv4",       "codepoint":  2,    "type": "ipv4addr", "description": "listen address for snmpGet operations, default = 0.0.0.0"},
+            {"name": "listeningPort",       "codepoint":  3,    "type": "uint32", "description": "listening port for snmpGet operations, default = 161"},
+            {"name": "version",             "codepoint":  4,   "type": "string", "description": "specifies the snmp version type=str, choices=['2c', '3']"}
+            {"name": "community",           "codepoint":  5,   "type": "string", "description": "holds the v2c community, only used for v2c, default = ''"}
+        ]
+    }
+}
+
+
+{
+    "object": {
+        "name"      : "bd_snmp_usm_config_object",
+        "codepoint" : 10xx,
+        "module"    : "bds",
+
+        "attribute": [
+            {"name": "userName",            "codepoint":  1,    "type": "string", "description": "identifier for the USM user"},
+            {"name": "authKey",             "codepoint":  2,    "type": "string", "description": "holds the authentication, empty autentication is not used"},
+            {"name": "authProtocol",        "codepoint":  3,    "type": "string", "description": "holds the authentication protocol, optional (MD5|SHA), default = SHA"},
+            {"name": "authKey",             "codepoint":  4,    "type": "string", "description": "holds the encryption key, empty encryption is not used"},
+            {"name": "authProtocol",        "codepoint":  5,    "type": "string", "description": "holds the encryption protocol, optional, (DES|AES) default = AES"}
+        ]
+    }
+}
+
+
+{
+    "object": {
+        "name"      : "bd_snmp_static_oids_object",
+        "codepoint" : 10xx,
+        "module"    : "bds",
+
+        "attribute": [
+            {"name": "oidName",            "codepoint":  1,    "type": "string", "description": "string Identifier of oid, e.g. sysLocation"},
+            {"name": "valueAsString",      "codepoint":  2,    "type": "string", "description": "value of the oid, e.f. contact@example.com"},
+        ]
+    }
+}
+
+
+{
+    "object": {
+        "name"      : "bd_snmp_trap_destination_object",
+        "codepoint" : 10xx,
+        "module"    : "bds",
+
+        "attribute": [
+            {"name": "snmpIpv4TrapTarget",    "codepoint":  1,    "type": "ipv4addr", "description": "string Identifier of oid, e.g. sysLocation"},
+            {"name": "snmpTrapPort",      "codepoint":  2,    "type": "string", "description": "value of the oid, e.f. contact@example.com"}
+        ]
+    }
+}

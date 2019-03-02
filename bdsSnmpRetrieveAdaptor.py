@@ -28,7 +28,14 @@ from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
 from bdsAccess import BdsAccess
 from oidDb import OidDb
+import time
 
+class Uptime:
+    birthday = time.time()
+    def __call__(self):
+        return (int(time.time()-self.birthday)*100)
+
+BIRTHDAY = time.time()
 
 class MibInstrumController(instrum.AbstractMibInstrumController):
 
@@ -45,6 +52,9 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
     def createVarbindFromOidDbItem(self,_oidDbItem):
         baseType = _oidDbItem.pysnmpBaseType      #FIXME catch exception
         if _oidDbItem.value != None:
+            if _oidDbItem.name == "sysUptime":
+                x = Uptime()
+                _oidDbItem.value = int((time.time()-BIRTHDAY)*100)
             if _oidDbItem.pysnmpRepresentation:
                 evalString = "{}({}='{}')".format(_oidDbItem.pysnmpBaseType,
                                                   _oidDbItem.pysnmpRepresentation,
@@ -71,7 +81,8 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
     def readVars(self, varBinds, acInfo=(None, None)):
         collonSeparatedVarbindList = [ ', '.join(str(x[0]) for x in varBinds )]
         self.moduleLogger.debug(f'readVars: {collonSeparatedVarbindList}')
-
+        print (f'readVars: {collonSeparatedVarbindList}')
+        returnList = []
         for oid, value in varBinds:
             try:
                 oidDbItemObj = self._oidDb.getObjFromOid(str(oid))
@@ -84,11 +95,13 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
                 self.moduleLogger.debug(f'oidDb returned\n{oidDbItemObj}for oid: {oid}')
                 if oidDbItemObj is None:
                     self.moduleLogger.warning(f'_oidDb return None for oid: {oid}')
-                    value = [ v2c.NoSuchObject() ]
-
+                    #print (f'_oidDb return None for oid: {oid}')
+                    returnList.append((oid,v2c.NoSuchObject()))
                 else:
                     self.moduleLogger.debug(f'createVarbindFromOidDbItem with {oidDbItemObj.oid}')
-                    return [ self.createVarbindFromOidDbItem(oidDbItemObj) ]
+                    returnList.append(self.createVarbindFromOidDbItem(oidDbItemObj))
+        [ print(x) for x in returnList ]
+        return returnList
 
 
     def readNextVars(self, varBinds, acInfo=(None, None)):
@@ -101,26 +114,26 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         rspVarBinds = []
         oidStrings = []
 
+        returnList = []
         for oid, value in varBinds:
             self.moduleLogger.debug('entry for-loop {},{} in varBinds'.format(oid, value))
             nextOidString = self._oidDb.getNextOid(str(oid))
-            print(f'nextOidString: {nextOidString}')
+            #print(f'nextOidString: {nextOidString}')
             try:
-
                 oidDbItemObj = self._oidDb.getObjFromOid(nextOidString)
-
             except Exception as e:
                 print('oidDb failure: {}'.format(e))
-
             else:
-                print(f'oidDb returned\n{oidDbItemObj}for oid: {nextOidString}')
+                #print(f'oidDb returned\n{oidDbItemObj}for oid: {nextOidString}')
                 if oidDbItemObj is None:
-                    print('return [ ("0.0", v2c.EndOfMibView()) ]')
-                    return [ ("0.0", v2c.EndOfMibView()) ]
+                    #print('return [ ("0.0", v2c.EndOfMibView()) ]')
+                    returnList.append( ("0.0", v2c.EndOfMibView()) )
 
                 else:
-                    print(f'createVarbindFromOidDbItem with {oidDbItemObj.oid}')
-                    return [ self.createVarbindFromOidDbItem(oidDbItemObj) ]
+                    #print(f'createVarbindFromOidDbItem with {oidDbItemObj.oid}')
+                    returnList.append(self.createVarbindFromOidDbItem(oidDbItemObj))
+        print (returnList)
+        return returnList
 
 class SnmpFrontEnd:
     """
@@ -137,9 +150,7 @@ class SnmpFrontEnd:
         self.listeningAddress = configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
         self.snmpVersion = configDict["version"]
-        # engine_id = OctetString(hexValue='80004fb80567726f6d6d69742')
-        # context_engine_id = v2c.OctetString(hexValue='80004fb80567726f6d6d69742')
-        # self.snmpEngine = engine.SnmpEngine(snmpEngineID=engine_id)
+        self.birthday = time.time()
         self.snmpEngine = engine.SnmpEngine()
         self.bdsAccess = BdsAccess(cliArgsDict) # Instantiation of the BDS Access Service
         self.oidDb = self.bdsAccess.getOidDb()
@@ -220,6 +231,11 @@ class SnmpFrontEnd:
                 raise Exception('snmp v3: missing usmUsers configuration in configfile!')
             #https://github.com/openstack/virtualpdu/blob/master/virtualpdu/pdu/pysnmp_handler.py
             snmpContext = context.SnmpContext(self.snmpEngine)
+            snmpContext.unregisterContextName(v2c.OctetString(''))
+            snmpContext.registerContextName(
+                v2c.OctetString(''),  # Context Name
+                MibInstrumController().setOidDbAndLogger(self.oidDb)
+            )
         else:
             raise Exception('incorrect snmp version string, just "2c" and "3" are supported')
         cmdrsp.GetCommandResponder(self.snmpEngine, snmpContext)

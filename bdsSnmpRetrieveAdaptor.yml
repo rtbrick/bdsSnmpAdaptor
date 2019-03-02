@@ -12,7 +12,7 @@ bdsSnmpAdapter:
     version: 2c # specify snmp version type=str, choices=['2c', '3']
     community: public # v2c community
     staticOidContent:
-      sysDesc: sysDesc123
-      sysContact: sysContact123@example.com
-      sysName: sysName123
-      sysLocation: sysLocation123
+      sysDesc: l2.pod2.nbg2.rtbrick.net
+      sysContact: stefan@rtbrick.com
+      sysName: l2.pod2.nbg2.rtbrick.net
+      sysLocation: nbg2.rtbrick.net
