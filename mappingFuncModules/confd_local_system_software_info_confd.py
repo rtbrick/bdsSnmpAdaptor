@@ -11,7 +11,7 @@ class confd_local_system_software_info_confd(object):
 
     """
     @classmethod
-    async def setOids(self,bdsJsonResponseDict,targetOidDb):
+    async def setOids(self,bdsJsonResponseDict,targetOidDb,tableSequenceList,birthday):
         swString = bdsMappingFunctions.stringFromSoftwareInfo (bdsJsonResponseDict)
         targetOidDb.insertOid(newOidItem = OidDbItem(
             bdsMappingFunc = "confd_local_system_software_info_confd",

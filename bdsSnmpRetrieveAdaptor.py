@@ -30,10 +30,10 @@ from bdsAccess import BdsAccess
 from oidDb import OidDb
 import time
 
-class Uptime:
-    birthday = time.time()
-    def __call__(self):
-        return (int(time.time()-self.birthday)*100)
+# class Uptime:
+#     birthday = time.time()
+#     def __call__(self):
+#         return (int(time.time()-self.birthday)*100)
 
 BIRTHDAY = time.time()
 
@@ -53,7 +53,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         baseType = _oidDbItem.pysnmpBaseType      #FIXME catch exception
         if _oidDbItem.value != None:
             if _oidDbItem.name == "sysUptime":
-                x = Uptime()
+                #x = Uptime()
                 _oidDbItem.value = int((time.time()-BIRTHDAY)*100)
             if _oidDbItem.pysnmpRepresentation:
                 evalString = "{}({}='{}')".format(_oidDbItem.pysnmpBaseType,

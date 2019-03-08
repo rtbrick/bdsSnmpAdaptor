@@ -37,7 +37,7 @@ class confd_global_startup_status_confd(object):
 
 
     @classmethod
-    async def setOids(self,bdsJsonResponseDict,targetOidDb):
+    async def setOids(self,bdsJsonResponseDict,targetOidDb,tableSequenceList,birthday):
         oidSegment = "1.3.6.1.2.1.25.4."
         targetOidDb.insertOid(newOidItem = OidDbItem(
             bdsMappingFunc = "confd_global_startup_status_confd",

@@ -24,7 +24,7 @@ class fwdd_global_interface_physical_statistics(object):
     curl -X POST -H "Content-Type: application/json" -H "Accept: */*" -H "connection: close"\
         -H "Accept-Encoding: application/json"\
         -d '{"table": {"table_name": "global.interface.physical.statistics"}}'\
-        "http://10.0.3.50:5002/bds/table/walk?format=raw" | jq '.'
+        "http://10.0.3.10:5002/bds/table/walk?format=raw" | jq '.'
 
     {
       "objects": [
