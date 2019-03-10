@@ -24,6 +24,15 @@ rtbrickProducts MODULE-IDENTITY
     ::= { rtbrickProducts 1 }
 
 
+rtbrickChassisType ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION  "Identifies a specific router chassis type."
+    SYNTAX       INTEGER {
+                     unknown       (1),
+                     singleChassis (2)
+                 }
+
+
 --
 --  rtbrick enterprise-specific management objects
 --
@@ -31,6 +40,10 @@ rtbrickProducts MODULE-IDENTITY
 --
 -- Products Classification
 --
+
+
+
+
 rtbrickClassification       OBJECT IDENTIFIER ::= { rtbrickProducts   1 }
 rtbrickClassGeneral   	OBJECT IDENTIFIER ::= { rtbrickClassification 1 }
 rtbrickClassContainers	OBJECT IDENTIFIER ::= { rtbrickClassification 2 }

@@ -150,11 +150,13 @@ class asyncioRestServer():
         peerIP = request._transport_peername[0]
         self.requestCounter += 1
         self.moduleLogger.info ("handler: incoming request peerIP:{}".format(peerIP,request.headers,self.requestCounter))
+        print ("handler: incoming request peerIP:{}".format(peerIP,request.headers,self.requestCounter))
         #self.moduleLogger.debug ("handler: peerIP:{} headers:{} counter:{} ".format(peerIP,request.headers,self.requestCounter))
         data = {'headers': dict(request.headers)}
         jsonTxt = await request.text() #
         try:
             bdsLogDict = json.loads(jsonTxt)
+            print(f"bdsLogDict {bdsLogDict}")
         except Exception as e:
             self.moduleLogger.error ("connot convert json to dict:{} {}".format(jsonTxt,e))
         else:

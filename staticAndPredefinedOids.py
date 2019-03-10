@@ -32,7 +32,7 @@ class StaticAndPredefinedOids (object):
             bdsMappingFunc = "StaticAndPredefinedOids",
             oid = "1.3.6.1.2.1.1.2.0",
             name="sysObjectID", pysnmpBaseType="ObjectIdentifier",
-            value=".1.3.6.1.4.1.50058.102.1.1.1.2.1" ))     #FIXME get from BDS entity table
+            value="1.3.6.1.4.1.50058.102.1.0" ))     #FIXME get from BDS entity table
         targetOidDb.insertOid(newOidItem = OidDbItem(
             bdsMappingFunc = "StaticAndPredefinedOids",
             oid = "1.3.6.1.2.1.1.3.0",
@@ -59,4 +59,27 @@ class StaticAndPredefinedOids (object):
             name="SysServices", pysnmpBaseType="Integer32",
             value=6 ))
 
+        #
         print(f'temp print for engineId: {staticOidDict["engineId"]}')
+        #
+        #  Entity definitions
+        #
+        valueMatrix = [["Rtbrick","0.0"],
+                       ["Rtbrick","1.3.6.1.4.1.50058.102.1.0"]]
+        for i,phyValueList in valueMatrix:
+            index = i+1
+            targetOidDb.insertOid(newOidItem = OidDbItem(
+                bdsMappingFunc = "StaticAndPredefinedOids",
+                oid = "1.3.6.1.2.1.47.1.1.1.1."+str(index),
+                name="entPhysicalIndex", pysnmpBaseType="Integer32",
+                value=index ))
+            targetOidDb.insertOid(newOidItem = OidDbItem(
+                bdsMappingFunc = "StaticAndPredefinedOids",
+                oid = "1.3.6.1.2.1.47.1.1.1.1.2"+str(index),
+                name="entPhysicalDescr", pysnmpBaseType="OctetString",
+                value=valueMatrix[i][0] ))
+            targetOidDb.insertOid(newOidItem = OidDbItem(
+                bdsMappingFunc = "StaticAndPredefinedOids",
+                oid = "1.3.6.1.2.1.47.1.1.1.1.3"+str(index),
+                name="entPhysicalDescr", pysnmpBaseType="ObjectIdentifier",
+                value=valueMatrix[i][0] " ))

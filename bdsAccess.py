@@ -26,7 +26,7 @@ from oidDb import OidDb
 from staticAndPredefinedOids import StaticAndPredefinedOids
 from mappingFuncModules.confd_local_system_software_info_confd import confd_local_system_software_info_confd
 from mappingFuncModules.confd_global_startup_status_confd import confd_global_startup_status_confd
-from mappingFuncModules.confd_global_interface_container import confd_global_interface_container
+from mappingFuncModules.confd_global_interface_physical import confd_global_interface_physical
 from mappingFuncModules.ffwd_default_interface_logical import ffwd_default_interface_logical
 from mappingFuncModules.fwdd_global_interface_physical_statistics import fwdd_global_interface_physical_statistics
 
@@ -45,11 +45,11 @@ REQUEST_MAPPING_DICTS = {
                           'urlSuffix':'bds/table/walk?format=raw',
                          'table':'global.startup.status.confd'}
     },
-   "confd_global_interface_container" : {
-       "mappingFunc": confd_global_interface_container,
+   "confd_global_interface_physical" : {
+       "mappingFunc": confd_global_interface_physical,
        "bdsRequestDict": {'process': 'confd',
                           'urlSuffix':'bds/table/walk?format=raw',
-                         'table':'global.interface.container'}
+                         'table':'global.interface.physical'}
     }
    # "ffwd_default_interface_logical" : {
    #     "mappingFunc": ffwd_default_interface_logical,
@@ -175,7 +175,7 @@ class BdsAccess():
                     await mappingfunc.setOids(responseJsonDict,self.oidDb,tableSequenceList,BIRTHDAY)
                     await self.setTableSequenceDict(bdsRequestDictKey,responseJsonDict)
             #print(self.tableSequenceListDict)
-            await asyncio.sleep(60)
+            await asyncio.sleep(5)
 
 if __name__ == "__main__":
 
