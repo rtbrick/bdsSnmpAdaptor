@@ -5,60 +5,69 @@
 #
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
-
-import sys
-import requests
+#
 import json
-import logging
-import argparse
-import yaml
-import pprint
-from copy import deepcopy
 
 
-class bdsMappingFunctions():
+class bdsMappingFunctions(object):
 
-    def __init__():
+    def __init__(self):
         pass
 
     @classmethod
-    def stringFromSoftwareInfo(self,responseJSON):
+    def stringFromSoftwareInfo(cls, responseJSON):
         returnString = "RtBrick Fullstack:"
+
         for swModule in responseJSON["objects"]:
-            if swModule["attribute"]["library"] in ["libbds","libconfd","libisis","lwip","libfwdd","libbgp","bd"]:
-                returnString += (" {}:{}".format(swModule["attribute"]["library"],
-                                                    swModule["attribute"]["version"]))
+            if swModule["attribute"]["library"] in ["libbds", "libconfd",
+                                                    "libisis", "lwip",
+                                                    "libfwdd", "libbgp", "bd"]:
+                returnString += (" {}:{}".format(
+                    swModule["attribute"]["library"], swModule["attribute"]["version"]))
+
         return returnString
 
     @classmethod
-    def ifIndexFromIfName(self,ifNameString):
+    def ifIndexFromIfName(cls, ifNameString):
         ifIndexList = ifNameString.split("-")[1].split("/")
         if len(ifIndexList) == 5:
             if int(ifIndexList[4]) == 0:
-                ifIndex = int(ifIndexList[0])*4096*128*128*16 + int(ifIndexList[1])*4096*128*128 + int(ifIndexList[2])*4096*128 + int(ifIndexList[3])*4096 + (int(ifIndexList[4])+1)
+                ifIndex = int(ifIndexList[0]) * 4096 * 128 * 128 * 16 + int(ifIndexList[1]) * 4096 * 128 * 128 + int(
+                    ifIndexList[2]) * 4096 * 128 + int(ifIndexList[3]) * 4096 + (int(ifIndexList[4]) + 1)
+
             else:
-                ifIndex = int(ifIndexList[0])*4096*128*128*16 + int(ifIndexList[1])*4096*128*128 + int(ifIndexList[2])*4096*128 + int(ifIndexList[3])*4096 + int(ifIndexList[4])
+                ifIndex = int(ifIndexList[0]) * 4096 * 128 * 128 * 16 + int(ifIndexList[1]) * 4096 * 128 * 128 + int(
+                    ifIndexList[2]) * 4096 * 128 + int(ifIndexList[3]) * 4096 + int(ifIndexList[4])
+
             return ifIndex
+
         elif len(ifIndexList) == 4:
-            ifIndex = int(ifIndexList[0])*4096*128*128*16 + int(ifIndexList[1])*4096*128*128 + int(ifIndexList[2])*4096*128 + int(ifIndexList[3])*4096
+            ifIndex = int(ifIndexList[0]) * 4096 * 128 * 128 * 16 + int(ifIndexList[1]) * 4096 * 128 * 128 + int(
+                ifIndexList[2]) * 4096 * 128 + int(ifIndexList[3]) * 4096
+
             return ifIndex
+
         elif len(ifIndexList) == 3:
-            ifIndex = int(ifIndexList[0])*4096*128*128 + int(ifIndexList[1])*4096*128 + int(ifIndexList[2])*4096
+            ifIndex = int(ifIndexList[0]) * 4096 * 128 * 128 + int(ifIndexList[1]) * 4096 * 128 + int(
+                ifIndexList[2]) * 4096
             return ifIndex
+
         else:
             return None
 
     @classmethod
-    def stripIfPrefixFromIfName(self,ifNameString):
+    def stripIfPrefixFromIfName(cls, ifNameString):
         ifIndexList = ifNameString.split("-")[1].split("/")
+
         if len(ifIndexList) == 5:
             return "/".join(ifIndexList)
+
         elif len(ifIndexList) == 4:
             return "/".join(ifIndexList[1:])
+
         elif len(ifIndexList) == 3:
             return "/".join(ifIndexList)
-        else:
-            return None
+
 
 if __name__ == '__main__':
     jsonString = """{
@@ -293,5 +302,5 @@ if __name__ == '__main__':
     ]
 }"""
     responseJSON = json.loads(jsonString)
-    versionStr = bdsMappingFunctions.stringFromSoftwareInfo (responseJSON)
+    versionStr = bdsMappingFunctions.stringFromSoftwareInfo(responseJSON)
     print(versionStr)
