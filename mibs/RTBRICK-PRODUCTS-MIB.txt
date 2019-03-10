@@ -23,52 +23,7 @@ rtbrickProducts MODULE-IDENTITY
     DESCRIPTION  "Initial revision"
     ::= { rtbrickProducts 1 }
 
-
-rtbrickChassisType ::= TEXTUAL-CONVENTION
-    STATUS       current
-    DESCRIPTION  "Identifies a specific router chassis type."
-    SYNTAX       INTEGER {
-                     unknown       (1),
-                     singleChassis (2)
-                 }
-
-
---
---  rtbrick enterprise-specific management objects
---
-
---
--- Products Classification
---
-
-
-
-
-rtbrickClassification       OBJECT IDENTIFIER ::= { rtbrickProducts   1 }
-rtbrickClassGeneral   	OBJECT IDENTIFIER ::= { rtbrickClassification 1 }
-rtbrickClassContainers	OBJECT IDENTIFIER ::= { rtbrickClassification 2 }
-rtbrickClassContents	OBJECT IDENTIFIER ::= { rtbrickClassification 3 }
-rtbrickClassStatus		OBJECT IDENTIFIER ::= { rtbrickClassification 4 }
-
---
--- General Information
---
-
--- Product Line
-rtbrickProductLine	        OBJECT IDENTIFIER ::= { rtbrickClassGeneral 1 }
-rtbrickProductName 	        OBJECT IDENTIFIER ::= { rtbrickClassGeneral 2 }
-rtbrickProductModel         OBJECT IDENTIFIER ::= { rtbrickClassGeneral 3 }
-rtbrickProductVariation     OBJECT IDENTIFIER ::= { rtbrickClassGeneral 4 }
--- Chassis
-rtbrickChassis 	        OBJECT IDENTIFIER ::= { rtbrickClassContainers 1 }
-
---
--- Edgecore 5916-54
---
-
-  rtbrickProductLineEC5916      OBJECT IDENTIFIER ::= { rtbrickProductLine      1 }
-  rtbrickProductNameEC5916      OBJECT IDENTIFIER ::= { rtbrickProductName      1 }
-  rtbrickProductModelEC5916     OBJECT IDENTIFIER ::= { rtbrickProductModel     1 }
-  rtbrickChassisEC5916          OBJECT IDENTIFIER ::= { rtbrickChassis          1 }
+-- EC-AS5916-54XK 48-port SFP+ + 6-port QSFP+ Router
+rtbrickECAS591654XK OBJECT IDENTIFIER ::= { rtbrickProducts 1 }
 
 END
