@@ -28,8 +28,9 @@ sudo cp mibs/RT* /usr/share/snmp/mibs
 
 ## Modify config parameters in config file (dev. status)
 
-bdsSnmpRetrieveAdaptor.yml holds the config attribute for get/get-next
-operations. The format will change, when moving to deployment architecture.
+The `bdsSnmpRetrieveAdaptor.yml` file holds the config attribute for SNMP
+GET/GETNEXT commands. The format will change, when moving to deployment
+architecture.
 
 ```shell
 vim bdsSnmpRetrieveAdaptor.yml
@@ -37,21 +38,21 @@ vim bdsSnmpRetrieveAdaptor.yml
 ```yaml
 bdsSnmpAdapter:
   loggingLevel: debug
-  rotatingLogFile: /tmp/bdsSnmpAdaptor_   #FIXME store this at permament location
+  rotatingLogFile: /tmp/bdsSnmpAdaptor_   #FIXME store this at permanent location
   bdsAccess:
     rtbrickHost: 10.0.3.10
     rtbrickPorts:
      - confd: 2002  #Define the rest port on which confd listens"
-     - fwdd-hald: 5002  #Define the rest port on which fwwd listens"
+     - fwdd-hald: 5002  #Define the rest port on which fwdd listens"
   bdsSnmpRetrieveAdaptor:
-    listeningIP: 0.0.0.0  #SNMP get/getNext listening IP address
-    listeningPort: 161 #SNMP get/getNext listening port
-    version: 2c # specify snmp version type=str, choices=['2c', '3']
-    community: public # v2c community
+    listeningIP: 0.0.0.0  #SNMP GET/GETNEXT command responder listening IPv4 address
+    listeningPort: 161  #SNMP GET/GETNEXT responder listening UDP port
+    version: 2c  # specify SNMP version type=str, choices=['2c', '3']
+    community: public  # SNMP v2c community name
     #
-    # alternatively v3 config:
+    # alternatively SNMP v3 config:
     #
-    version: 3 # specify snmp version type=str, choices=['2c', '3']
+#    version: 3 # specify snmp version type=str, choices=['2c', '3']
     # User-based Security Model (USM) for version 3 configurations:
     # http://snmplabs.com/pysnmp/docs/api-reference.html#security-parameters
     usmUsers:
@@ -64,8 +65,8 @@ bdsSnmpAdapter:
           authKey: authKey123
 ```
 
-bdsSnmpTrapAdaptor.yml holds the config attribute for notification
-operations. The format will change, when moving to deployment architecture.
+The `bdsSnmpTrapAdaptor.yml` file holds the config attribute for SNMP notifications.
+The format will change, when moving to deployment architecture.
 
 ```shell
 vim bdsSnmpRetrieveAdaptor.yml
@@ -73,14 +74,14 @@ vim bdsSnmpRetrieveAdaptor.yml
 ```yaml
 bdsSnmpAdapter:
   loggingLevel: debug
-  rotatingLogFile: /tmp/bdsSnmpAdapter_   #FIXME store this at permament location
+  rotatingLogFile: /tmp/bdsSnmpAdapter_   #FIXME store this at permanent location
   bdsSnmpTrapAdaptor:
-    listeningIP: 0.0.0.0  #REST listening IP address
-    listeningPort: 5000 #REST listening port
-    snmpTrapServer: 127.0.0.1 #defines the SNMP server, which receives the traps
-    snmpTrapPort: 162 # defines the SNMP trap destination port
-    version: 2c # specify snmp version type=str, choices=['2c', '3']
-    community: public # v2c community
+    listeningIP: 0.0.0.0  #REST API listening IP address
+    listeningPort: 5000  #REST API listening port
+    snmpTrapServer: 127.0.0.1  #SNMP notification receiver listening IPv4 address
+    snmpTrapPort: 162  #SNMP notification receiver listening UDP port
+    version: 2c # specify SNMP version type=str, choices=['2c', '3']
+    community: public # SNMP v2c community name
     usmUsers:
       - testUser1:
           authKey: authKey123

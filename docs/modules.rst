@@ -7,14 +7,14 @@ Modules
 Module-Overview
 ===============
 
-bdsSnmpAdapter utilizes 6 discrete python modules, which run as separate
+`bdsSnmpAdapter` utilizes 6 discrete python modules, which run as separate
 linux processes:
 
-- 3 processes support SNMP get/next information retrieve:
+- 3 processes support SNMP GET/GETNEXT command for information retrieval:
 
   - bdsAccessToRedis
   - bdsSnmpTables
-  - getOidFromRedi
+  - getOidFromRedis
 
 - 2 processes support the generation of SNMP notifications:
 
