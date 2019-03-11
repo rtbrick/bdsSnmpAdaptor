@@ -1,4 +1,4 @@
-RTBRICK-PRODUCT DEFINITIONS ::= BEGIN
+RTBRICK-PRODUCTS DEFINITIONS ::= BEGIN
 
 --
 -- Top-level infrastructure of the RtBrick enterprise MIB tree
@@ -13,7 +13,7 @@ IMPORTS
     rtbrickProducts                          FROM RTBRICK-MIB;
 
 
-rtbrickProducts MODULE-IDENTITY
+rtbrickProductsMIB MODULE-IDENTITY
     LAST-UPDATED "201804140000Z"
     ORGANIZATION "RtBrick"
     CONTACT-INFO "E-mail: Stefan Lieberth <stefan@rtbrick.com>"
@@ -21,9 +21,9 @@ rtbrickProducts MODULE-IDENTITY
 	    "RtBrick Product Information"
     REVISION     "201804140000Z"
     DESCRIPTION  "Initial revision"
-    ::= { rtbrickProducts 1 }
+    ::= { rtbrickModules 1 }
 
--- EC-AS5916-54XK 48-port SFP+ + 6-port QSFP+ Router
+-- EC-AS5916-54XK 48-port SFP+ plus 6-port QSFP28 Router
 rtbrickECAS591654XK OBJECT IDENTIFIER ::= { rtbrickProducts 1 }
 
 END

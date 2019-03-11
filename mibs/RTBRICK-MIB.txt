@@ -31,5 +31,6 @@ rtbrickTables                  OBJECT IDENTIFIER ::= { rtbrick 101 }
 rtbrickProducts                OBJECT IDENTIFIER ::= { rtbrick 102 }
 rtbrickTraps                   OBJECT IDENTIFIER ::= { rtbrick 103 }
 rtbrickSyslogNotifications     OBJECT IDENTIFIER ::= { rtbrickTraps 1 }
+rtbrickModules                 OBJECT IDENTIFIER ::= { rtbrick 104 }
 
 END
