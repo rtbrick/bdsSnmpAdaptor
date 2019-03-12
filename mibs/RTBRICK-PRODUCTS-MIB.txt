@@ -10,7 +10,7 @@ IMPORTS
     TEXTUAL-CONVENTION, DisplayString,
     PhysAddress, TruthValue, RowStatus,
     TimeStamp, AutonomousType, TestAndIncr   FROM SNMPv2-TC
-    rtbrickProducts                          FROM RTBRICK-MIB;
+    rtbrickProducts, rtbrickModules          FROM RTBRICK-MIB;
 
 
 rtbrickProductsMIB MODULE-IDENTITY

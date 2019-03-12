@@ -32,7 +32,7 @@ class StaticAndPredefinedOids (object):
             bdsMappingFunc = "StaticAndPredefinedOids",
             oid = "1.3.6.1.2.1.1.2.0",
             name="sysObjectID", pysnmpBaseType="ObjectIdentifier",
-            value="1.3.6.1.4.1.50058.102.1.0" ))     #FIXME get from BDS entity table
+            value="1.3.6.1.4.1.50058.102.1" ))     #FIXME get from BDS entity table
         targetOidDb.insertOid(newOidItem = OidDbItem(
             bdsMappingFunc = "StaticAndPredefinedOids",
             oid = "1.3.6.1.2.1.1.3.0",
@@ -65,7 +65,7 @@ class StaticAndPredefinedOids (object):
         #  Entity definitions test
         #
         valueMatrix = [["Edgecore Networks AS5912-54 port 10GB SFP+ + 6 port QSFP28",
-                        "1.3.6.1.4.1.50058.102.1.0",
+                        "1.3.6.1.4.1.50058.102.1",
                         0,
                         3,
                         0,
