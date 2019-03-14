@@ -65,7 +65,13 @@ class asyncioTrapGenerator():
         self.snmpTrapTargets = configDict["snmpTrapTargets"]
         self.snmpTrapPort = configDict["snmpTrapPort"]
         self.trapCounter = 0
-        self.snmpEngine = SnmpEngine()
+        engineId = configDict.get('engineId')
+        if engineId:
+            engineId = engineId.replace(':', '')
+            if not engineId.startswith('0x') and not engineId.startswith('0X'):
+                engineId = '0x' + engineId
+            engineId = OctetString(hexValue=engineId)
+        self.snmpEngine = SnmpEngine(engineId=engineId)
         self.restHttpServerObj = restHttpServerObj
 
     async def sendTrap(self,bdsLogDict):

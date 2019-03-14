@@ -10,6 +10,9 @@ bdsSnmpAdapter:
     listeningIP: 0.0.0.0  #SNMP get/getNext listening IP address
     listeningPort: 161 #SNMP get/getNext listening port
     version: 3 # specify snmp version type=str, choices=['2c', '3']
+    # SNMP engine ID uniquely identifies SNMP engine within an administrative
+    # domain. If not set, an automatic value will be generated.
+    engineId: 80:00:C3:8A:04:73:79:73:4e:61:6d:65:31:32:33
     # User-based Security Model (USM) for version 3 configurations:
     # http://snmplabs.com/pysnmp/docs/api-reference.html#security-parameters
     usmUsers:
@@ -23,4 +26,3 @@ bdsSnmpAdapter:
       sysContact: sysContact123@example.com
       sysName: sysName123
       sysLocation: sysLocation123
-      engineId: 80:00:C3:8A:04:73:79:73:4e:61:6d:65_31:32:33
