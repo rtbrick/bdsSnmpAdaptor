@@ -6,6 +6,7 @@
 # License: BSD License 2.0
 #
 import sys
+import yaml
 
 
 def loadBdsSnmpAdapterConfigFile(configFile,moduleName):
@@ -26,4 +27,3 @@ def loadBdsSnmpAdapterConfigFile(configFile,moduleName):
             for key in data["bdsSnmpAdapter"][moduleName].keys():
                 configDict[key] = data["bdsSnmpAdapter"][moduleName][key]
         return configDict
-
