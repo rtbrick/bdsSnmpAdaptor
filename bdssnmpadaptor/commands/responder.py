@@ -64,7 +64,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
 
     def setOidDbAndLogger(self, _oidDb):
         self._oidDb = _oidDb
-        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
+        self.moduleFileNameWithoutPy = "responder"
         configDict = loadBdsSnmpAdapterConfigFile(
             cliArgsDict["configFile"], self.moduleFileNameWithoutPy)
         set_logging(configDict, self.moduleFileNameWithoutPy, self)
@@ -134,10 +134,9 @@ class SnmpFrontEnd:
     """
 
     def __init__(self,cliArgsDict):
-        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
         configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict["configFile"], self.moduleFileNameWithoutPy)
-        set_logging(configDict,self.moduleFileNameWithoutPy,self)
+            cliArgsDict["configFile"], "responder")
+        set_logging(configDict,"SnmpFrontEnd",self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
 
         self.listeningAddress = configDict["listeningIP"]

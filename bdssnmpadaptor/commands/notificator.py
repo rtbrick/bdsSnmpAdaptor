@@ -47,9 +47,8 @@ SYSLOGMSGTEXT     = "1.3.6.1.4.1.50058.102.1.1.4.0"
 class asyncioTrapGenerator():
 
     def __init__(self,cliArgsDict,restHttpServerObj):
-        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
-        set_logging(configDict,self.moduleFileNameWithoutPy,self)
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"notificator")
+        set_logging(configDict,"notificator",self)
         self.moduleLogger.info("original configDict: {}".format(configDict))
         #configDict["usmUserDataMatrix"] = [ usmUserTuple.strip().split(",") for usmUserTuple in configDict["usmUserTuples"].split(';') if len(usmUserTuple) > 0 ]
         #self.moduleLogger.debug("configDict['usmUserDataMatrix']: {}".format(configDict["usmUserDataMatrix"]))
@@ -131,10 +130,8 @@ class asyncioRestServer():
 
     def __init__(self,cliArgsDict):
 
-
-        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
-        set_logging(configDict,self.moduleFileNameWithoutPy,self)
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"notificator")
+        set_logging(configDict,"notificator",self)
         self.listeningIP =  configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
         self.requestCounter = 0

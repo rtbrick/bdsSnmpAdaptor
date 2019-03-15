@@ -6,7 +6,7 @@ bdsSnmpAdapter:
     rtbrickPorts:
      - confd: 2002  #Define the rest port on which confd listens"
      - fwdd-hald: 5002  #Define the rest port on which fwwd listens"
-  bdsSnmpRetrieveAdaptor:
+  responder:
     listeningIP: 0.0.0.0  #SNMP get/getNext listening IP address
     listeningPort: 161 #SNMP get/getNext listening port
     version: 3 # specify snmp version type=str, choices=['2c', '3']
