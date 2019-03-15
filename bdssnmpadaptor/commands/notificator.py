@@ -21,6 +21,7 @@ from aiohttp import web
 from aiohttp.web import Application, Response, StreamResponse, run_app
 from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
 from bdssnmpadaptor.log import set_logging
+from bdssnmpadaptor.snmp_config import getSnmpEngine
 from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integer32
 from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress, Unsigned32
 
@@ -64,13 +65,8 @@ class asyncioTrapGenerator():
         self.snmpTrapTargets = configDict["snmpTrapTargets"]
         self.snmpTrapPort = configDict["snmpTrapPort"]
         self.trapCounter = 0
-        engineId = configDict.get('engineId')
-        if engineId:
-            engineId = engineId.replace(':', '')
-            if not engineId.startswith('0x') and not engineId.startswith('0X'):
-                engineId = '0x' + engineId
-            engineId = OctetString(hexValue=engineId)
-        self.snmpEngine = SnmpEngine(engineId=engineId)
+
+        self.engineId = getSnmpEngine(configDict.get('engineId'))
         self.restHttpServerObj = restHttpServerObj
 
     async def sendTrap(self,bdsLogDict):

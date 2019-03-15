@@ -21,6 +21,7 @@ from pysnmp.proto.api import v2c
 from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
 from bdssnmpadaptor.log import set_logging
 from bdssnmpadaptor.access import BdsAccess
+from bdssnmpadaptor.snmp_config import getSnmpEngine
 
 # class Uptime:
 #     birthday = time.time()
@@ -143,13 +144,7 @@ class SnmpFrontEnd:
         self.listeningPort = configDict["listeningPort"]
         self.snmpVersion = configDict["version"]
         self.birthday = time.time()
-        engineId = configDict.get('engineId')
-        if engineId:
-            engineId = engineId.replace(':', '')
-            if not engineId.startswith('0x') and not engineId.startswith('0X'):
-                engineId = '0x' + engineId
-            engineId = v2c.OctetString(hexValue=engineId)
-        self.snmpEngine = engine.SnmpEngine(engineId=engineId)
+        self.engineId = getSnmpEngine(configDict.get('engineId'))
         self.bdsAccess = BdsAccess(cliArgsDict) # Instantiation of the BDS Access Service
         self.oidDb = self.bdsAccess.getOidDb()
         # UDP over IPv4
