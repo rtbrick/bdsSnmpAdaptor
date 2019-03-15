@@ -9,6 +9,10 @@ bdsSnmpAdapter:
     snmpTrapPort: 162 # defines the SNMP trap destination port
     version: 2c # specify snmp version type=str, choices=['2c', '3']
     community: public # v2c community
+    # SNMP engine ID uniquely identifies SNMP engine within an administrative
+    # domain. For SNMPv3 crypto feature to work, the same SNMP engine ID value
+    # should be configured at the TRAP receiver.
+    engineId: 80:00:C3:8A:04:73:79:73:4e:61:6d:65:31:32:33
     # User-based Security Model (USM) for version 3 configurations:
     # http://snmplabs.com/pysnmp/docs/api-reference.html#security-parameters
     usmUsers:
