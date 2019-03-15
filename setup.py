@@ -73,7 +73,8 @@ params.update(
         'classifiers': [x for x in classifiers.split('\n') if x],
         'license': 'BSD',
         'packages': ['bdssnmpadaptor',
-                     'bdssnmpadaptor.commands'],
++                     'bdssnmpadaptor.commands',
++                     'bdssnmpadaptor.mapping_modules'],
         'entry_points': {
             'console_scripts': [
                 'bds-snmp-manager = bdssnmpadaptor.commands.manager:main',
