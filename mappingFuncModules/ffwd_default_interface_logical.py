@@ -1,10 +1,9 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-from bdsMappingFunctions import bdsMappingFunctions
-import logging
-from oidDb import OidDbItem
-import asyncio
+from bdssnmpadaptor.bdsMappingFunctions import bdsMappingFunctions
+from bdssnmpadaptor.oidDb import OidDbItem
+
 
 class ffwd_default_interface_logical(object):
 

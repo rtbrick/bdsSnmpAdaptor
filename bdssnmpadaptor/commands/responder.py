@@ -7,28 +7,20 @@
 # License: BSD License 2.0
 
 import sys
-import os
-import requests
 import asyncio
-import time
-import json
 import logging
-from logging.handlers import RotatingFileHandler
 import argparse
-import yaml
-import pprint
+import time
+
 from pysnmp.entity import engine, config
 from pysnmp.entity.rfc3413 import cmdrsp, context
 from pysnmp.carrier.asyncio.dgram import udp
 from pysnmp.smi import instrum
 from pysnmp.proto.api import v2c
-from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integer32
-from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress
-from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
-from bdsSnmpAdapterManager import set_logging
-from bdsAccess import BdsAccess
-from oidDb import OidDb
-import time
+
+from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
+from bdssnmpadaptor.log import set_logging
+from bdssnmpadaptor.access import BdsAccess
 
 # class Uptime:
 #     birthday = time.time()
@@ -256,7 +248,7 @@ class SnmpFrontEnd:
         )
 
 
-if __name__ == "__main__":
+def main():
 
     epilogTXT = """
 
@@ -283,3 +275,9 @@ if __name__ == "__main__":
         pass
 
     loop.close()
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

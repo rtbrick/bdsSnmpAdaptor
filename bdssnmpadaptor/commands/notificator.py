@@ -19,9 +19,8 @@ import sys
 import argparse
 from aiohttp import web
 from aiohttp.web import Application, Response, StreamResponse, run_app
-from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
-from bdsSnmpAdapterManager import set_logging
-
+from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
+from bdssnmpadaptor.log import set_logging
 from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integer32
 from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress, Unsigned32
 
@@ -187,7 +186,9 @@ class asyncioRestServer():
             self.backgroundLogging()
             )
 
-if __name__ == "__main__":
+
+def main():
+
     epilogTXT = """
 
     ... to be added """
@@ -205,3 +206,9 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     loop.close()
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

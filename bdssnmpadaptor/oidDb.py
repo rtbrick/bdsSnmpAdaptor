@@ -14,8 +14,8 @@ import argparse
 import yaml
 import pprint
 from copy import deepcopy
-from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
-from bdsSnmpAdapterManager import set_logging
+from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
+from bdssnmpadaptor.log import set_logging
 from pysnmp.proto.rfc1902 import OctetString, ObjectIdentifier, TimeTicks, Integer32
 from pysnmp.proto.rfc1902 import Gauge32, Counter32, IpAddress
 

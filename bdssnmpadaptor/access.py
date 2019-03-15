@@ -7,28 +7,19 @@
 # License: BSD License 2.0
 
 import sys
-import os
 #import requests
 import asyncio
 import aiohttp
-import json
 import logging
-from logging.handlers import RotatingFileHandler
 import argparse
-import yaml
-import pprint
-from copy import deepcopy
 import time
-import hashlib
-from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
-from bdsSnmpAdapterManager import set_logging
-from oidDb import OidDb
+from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
+from bdssnmpadaptor.log import set_logging
+from bdssnmpadaptor.oidDb import OidDb
 from staticAndPredefinedOids import StaticAndPredefinedOids
 from mappingFuncModules.confd_local_system_software_info_confd import confd_local_system_software_info_confd
 from mappingFuncModules.confd_global_startup_status_confd import confd_global_startup_status_confd
 from mappingFuncModules.confd_global_interface_physical import confd_global_interface_physical
-from mappingFuncModules.ffwd_default_interface_logical import ffwd_default_interface_logical
-from mappingFuncModules.fwdd_global_interface_physical_statistics import fwdd_global_interface_physical_statistics
 
 BIRTHDAY = time.time()
 
@@ -177,7 +168,7 @@ class BdsAccess():
             #print(self.tableSequenceListDict)
             await asyncio.sleep(5)
 
-if __name__ == "__main__":
+def main():
 
     logging.getLogger().setLevel(logging.DEBUG)       # FIXME set level from cliargs
     epilogTXT = """
@@ -198,3 +189,9 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     loop.close()
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
