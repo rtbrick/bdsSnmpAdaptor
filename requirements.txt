@@ -2,3 +2,4 @@ pysnmp>=4.4.8,<5.0.0
 aiohttp
 requests
 redis
+pyyaml

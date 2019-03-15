@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-from bdssnmpadaptor.bdsMappingFunctions import bdsMappingFunctions
+from bdssnmpadaptor.mapping_functions import bdsMappingFunctions
 #import pytablewriter
 #import yaml
 from bdssnmpadaptor.oidDb import OidDbItem
