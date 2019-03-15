@@ -13,9 +13,9 @@ def getSnmpEngine(engineId=None):
     if engineId:
         engineId = engineId.replace(':', '')
 
-        if not engineId.startswith('0x') and not engineId.startswith('0X'):
-            engineId = '0x' + engineId
+        if engineId.startswith('0x') or engineId.startswith('0X'):
+            engineId = engineId[2:]
 
         engineId = OctetString(hexValue=engineId)
 
-    return SnmpEngine(engineId=engineId)
+    return SnmpEngine(snmpEngineID=engineId)
