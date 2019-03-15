@@ -1,10 +1,9 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-from bdsMappingFunctions import bdsMappingFunctions
-import logging
-from oidDb import OidDbItem
-import asyncio
+from bdssnmpadaptor.mapping_functions import bdsMappingFunctions
+from bdssnmpadaptor.oidDb import OidDbItem
+
 
 class confd_local_system_software_info_confd(object):
     """

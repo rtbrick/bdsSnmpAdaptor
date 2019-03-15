@@ -1,12 +1,10 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-from bdsMappingFunctions import bdsMappingFunctions
-import logging
+from bdssnmpadaptor.mapping_functions import bdsMappingFunctions
 #import pytablewriter
 #import yaml
-from oidDb import OidDbItem
-import asyncio
+from bdssnmpadaptor.oidDb import OidDbItem
 import struct
 import binascii
 import time

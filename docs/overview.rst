@@ -28,6 +28,7 @@ The following key libraries are used:
 - aiohttp (REST server)
 - requestsp (REST client)
 - Redis 5.0
+- pyyaml
 
 The use-case for `bdsSnmpAdapter` is the integration of RtBrick Systems with
 the existing management environment, which relies upon SNMP for management
