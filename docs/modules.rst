@@ -23,7 +23,7 @@ linux processes:
 
 - 1 management process, which collects control information from the above:
 
-  - bdsSnmpAdapterManager
+  - BdsSnmpAdapterManager
 
 .. figure::  images/moduleOverview.pdf
    :align:   center

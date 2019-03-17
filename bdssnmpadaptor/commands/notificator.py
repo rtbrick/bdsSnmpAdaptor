@@ -54,11 +54,14 @@ class asyncioTrapGenerator():
         #self.moduleLogger.debug("configDict['usmUserDataMatrix']: {}".format(configDict["usmUserDataMatrix"]))
         #configDict["usmUsers"] = []
         self.moduleLogger.info("modified configDict: {}".format(configDict))
+
+        self.snmpEngine = getSnmpEngine(engineId=configDict.get('engineId'))
         self.snmpVersion = configDict["version"]
         if self.snmpVersion == "2c":
             self.community = configDict["community"]
             self.moduleLogger.info("SNMP version {} community {}".format(self.snmpVersion,self.community))
             #config.addV1System(self.snmpEngine, 'my-area', self.community )
+
         elif self.snmpVersion == "3":
             usmUserDataMatrix = [ usmUserTuple.strip().split(",") for usmUserTuple in configDict["usmUserTuples"].split(';') if len(usmUserTuple) > 0 ]
         self.snmpTrapTargets = configDict["snmpTrapTargets"]

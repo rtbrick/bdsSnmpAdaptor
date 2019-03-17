@@ -61,7 +61,7 @@ REQUEST_MAPPING_DICTS = {
 class BdsAccess():
 
     def __init__(self,cliArgsDict):
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"bdsAccess")
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"], "access")
         set_logging(configDict,"bdsAccess",self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
         self.rtbrickHost = configDict['rtbrickHost']
@@ -69,7 +69,7 @@ class BdsAccess():
         #self.rtbrickCtrldPort = configDict['rtbrickCtrldPort']
         #self.rtbrickContainerName = configDict['rtbrickContainerName']
         self.staticOidDict = {}
-        d = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"],"bdsSnmpRetrieveAdaptor")
+        d = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"], "responder")
         if "staticOidContent" in d.keys():
             for oidName in [ "sysDesc","sysContact","sysName","sysLocation"]:
                 if oidName in d["staticOidContent"].keys():

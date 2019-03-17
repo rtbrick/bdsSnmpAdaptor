@@ -30,6 +30,17 @@ from bdssnmpadaptor.snmp_config import getSnmpEngine
 
 BIRTHDAY = time.time()
 
+OctetString = v2c.OctetString
+Integer32 = v2c.Integer32
+TimeTicks = v2c.TimeTicks
+ObjectIdentifier = v2c.ObjectIdentifier
+Counter32 = v2c.Counter32
+Counter64 = v2c.Counter64
+Gauge32 = v2c.Gauge32
+Unsigned32 = v2c.Unsigned32
+IpAddress = v2c.IpAddress
+
+
 class MibInstrumController(instrum.AbstractMibInstrumController):
 
     # TODO: we probably need explicit SNMP type spec in YAML map
@@ -62,7 +73,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         else:
             return (_oidDbItem.oid, v2c.NoSuchObject())
 
-    def setOidDbAndLogger(self, _oidDb):
+    def setOidDbAndLogger(self, _oidDb, cliArgsDict):
         self._oidDb = _oidDb
         self.moduleFileNameWithoutPy = "responder"
         configDict = loadBdsSnmpAdapterConfigFile(
@@ -128,7 +139,8 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         print (returnList)
         return returnList
 
-class SnmpFrontEnd:
+
+class SnmpFrontEnd(object):
     """
 
     """
@@ -139,6 +151,7 @@ class SnmpFrontEnd:
         set_logging(configDict,"SnmpFrontEnd",self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
 
+        self.snmpEngine = getSnmpEngine(engineId=configDict.get('engineId'))
         self.listeningAddress = configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
         self.snmpVersion = configDict["version"]
@@ -177,7 +190,7 @@ class SnmpFrontEnd:
             snmpContext.unregisterContextName(v2c.OctetString(''))
             snmpContext.registerContextName(
                 v2c.OctetString(''),  # Context Name
-                MibInstrumController().setOidDbAndLogger(self.oidDb)
+                MibInstrumController().setOidDbAndLogger(self.oidDb, cliArgsDict)
             )
         elif str(self.snmpVersion) == "3":
             if "usmUsers" in configDict.keys():
@@ -226,7 +239,7 @@ class SnmpFrontEnd:
             snmpContext.unregisterContextName(v2c.OctetString(''))
             snmpContext.registerContextName(
                 v2c.OctetString(''),  # Context Name
-                MibInstrumController().setOidDbAndLogger(self.oidDb)
+                MibInstrumController().setOidDbAndLogger(self.oidDb, cliArgsDict)
             )
         else:
             raise Exception('incorrect snmp version string, just "2c" and "3" are supported')

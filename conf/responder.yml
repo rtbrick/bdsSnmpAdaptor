@@ -1,7 +1,7 @@
 bdsSnmpAdapter:
   loggingLevel: debug
   rotatingLogFile: /tmp/bdsSnmpAdaptor_   #FIXME store this at permament location
-  bdsAccess:
+  access:
     rtbrickHost: 10.0.3.10
     rtbrickPorts:
      - confd: 2002  #Define the rest port on which confd listens"
