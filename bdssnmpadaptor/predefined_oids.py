@@ -70,7 +70,9 @@ class StaticAndPredefinedOids(object):
             pysnmpBaseType="OctetString",
             pysnmpRepresentation="hexValue",
             #value=staticOidDict["snmpEngineID"]))
+            # FIXME : how to convert b'\x80\x00\xc3\x8a\x04sysName123' ?
             value="80:00:C3:8A:04:73:79:73:4e:61:6d:65:31:32:33".replace(":","")))
+            # FIXME end.
         targetOidDb.insertOid(newOidItem = OidDbItem(
             bdsMappingFunc = "StaticAndPredefinedOids",
             oid = "1.3.6.1.6.3.10.2.1.2.0",
