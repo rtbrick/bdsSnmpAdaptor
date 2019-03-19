@@ -81,6 +81,8 @@ class BdsAccess():
                     self.staticOidDict[oidName] = d["staticOidContent"][oidName]
                 else:
                     self.staticOidDict[oidName] = "to be defined"
+
+        self.staticOidDict["snmpEngineID"] = cliArgsDict["snmpEngineIdValue"]
         self.expirytimer = 50 ### FIXME
         self.responseSequence = 0
         self.requestMappingDict = REQUEST_MAPPING_DICTS

@@ -56,9 +56,10 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
     def createVarbindFromOidDbItem(self,_oidDbItem):
         baseType = _oidDbItem.pysnmpBaseType      #FIXME catch exception
         if _oidDbItem.value != None:
-            if _oidDbItem.name == "sysUptime":
-                #x = Uptime()
+            if _oidDbItem.name in ["sysUptime", "hrSystemUptime" ]:    # FIXME: add a function for realitime OIDs
                 _oidDbItem.value = int((time.time()-BIRTHDAY)*100)
+            if _oidDbItem.name in ["snmpEngineTime" ]:    # FIXME: add a function for realitime OIDs
+                _oidDbItem.value = int((time.time()-BIRTHDAY))
             if _oidDbItem.pysnmpRepresentation:
                 evalString = "{}({}='{}')".format(_oidDbItem.pysnmpBaseType,
                                                   _oidDbItem.pysnmpRepresentation,
@@ -85,14 +86,14 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
     def readVars(self, varBinds, acInfo=(None, None)):
         collonSeparatedVarbindList = [ ', '.join(str(x[0]) for x in varBinds )]
         self.moduleLogger.debug(f'readVars: {collonSeparatedVarbindList}')
-        print (f'readVars: {collonSeparatedVarbindList}')
+        #print (f'readVars: {collonSeparatedVarbindList}')
         returnList = []
         for oid, value in varBinds:
             try:
                 oidDbItemObj = self._oidDb.getObjFromOid(str(oid))
 
             except Exception as exc:
-                print('oidDb failure: {}'.format(exc))
+                #print('oidDb failure: {}'.format(exc))
                 valueDict = None                               # FIXME
 
             else:
@@ -104,7 +105,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
                 else:
                     self.moduleLogger.debug(f'createVarbindFromOidDbItem with {oidDbItemObj.oid}')
                     returnList.append(self.createVarbindFromOidDbItem(oidDbItemObj))
-        [ print(x) for x in returnList ]
+        #[ print(x) for x in returnList ]
         return returnList
 
 
@@ -113,7 +114,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
 
         """
         collonSeparatedVarbindList = [ ', '.join(str(x[0]) for x in varBinds )]
-        print(f'readNextVars: {collonSeparatedVarbindList}')
+        #print(f'readNextVars: {collonSeparatedVarbindList}')
 
         rspVarBinds = []
         oidStrings = []
@@ -136,7 +137,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
                 else:
                     #print(f'createVarbindFromOidDbItem with {oidDbItemObj.oid}')
                     returnList.append(self.createVarbindFromOidDbItem(oidDbItemObj))
-        print (returnList)
+        #print (returnList)
         return returnList
 
 
@@ -157,6 +158,7 @@ class SnmpFrontEnd(object):
         self.snmpVersion = configDict["version"]
         self.birthday = time.time()
         self.engineId = getSnmpEngine(configDict.get('engineId'))
+        cliArgsDict["snmpEngineIdValue"] = self.engineId.snmpEngineID._value
         self.bdsAccess = BdsAccess(cliArgsDict) # Instantiation of the BDS Access Service
         self.oidDb = self.bdsAccess.getOidDb()
         # UDP over IPv4
