@@ -5,7 +5,7 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
-from bdssnmpadaptor.mapping_functions import bdsMappingFunctions
+from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
 from bdssnmpadaptor.oidDb import OidDbItem
 
 
@@ -16,13 +16,14 @@ class confd_local_system_software_info_confd(object):
     @classmethod
     async def setOids(cls, bdsJsonResponseDict, targetOidDb,
                       tableSequenceList, birthday):
-        swString = bdsMappingFunctions.stringFromSoftwareInfo(bdsJsonResponseDict)
+        swString = BdsMappingFunctions.stringFromSoftwareInfo(bdsJsonResponseDict)
 
-        targetOidDb.insertOid(newOidItem=OidDbItem(
-            bdsMappingFunc="confd_local_system_software_info_confd",
-            oid="1.3.6.1.2.1.1.1.0",
-            name="sysDescr", pysnmpBaseType="OctetString",
-            value=swString))
+        targetOidDb.insertOid(
+            newOidItem=OidDbItem(
+                bdsMappingFunc="confd_local_system_software_info_confd",
+                oid="1.3.6.1.2.1.1.1.0",
+                name="sysDescr", pysnmpBaseType="OctetString",
+                value=swString))
 
         # oidSegment = "1.3.6.1.2.1.1.1.0"
         # targetOidDb.setLock()

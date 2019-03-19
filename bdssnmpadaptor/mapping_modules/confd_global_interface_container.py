@@ -9,7 +9,7 @@ import binascii
 import struct
 import time
 
-from bdssnmpadaptor.mapping_functions import bdsMappingFunctions
+from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
 from bdssnmpadaptor.oidDb import OidDbItem
 
 IFTYPEMAP = {
@@ -26,8 +26,10 @@ IFOPERSTATUSMAP = {
 bigEndianFloatStruct = struct.Struct('>f')
 littleEndianShortStruct = struct.Struct('<h')
 
-IFMTU_LAMBDA = lambda x : int(littleEndianShortStruct.unpack(binascii.unhexlify(x))[0])
-IFSPEED_LAMBDA = lambda x : int(bigEndianFloatStruct.unpack(binascii.unhexlify(x))[0]/1000000*8)
+IFMTU_LAMBDA = lambda x: int(
+    littleEndianShortStruct.unpack(binascii.unhexlify(x))[0])
+IFSPEED_LAMBDA = lambda x: int(
+    bigEndianFloatStruct.unpack(binascii.unhexlify(x))[0] / 1000000 * 8)
 
 
 # HEX_STRING_LAMBDA = lambda x : int(x,16)
@@ -134,22 +136,22 @@ class confd_global_interface_container(object):
             pass  # add logger statement
 
         else:
-            targetOidDb.insertOid(newOidItem = OidDbItem(
-                bdsMappingFunc = "confd_global_interface_container",
-                oid = "1.3.6.1.2.1.2.1.0",
+            targetOidDb.insertOid(newOidItem=OidDbItem(
+                bdsMappingFunc="confd_global_interface_container",
+                oid="1.3.6.1.2.1.2.1.0",
                 name="ifIndex",
                 pysnmpBaseType="Integer32",
                 value=len(bdsJsonResponseDict["objects"])))
             targetOidDb.setLock()
-            #targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
-            for i,bdsJsonObject in enumerate(bdsJsonResponseDict["objects"]):
+            # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
+            for i, bdsJsonObject in enumerate(bdsJsonResponseDict["objects"]):
                 oidSegment = "1.3.6.1.2.1.2.2.1."
                 thisSequenceNumber = bdsJsonObject["sequence"]
                 ifName = bdsJsonObject["attribute"]["interface_name"]
 
-                index = bdsMappingFunctions.ifIndexFromIfName(ifName)
+                index = BdsMappingFunctions.ifIndexFromIfName(ifName)
                 # index =  i + 1
-                ifPhysicalLocation = bdsMappingFunctions.stripIfPrefixFromIfName(ifName)
+                ifPhysicalLocation = BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
 
                 targetOidDb.insertOid(newOidItem=OidDbItem(
                     bdsMappingFunc="confd_global_interface_container",
@@ -178,9 +180,10 @@ class confd_global_interface_container(object):
                     name="ifMtu",
                     pysnmpBaseType="Integer32",
                     value=IFMTU_LAMBDA(bdsJsonObject["attribute"]["layer2_mtu"])))
-                targetOidDb.insertOid(newOidItem = OidDbItem(
-                    bdsMappingFunc = "confd_global_interface_container",
-                    oid = oidSegment+"6."+str(index),
+
+                targetOidDb.insertOid(newOidItem=OidDbItem(
+                    bdsMappingFunc="confd_global_interface_container",
+                    oid=oidSegment + "6." + str(index),
                     name="ifPhysAddress",
                     pysnmpBaseType="OctetString",
                     pysnmpRepresentation="hexValue",
@@ -206,11 +209,11 @@ class confd_global_interface_container(object):
                         oid=oidSegment + "9." + str(index),
                         name="ifLastChange",
                         pysnmpBaseType="TimeTicks",
-                        value=0 ))
-                elif thisSequenceNumber != lastSequenceNumberList[i] :    #status has changed
-                    targetOidDb.insertOid(newOidItem = OidDbItem(
-                        bdsMappingFunc = "confd_global_interface_container",
-                        oid = oidSegment+"9."+str(index),
+                        value=0))
+                elif thisSequenceNumber != lastSequenceNumberList[i]:  # status has changed
+                    targetOidDb.insertOid(newOidItem=OidDbItem(
+                        bdsMappingFunc="confd_global_interface_container",
+                        oid=oidSegment + "9." + str(index),
                         name="ifTableLastChange",
                         pysnmpBaseType="TimeTicks",
                         value=int((time.time() - birthday) * 100)))
@@ -235,14 +238,15 @@ class confd_global_interface_container(object):
                         oid="1.3.6.1.2.1.31.1.5",
                         name="ifTableLastChange",
                         pysnmpBaseType="TimeTicks",
-                        value=int((time.time()-birthday)*100) ))
+                        value=int((time.time() - birthday) * 100)))
                 #
                 # Change to ífXTable
                 #
                 oidSegment = "1.3.6.1.2.1.31.1.1.1."
-                targetOidDb.insertOid(newOidItem = OidDbItem(
-                    bdsMappingFunc = "confd_global_interface_container",
-                    oid = oidSegment+"15."+str(index),
+
+                targetOidDb.insertOid(newOidItem=OidDbItem(
+                    bdsMappingFunc="confd_global_interface_container",
+                    oid=oidSegment + "15." + str(index),
                     name="ifSpeed",
                     pysnmpBaseType="Gauge32",
                     value=IFSPEED_LAMBDA(bdsJsonObject["attribute"]["bandwidth"])))

@@ -9,7 +9,7 @@
 import json
 
 
-class bdsMappingFunctions(object):
+class BdsMappingFunctions(object):
 
     def __init__(self):
         pass
@@ -302,5 +302,5 @@ if __name__ == '__main__':
     ]
 }"""
     responseJSON = json.loads(jsonString)
-    versionStr = bdsMappingFunctions.stringFromSoftwareInfo(responseJSON)
+    versionStr = BdsMappingFunctions.stringFromSoftwareInfo(responseJSON)
     print(versionStr)

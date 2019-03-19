@@ -54,41 +54,61 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
 
     def createVarbindFromOidDbItem(self, _oidDbItem):
         baseType = _oidDbItem.pysnmpBaseType  # FIXME catch exception
+
         if _oidDbItem.value != None:
             if _oidDbItem.name in ["sysUptime", "hrSystemUptime" ]:    # FIXME: add a function for realitime OIDs
                 _oidDbItem.value = int((time.time()-BIRTHDAY)*100)
+
             if _oidDbItem.name in ["snmpEngineTime" ]:    # FIXME: add a function for realitime OIDs
                 _oidDbItem.value = int((time.time()-BIRTHDAY))
+
             if _oidDbItem.pysnmpRepresentation:
                 evalString = "{}({}='{}')".format(_oidDbItem.pysnmpBaseType,
                                                   _oidDbItem.pysnmpRepresentation,
                                                   _oidDbItem.value)
+
             else:
                 evalString = "{}('{}')".format(_oidDbItem.pysnmpBaseType,
                                                _oidDbItem.value)
-            self.moduleLogger.debug("createVarbindFromOidDbItem evalString {})".format(evalString))
-            returnValue = eval(evalString)
             self.moduleLogger.debug(
-                "createVarbindFromOidDbItem returning oid {} with value {} ".format(_oidDbItem.oid, returnValue))
+                "createVarbindFromOidDbItem evalString"
+                " {})".format(evalString))
+
+            returnValue = eval(evalString)
+
+            self.moduleLogger.debug(
+                "createVarbindFromOidDbItem returning oid {} with "
+                "value {} ".format(_oidDbItem.oid, returnValue))
+
             return _oidDbItem.oid, returnValue
+
         else:
             return _oidDbItem.oid, v2c.NoSuchObject()
 
     def setOidDbAndLogger(self, _oidDb, cliArgsDict):
         self._oidDb = _oidDb
         self.moduleFileNameWithoutPy = "responder"
-        # TODO - undefined variable
+
         configDict = loadBdsSnmpAdapterConfigFile(
             cliArgsDict["configFile"], self.moduleFileNameWithoutPy)
+
         set_logging(configDict, self.moduleFileNameWithoutPy, self)
-        self.moduleLogger.debug(f"MibInstrumController set _oidDB: firstItem {self._oidDb.firstItem}")
+
+        self.moduleLogger.debug(
+            f"MibInstrumController set _oidDB: firstItem "
+            f"{self._oidDb.firstItem}")
+
         return self
 
     def readVars(self, varBinds, acInfo=(None, None)):
         collonSeparatedVarbindList = [', '.join(str(x[0]) for x in varBinds)]
+
         self.moduleLogger.debug(f'readVars: {collonSeparatedVarbindList}')
+
         #print (f'readVars: {collonSeparatedVarbindList}')
+
         returnList = []
+
         for oid, value in varBinds:
             try:
                 oidDbItemObj = self._oidDb.getObjFromOid(str(oid))
@@ -99,13 +119,20 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
 
             else:
                 self.moduleLogger.debug(f'oidDb returned\n{oidDbItemObj}for oid: {oid}')
+
                 if oidDbItemObj is None:
-                    self.moduleLogger.warning(f'_oidDb return None for oid: {oid}')
+                    self.moduleLogger.warning(
+                        f'_oidDb return None for oid: {oid}')
+
                     # print (f'_oidDb return None for oid: {oid}')
                     returnList.append((oid, v2c.NoSuchObject()))
+
                 else:
-                    self.moduleLogger.debug(f'createVarbindFromOidDbItem with {oidDbItemObj.oid}')
+                    self.moduleLogger.debug(
+                        f'createVarbindFromOidDbItem with {oidDbItemObj.oid}')
+
                     returnList.append(self.createVarbindFromOidDbItem(oidDbItemObj))
+
         #[ print(x) for x in returnList ]
         return returnList
 
@@ -121,14 +148,20 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         oidStrings = []
 
         returnList = []
+
         for oid, value in varBinds:
-            self.moduleLogger.debug('entry for-loop {},{} in varBinds'.format(oid, value))
+            self.moduleLogger.debug(
+                'entry for-loop {},{} in varBinds'.format(oid, value))
+
             nextOidString = self._oidDb.getNextOid(str(oid))
+
             # print(f'nextOidString: {nextOidString}')
             try:
                 oidDbItemObj = self._oidDb.getObjFromOid(nextOidString)
+
             except Exception as e:
                 print('oidDb failure: {}'.format(e))
+
             else:
                 # print(f'oidDb returned\n{oidDbItemObj}for oid: {nextOidString}')
                 if oidDbItemObj is None:
@@ -154,14 +187,18 @@ class SnmpFrontEnd(object):
         set_logging(configDict,"SnmpFrontEnd",self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
 
+
         self.snmpEngine = getSnmpEngine(engineId=configDict.get('engineId'))
         self.listeningAddress = configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
         self.snmpVersion = configDict["version"]
         self.birthday = time.time()
         self.engineId = getSnmpEngine(configDict.get('engineId'))
-        cliArgsDict["snmpEngineIdValue"] = self.engineId.snmpEngineID._value
+
+        cliArgsDict["snmpEngineIdValue"] = self.engineId.snmpEngineID.asOctets()
+
         self.bdsAccess = BdsAccess(cliArgsDict) # Instantiation of the BDS Access Service
+
         self.oidDb = self.bdsAccess.getOidDb()
 
         # UDP over IPv4
@@ -201,27 +238,27 @@ class SnmpFrontEnd(object):
             )
 
         elif str(self.snmpVersion) == "3":
-            if "usmUsers" in configDict.keys():
+            if "usmUsers" in configDict:
 
                 for usmUserDict in configDict["usmUsers"]:
-                    userName = list(usmUserDict.keys())[0]
+                    userName = list(usmUserDict)[0]
                     d = usmUserDict[userName]
 
-                    if "authKey" in d.keys():
+                    if "authKey" in d:
                         authKey = d["authKey"]
                         authProtocol = "SHA"
                         authProtocolObj = config.usmHMACSHAAuthProtocol
 
-                        if "authProtocol" in d.keys():
+                        if "authProtocol" in d:
                             authProtocol = d["authProtocol"]
                             if authProtocol == "MD5":
                                 authProtocolObj = config.usmHMACMD5AuthProtocol
 
-                        if "privKey" in d.keys():
+                        if "privKey" in d:
                             privKey = d["privKey"]
                             privProtocol = "AES"
                             privProtocolObj = config.usmAesCfb128Protocol
-                            if "privProtocol" in d.keys():
+                            if "privProtocol" in d:
                                 privProtocol = d["privProtocol"]
 
                                 if privProtocol == "DES":
@@ -252,7 +289,8 @@ class SnmpFrontEnd(object):
                         authProtocolObj, authKey,
                         privProtocolObj, privKey)
 
-                    config.addVacmUser(self.snmpEngine, 3, userName, authString, (1, 3, 6))
+                    config.addVacmUser(
+                        self.snmpEngine, 3, userName, authString, (1, 3, 6))
 
                     print(f"addVacmUser: self.snmpEngine, 3, "
                           f"{userName}, {authString}, (1, 3, 6)")

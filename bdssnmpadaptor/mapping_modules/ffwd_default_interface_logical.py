@@ -5,7 +5,7 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
-from bdssnmpadaptor.mapping_functions import bdsMappingFunctions
+from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
 from bdssnmpadaptor.oidDb import OidDbItem
 
 
@@ -47,27 +47,30 @@ class ffwd_default_interface_logical(object):
         # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
         for bdsJsonObject in bdsJsonResponseDict["objects"]:
             ifName = bdsJsonObject["attribute"]["interface_name"]
-            index = bdsMappingFunctions.ifIndexFromIfName(ifName)
+            index = BdsMappingFunctions.ifIndexFromIfName(ifName)
 
-            targetOidDb.insertOid(newOidItem=OidDbItem(
-                bdsMappingFunc="ffwd_default_interface_logical",
-                oid=oidSegment + "1." + str(index),
-                name="ifIndex",
-                pysnmpBaseType="Integer32",
-                value=int(index)))
+            targetOidDb.insertOid(
+                newOidItem=OidDbItem(
+                    bdsMappingFunc="ffwd_default_interface_logical",
+                    oid=oidSegment + "1." + str(index),
+                    name="ifIndex",
+                    pysnmpBaseType="Integer32",
+                    value=int(index)))
 
-            targetOidDb.insertOid(newOidItem=OidDbItem(
-                bdsMappingFunc="ffwd_default_interface_logical",
-                oid=oidSegment + "2." + str(index),
-                name="ifDescr",
-                pysnmpBaseType="OctetString",
-                value=bdsJsonObject["attribute"]["interface_name"]))
+            targetOidDb.insertOid(
+                newOidItem=OidDbItem(
+                    bdsMappingFunc="ffwd_default_interface_logical",
+                    oid=oidSegment + "2." + str(index),
+                    name="ifDescr",
+                    pysnmpBaseType="OctetString",
+                    value=bdsJsonObject["attribute"]["interface_name"]))
 
-            targetOidDb.insertOid(newOidItem=OidDbItem(
-                bdsMappingFunc="ffwd_default_interface_logical",
-                oid=oidSegment + "3." + str(index),
-                name="ifType",
-                pysnmpBaseType="Integer32",
-                value=6))
+            targetOidDb.insertOid(
+                newOidItem=OidDbItem(
+                    bdsMappingFunc="ffwd_default_interface_logical",
+                    oid=oidSegment + "3." + str(index),
+                    name="ifType",
+                    pysnmpBaseType="Integer32",
+                    value=6))
 
         targetOidDb.releaseLock()

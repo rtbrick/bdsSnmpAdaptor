@@ -10,13 +10,10 @@ import argparse
 import asyncio
 import json
 import sys
-import argparse
-from aiohttp import web
-from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
-from bdssnmpadaptor.log import set_logging
-from bdssnmpadaptor.snmp_config import getSnmpEngine
 
 from aiohttp import web
+from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
+from bdsSnmpAdapterManager import set_logging
 from pysnmp.hlapi.asyncio import CommunityData
 from pysnmp.hlapi.asyncio import ContextData
 from pysnmp.hlapi.asyncio import NotificationType
@@ -27,8 +24,10 @@ from pysnmp.proto.rfc1902 import Integer32
 from pysnmp.proto.rfc1902 import OctetString
 from pysnmp.proto.rfc1902 import Unsigned32
 
-from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
-from bdsSnmpAdapterManager import set_logging
+from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
+from bdssnmpadaptor.log import set_logging
+from bdssnmpadaptor.snmp_config import getSnmpEngine
+
 
 RTBRICKSYSLOGTRAP = "1.3.6.1.4.1.50058.103.1.1"
 SYSLOGMSG = "1.3.6.1.4.1.50058.102.1.1.0"
@@ -38,11 +37,14 @@ SYSLOGMSGSEVERITY = "1.3.6.1.4.1.50058.102.1.1.3.0"
 SYSLOGMSGTEXT = "1.3.6.1.4.1.50058.102.1.1.4.0"
 
 
-class asyncioTrapGenerator(object):
+class AsyncioTrapGenerator(object):
 
     def __init__(self, cliArgsDict, restHttpServerObj):
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"], "notificator")
+        configDict = loadBdsSnmpAdapterConfigFile(
+            cliArgsDict["configFile"], "notificator")
+
         set_logging(configDict,"notificator", self)
+
         self.moduleLogger.info("original configDict: {}".format(configDict))
 
         # configDict["usmUserDataMatrix"] = [ usmUserTuple.strip().split(",") for usmUserTuple in configDict["usmUserTuples"].split(';') if len(usmUserTuple) > 0 ]
@@ -56,6 +58,7 @@ class asyncioTrapGenerator(object):
 
         if self.snmpVersion == "2c":
             self.community = configDict["community"]
+
             self.moduleLogger.info(
                 "SNMP version {} community {}".format(
                     self.snmpVersion, self.community))
@@ -75,7 +78,8 @@ class asyncioTrapGenerator(object):
         self.restHttpServerObj = restHttpServerObj
 
     async def sendTrap(self, bdsLogDict):
-        self.moduleLogger.debug("sendTrap bdsLogDict: {}".format(bdsLogDict))
+        self.moduleLogger.debug(
+            "sendTrap bdsLogDict: {}".format(bdsLogDict))
 
         self.trapCounter += 1
 
@@ -83,21 +87,28 @@ class asyncioTrapGenerator(object):
             syslogMsgFacility = bdsLogDict["host"]
 
         except Exception as e:
-            self.moduleLogger.error("connot set syslogMsgFacility from bdsLogDict: {}".format(bdsLogDict, e))
+            self.moduleLogger.error(
+                "cannot set syslogMsgFacility from bdsLogDict: "
+                "{}".format(bdsLogDict, e))
             syslogMsgFacility = "error"
 
         try:
             syslogMsgSeverity = bdsLogDict["level"]
 
         except Exception as e:
-            self.moduleLogger.error("connot set syslogMsgSeverity from bdsLogDict: {}".format(bdsLogDict, e))
+            self.moduleLogger.error(
+                "cannot set syslogMsgSeverity from bdsLogDict: "
+                "{}".format(bdsLogDict, e))
             syslogMsgSeverity = 0
 
         try:
             syslogMsgText = bdsLogDict["full_message"]
 
         except Exception as e:
-            self.moduleLogger.error("connot set syslogMsgText from bdsLogDict: {}".format(bdsLogDict, e))
+            self.moduleLogger.error(
+                "connot set syslogMsgText from bdsLogDict: "
+                "{}".format(bdsLogDict, e))
+
             syslogMsgText = "error"
 
         self.moduleLogger.debug(
@@ -153,7 +164,7 @@ class asyncioRestServer(object):
         self.requestCounter = 0
 
         self.bdsLogsToBeProcessedList = []
-        self.snmpTrapGenerator = asyncioTrapGenerator(cliArgsDict, self)
+        self.snmpTrapGenerator = AsyncioTrapGenerator(cliArgsDict, self)
 
     async def handler(self, request):
 

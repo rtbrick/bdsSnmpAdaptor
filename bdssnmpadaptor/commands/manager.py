@@ -7,44 +7,45 @@
 # License: BSD License 2.0
 
 import argparse
-import logging
 import sys
 import time
-from logging.handlers import RotatingFileHandler
 
 import redis
 
 from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
 from bdssnmpadaptor.log import set_logging
 
-PROCESS_LIST = [ "restServer" ,"redisToSnmpTrap" , "getOidFromRedis" , "bdsSnmpTables" , "bdsAccessToRedis" ]
+PROCESS_LIST = ["restServer", "redisToSnmpTrap", "getOidFromRedis",
+                "bdsSnmpTables", "bdsAccessToRedis"]
 BSA_STATUS_KEY = "BSA_status_"
 
 
 class BdsSnmpAdapterManager(object):
 
-    def __init__(self,cliArgsDict):
+    def __init__(self, cliArgsDict):
         self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
         configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict["configFile"],self.moduleFileNameWithoutPy)
-        set_logging(configDict,self.moduleFileNameWithoutPy,self)
+            cliArgsDict["configFile"], self.moduleFileNameWithoutPy)
+        set_logging(configDict, self.moduleFileNameWithoutPy, self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
+
         self.redisServer = redis.StrictRedis(
             host=configDict["redisServerIp"], port=configDict["redisServerPort"],
-            db=0,decode_responses=True)
+            db=0, decode_responses=True)
 
     def run_forever(self):
         while True:
-            print ("#"*60)
+            print("#" * 60)
+
             for processString in PROCESS_LIST:
                 redisKey = BSA_STATUS_KEY + processString
                 modulStatusDict = self.redisServer.hgetall(redisKey)
-                print ("{:20s}{}".format(processString,modulStatusDict))
+                print("{:20s}{}".format(processString, modulStatusDict))
+
             time.sleep(1)
 
 
 def main():
-
     epilogTXT = """
 
     ... to be added """

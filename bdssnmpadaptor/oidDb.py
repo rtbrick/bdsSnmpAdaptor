@@ -29,7 +29,7 @@ class OidDb(object):
         self.lock = False  # not implemented yet, locker for insertOid
 
     def insertOid(self, newOidItem):
-        if newOidItem.oid in self.oidDict.keys():
+        if newOidItem.oid in self.oidDict:
             self.moduleLogger.debug(f"updating {newOidItem.oid} {newOidItem.value}")
             self.oidDict[newOidItem.oid].value = newOidItem.value
 
@@ -146,14 +146,14 @@ class OidDb(object):
         return self.firstItem
 
     def getObjFromOid(self, oid):
-        if oid in self.oidDict.keys():
+        if oid in self.oidDict:
             self.moduleLogger.debug(
-                f"getObjFromOid found in oidDict.keys")
+                f"getObjFromOid found in oidDict")
             return self.oidDict[oid]
 
         else:
             self.moduleLogger.warning(
-                f"getObjFromOid did NOT found in oidDict.keys")
+                f"getObjFromOid did NOT found in oidDict")
             return
 
     def getNextOid(self, searchOid):
@@ -224,7 +224,7 @@ class OidDb(object):
         return returnStr
 
 
-class OidDbItem():
+class OidDbItem(object):
     """ Database Item, which pysnmp attributes required for get and getnext.
 
     """
