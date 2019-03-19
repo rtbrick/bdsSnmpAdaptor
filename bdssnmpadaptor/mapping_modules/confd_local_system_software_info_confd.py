@@ -1,22 +1,28 @@
-import os
-import sys
-sys.path.insert(0, os.path.abspath('..'))
+# -*- coding: utf-8 -*-
+#
+# This file is part of bdsSnmpAdaptor software.
+#
+# Copyright (C) 2017-2019, RtBrick Inc
+# License: BSD License 2.0
+#
 from bdssnmpadaptor.mapping_functions import bdsMappingFunctions
 from bdssnmpadaptor.oidDb import OidDbItem
 
 
 class confd_local_system_software_info_confd(object):
+    """Local system software information
     """
 
-    """
     @classmethod
-    async def setOids(self,bdsJsonResponseDict,targetOidDb,tableSequenceList,birthday):
-        swString = bdsMappingFunctions.stringFromSoftwareInfo (bdsJsonResponseDict)
-        targetOidDb.insertOid(newOidItem = OidDbItem(
-            bdsMappingFunc = "confd_local_system_software_info_confd",
-            oid = "1.3.6.1.2.1.1.1.0",
+    async def setOids(cls, bdsJsonResponseDict, targetOidDb,
+                      tableSequenceList, birthday):
+        swString = bdsMappingFunctions.stringFromSoftwareInfo(bdsJsonResponseDict)
+
+        targetOidDb.insertOid(newOidItem=OidDbItem(
+            bdsMappingFunc="confd_local_system_software_info_confd",
+            oid="1.3.6.1.2.1.1.1.0",
             name="sysDescr", pysnmpBaseType="OctetString",
-            value=swString ))
+            value=swString))
 
         # oidSegment = "1.3.6.1.2.1.1.1.0"
         # targetOidDb.setLock()
@@ -59,4 +65,4 @@ class confd_local_system_software_info_confd(object):
         #         value=bdsJsonObject["attribute"]["source_path"]))
         # # in addition the SW Info Flag is set by
         # # creating an abbreviated string over all modules
-        #targetOidDb.releaseLock()
+        # targetOidDb.releaseLock()
