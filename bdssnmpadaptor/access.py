@@ -81,7 +81,7 @@ class BdsAccess(object):
                     self.staticOidDict[oidName] = "to be defined"
 
             for oidName in ["engineId"]:
-                if oidName in d["staticOidContent"].keys():
+                if oidName in d["staticOidContent"]:
                     self.staticOidDict[oidName] = d["staticOidContent"][oidName]
 
                 else:
@@ -104,7 +104,7 @@ class BdsAccess(object):
         bdsSuffix = bdsRequestDict['urlSuffix']
         bdsTable = bdsRequestDict['table']
 
-        if "attributes" in bdsRequestDict.keys():
+        if "attributes" in bdsRequestDict:
             attributeDict = {}
 
             for attribute in bdsRequestDict['attributes']:
@@ -130,7 +130,7 @@ class BdsAccess(object):
             }
 
         rtbrickProcessPortDict = [
-            x for x in self.rtbrickPorts if list(x.keys())[0] == bdsProcess][0]
+            x for x in self.rtbrickPorts if list(x)[0] == bdsProcess][0]
 
         rtbrickPort = int(rtbrickProcessPortDict[bdsProcess])
 
@@ -181,7 +181,7 @@ class BdsAccess(object):
         while True:
             await StaticAndPredefinedOids.setOids(self.oidDb, self.staticOidDict)
 
-            for bdsRequestDictKey in self.requestMappingDict.keys():
+            for bdsRequestDictKey in self.requestMappingDict:
                 self.moduleLogger.debug("working on {}".format(bdsRequestDictKey))
 
                 bdsRequestDict = self.requestMappingDict[bdsRequestDictKey]["bdsRequestDict"]
@@ -196,7 +196,7 @@ class BdsAccess(object):
                     self.moduleLogger.debug(
                         "self.responseJsonDicts[{}] {}".format(responseTableKey, responseJsonDict))
 
-                    if bdsRequestDictKey in self.tableSequenceListDict.keys():
+                    if bdsRequestDictKey in self.tableSequenceListDict:
                         tableSequenceList = self.tableSequenceListDict[bdsRequestDictKey]
 
                     else:

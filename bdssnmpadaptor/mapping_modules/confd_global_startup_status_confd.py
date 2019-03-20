@@ -52,49 +52,56 @@ class confd_global_startup_status_confd(object):
         for index0, bdsJsonObject in enumerate(bdsJsonResponseDict["objects"]):
             index = index0 + 1
 
-            targetOidDb.insertOid(newOidItem=OidDbItem(
-                bdsMappingFunc="confd_global_startup_status_confd",
-                oid=oidSegment + "1." + str(index),
-                name="hrSWRunIndex",
-                pysnmpBaseType="Integer32",
-                value=index))
+            targetOidDb.insertOid(
+                newOidItem=OidDbItem(
+                    bdsMappingFunc="confd_global_startup_status_confd",
+                    oid=oidSegment + "1." + str(index),
+                    name="hrSWRunIndex",
+                    pysnmpBaseType="Integer32",
+                    value=index))
 
-            targetOidDb.insertOid(newOidItem=OidDbItem(
-                bdsMappingFunc="confd_global_startup_status_confd",
-                oid=oidSegment + "2." + str(index),
-                name="hrSWRunName", pysnmpBaseType="OctetString",
-                value=bdsJsonObject["attribute"]["module_name"]))
+            targetOidDb.insertOid(
+                newOidItem=OidDbItem(
+                    bdsMappingFunc="confd_global_startup_status_confd",
+                    oid=oidSegment + "2." + str(index),
+                    name="hrSWRunName", pysnmpBaseType="OctetString",
+                    value=bdsJsonObject["attribute"]["module_name"]))
 
-            targetOidDb.insertOid(newOidItem=OidDbItem(
-                bdsMappingFunc="confd_global_startup_status_confd",
-                oid=oidSegment + "3." + str(index),
-                name="hrSWRunID", pysnmpBaseType="ObjectIdentifier",
-                value="0.0"))
+            targetOidDb.insertOid(
+                newOidItem=OidDbItem(
+                    bdsMappingFunc="confd_global_startup_status_confd",
+                    oid=oidSegment + "3." + str(index),
+                    name="hrSWRunID", pysnmpBaseType="ObjectIdentifier",
+                    value="0.0"))
 
-            targetOidDb.insertOid(newOidItem=OidDbItem(
-                bdsMappingFunc="confd_global_startup_status_confd",
-                oid=oidSegment + "4." + str(index),
-                name="hrSWRunPath", pysnmpBaseType="OctetString",
-                value=bdsJsonObject["attribute"]["bd_name"]))
+            targetOidDb.insertOid(
+                newOidItem=OidDbItem(
+                    bdsMappingFunc="confd_global_startup_status_confd",
+                    oid=oidSegment + "4." + str(index),
+                    name="hrSWRunPath", pysnmpBaseType="OctetString",
+                    value=bdsJsonObject["attribute"]["bd_name"]))
 
-            targetOidDb.insertOid(newOidItem=OidDbItem(
-                bdsMappingFunc="confd_global_startup_status_confd",
-                oid=oidSegment + "5." + str(index),
-                name="hrSWRunParameters", pysnmpBaseType="OctetString",
-                value=""))
+            targetOidDb.insertOid(
+                newOidItem=OidDbItem(
+                    bdsMappingFunc="confd_global_startup_status_confd",
+                    oid=oidSegment + "5." + str(index),
+                    name="hrSWRunParameters", pysnmpBaseType="OctetString",
+                    value=""))
 
-            targetOidDb.insertOid(newOidItem=OidDbItem(
-                bdsMappingFunc="confd_global_startup_status_confd",
-                oid=oidSegment + "6." + str(index),
-                name="hrSWRunType", pysnmpBaseType="Integer32",
-                value=4))  ## fixed value 4 for application
+            targetOidDb.insertOid(
+                newOidItem=OidDbItem(
+                    bdsMappingFunc="confd_global_startup_status_confd",
+                    oid=oidSegment + "6." + str(index),
+                    name="hrSWRunType", pysnmpBaseType="Integer32",
+                    value=4))  ## fixed value 4 for application
 
-            targetOidDb.insertOid(newOidItem=OidDbItem(
-                bdsMappingFunc="confd_global_startup_status_confd",
-                oid=oidSegment + "7." + str(index),
-                name="hrSWRunStatus", pysnmpBaseType="Integer32",
-                value=HRSWRUNSTATUSMAP[int(bdsJsonObject["attribute"]["startup_status"])]))
+            targetOidDb.insertOid(
+                newOidItem=OidDbItem(
+                    bdsMappingFunc="confd_global_startup_status_confd",
+                    oid=oidSegment + "7." + str(index),
+                    name="hrSWRunStatus", pysnmpBaseType="Integer32",
+                    value=HRSWRUNSTATUSMAP[int(bdsJsonObject["attribute"]["startup_status"])]))
 
-        # logging.debug(len(targetOidDb.oidDict.keys()))
+        # logging.debug(len(targetOidDb.oidDict)
         # logging.debug(targetOidDb)
         # targetOidDb.releaseLock()
