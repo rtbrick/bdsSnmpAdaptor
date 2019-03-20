@@ -21,7 +21,7 @@ from pysnmp.smi import instrum
 from bdssnmpadaptor.access import BdsAccess
 from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
 from bdssnmpadaptor.log import set_logging
-from bdssnmpadaptor.snmp_config import getSnmpEngine
+from bdssnmpadaptor import snmp_config
 
 # class Uptime:
 #     birthday = time.time()
@@ -187,15 +187,23 @@ class SnmpFrontEnd(object):
         set_logging(configDict,"SnmpFrontEnd",self)
         self.moduleLogger.debug("configDict:{}".format(configDict))
 
+        self.snmpEngine = snmp_config.getSnmpEngine(
+            engineId=configDict.get('engineId'))
 
-        self.snmpEngine = getSnmpEngine(engineId=configDict.get('engineId'))
+        engineBoots = snmp_config.setSnmpEngineBoots(
+            self.snmpEngine, configDict.get('stateDir', '.'))
+
         self.listeningAddress = configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
         self.snmpVersion = configDict["version"]
         self.birthday = time.time()
-        self.engineId = getSnmpEngine(configDict.get('engineId'))
 
-        cliArgsDict["snmpEngineIdValue"] = self.engineId.snmpEngineID.asOctets()
+        self.moduleLogger.info(
+            'Running SNMP engine ID {}, boots {} at {}:{}'.format(
+                self.snmpEngine, engineBoots, self.listeningAddress,
+                self.listeningPort))
+
+        cliArgsDict["snmpEngineIdValue"] = self.snmpEngine.snmpEngineID.asOctets()
 
         self.bdsAccess = BdsAccess(cliArgsDict) # Instantiation of the BDS Access Service
 

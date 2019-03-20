@@ -1,6 +1,7 @@
 bdsSnmpAdapter:
   loggingLevel: debug
-  rotatingLogFile: /tmp/bdsSnmpAdapter_   #FIXME store this at permament location
+  rotatingLogFile: /tmp/bdsSnmpAdapter_   #FIXME store this at permanent location
+  stateDir: /var/run/bds-snmp-notificator
   notificator:
     listeningIP: 0.0.0.0  #REST listening IP address
     listeningPort: 5000 #REST listening port
