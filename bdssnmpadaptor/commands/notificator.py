@@ -10,11 +10,8 @@ import argparse
 import asyncio
 import json
 import sys
-
 from aiohttp import web
 
-from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
-from bdsSnmpAdapterManager import set_logging
 from pysnmp.hlapi.asyncio import CommunityData
 from pysnmp.hlapi.asyncio import ContextData
 from pysnmp.hlapi.asyncio import NotificationType
@@ -47,7 +44,8 @@ class AsyncioTrapGenerator(object):
 
         self.moduleLogger.info("original configDict: {}".format(configDict))
 
-        # configDict["usmUserDataMatrix"] = [ usmUserTuple.strip().split(",") for usmUserTuple in configDict["usmUserTuples"].split(';') if len(usmUserTuple) > 0 ]
+        # configDict["usmUserDataMatrix"] = [ usmUserTuple.strip().split(",")
+        # for usmUserTuple in configDict["usmUserTuples"].split(';') if len(usmUserTuple) > 0 ]
         # self.moduleLogger.debug("configDict['usmUserDataMatrix']: {}".format(configDict["usmUserDataMatrix"]))
         # configDict["usmUsers"] = []
         self.moduleLogger.info("modified configDict: {}".format(configDict))
@@ -156,7 +154,7 @@ class AsyncioTrapGenerator(object):
         self.snmpEngine.transportDispatcher.closeDispatcher()
 
 
-class asyncioRestServer(object):
+class AsyncioRestServer(object):
 
     def __init__(self, cliArgsDict):
 
@@ -230,7 +228,6 @@ class asyncioRestServer(object):
         )
 
 
-
 def main():
 
     epilogTXT = """
@@ -247,7 +244,7 @@ def main():
     cliargs = parser.parse_args()
     cliArgsDict = vars(cliargs)
 
-    myRestHttpServer = asyncioRestServer(cliArgsDict)
+    myRestHttpServer = AsyncioRestServer(cliArgsDict)
 
     loop = asyncio.get_event_loop()
 

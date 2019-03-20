@@ -77,7 +77,6 @@ params.update(
                      'bdssnmpadaptor.mapping_modules'],
         'entry_points': {
             'console_scripts': [
-                'bds-snmp-manager = bdssnmpadaptor.commands.manager:main',
                 'bds-snmp-responder = bdssnmpadaptor.commands.responder:main',
                 'bds-snmp-notificator = bdssnmpadaptor.commands.notificator:main',
             ]
