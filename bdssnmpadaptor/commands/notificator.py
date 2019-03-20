@@ -12,6 +12,7 @@ import json
 import sys
 
 from aiohttp import web
+
 from bdsSnmpAdapterManager import loadBdsSnmpAdapterConfigFile
 from bdsSnmpAdapterManager import set_logging
 from pysnmp.hlapi.asyncio import CommunityData
@@ -26,8 +27,7 @@ from pysnmp.proto.rfc1902 import Unsigned32
 
 from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
 from bdssnmpadaptor.log import set_logging
-from bdssnmpadaptor.snmp_config import getSnmpEngine
-
+from bdssnmpadaptor import snmp_config
 
 RTBRICKSYSLOGTRAP = "1.3.6.1.4.1.50058.103.1.1"
 SYSLOGMSG = "1.3.6.1.4.1.50058.102.1.1.0"
@@ -52,7 +52,11 @@ class AsyncioTrapGenerator(object):
         # configDict["usmUsers"] = []
         self.moduleLogger.info("modified configDict: {}".format(configDict))
 
-        self.snmpEngine = getSnmpEngine(engineId=configDict.get('engineId'))
+        self.snmpEngine = snmp_config.getSnmpEngine(
+            engineId=configDict.get('engineId'))
+
+        engineBoots = snmp_config.setSnmpEngineBoots(
+            self.snmpEngine, configDict.get('stateDir', '.'))
 
         self.snmpVersion = configDict["version"]
 
@@ -74,8 +78,10 @@ class AsyncioTrapGenerator(object):
         self.snmpTrapPort = configDict["snmpTrapPort"]
         self.trapCounter = 0
 
-        self.engineId = getSnmpEngine(configDict.get('engineId'))
         self.restHttpServerObj = restHttpServerObj
+
+        self.moduleLogger.info('Running SNMP engine ID {}, boots {}'.format(
+            self.snmpEngine, engineBoots))
 
     async def sendTrap(self, bdsLogDict):
         self.moduleLogger.debug(

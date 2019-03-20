@@ -1,6 +1,7 @@
 bdsSnmpAdapter:
   loggingLevel: debug
   rotatingLogFile: /tmp/bdsSnmpAdaptor_   #FIXME store this at permament location
+  stateDir: /var/run/bds-snmp-responder
   access:
     rtbrickHost: 10.0.3.10
     rtbrickPorts:
