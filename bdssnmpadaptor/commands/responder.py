@@ -234,9 +234,7 @@ class SnmpFrontEnd(object):
         if str(self.snmpVersion) == "2c":
             self.community = configDict["community"]
 
-            config.addV1System(self.snmpEngine, 'read-subtree', self.community)
-            # Allow full MIB access for this user / securityModels at VACM
-            config.addVacmUser(self.snmpEngine, 2, 'read-subtree', 'noAuthNoPriv', (1, 3, 6))
+            snmp_config.setCommunity(self.snmpEngine, self.community)
 
             snmpContext = context.SnmpContext(self.snmpEngine)
             snmpContext.unregisterContextName(v2c.OctetString(''))
@@ -246,66 +244,16 @@ class SnmpFrontEnd(object):
             )
 
         elif str(self.snmpVersion) == "3":
-            if "usmUsers" in configDict:
-
-                for usmUserDict in configDict["usmUsers"]:
-                    userName = list(usmUserDict)[0]
-                    d = usmUserDict[userName]
-
-                    if "authKey" in d:
-                        authKey = d["authKey"]
-                        authProtocol = "SHA"
-                        authProtocolObj = config.usmHMACSHAAuthProtocol
-
-                        if "authProtocol" in d:
-                            authProtocol = d["authProtocol"]
-                            if authProtocol == "MD5":
-                                authProtocolObj = config.usmHMACMD5AuthProtocol
-
-                        if "privKey" in d:
-                            privKey = d["privKey"]
-                            privProtocol = "AES"
-                            privProtocolObj = config.usmAesCfb128Protocol
-                            if "privProtocol" in d:
-                                privProtocol = d["privProtocol"]
-
-                                if privProtocol == "DES":
-                                    privProtocolObj = config.usmDESPrivProtocol
-
-                            authString = "authPriv"
-
-                        else:
-                            privProtocol = None
-                            privProtocolObj = config.usmNoPrivProtocol
-                            privKey = None
-                            authString = "authNoPriv"
-
-                    else:
-                        authProtocol = None
-                        authProtocolObj = config.usmNoAuthProtocol
-                        authKey = None
-                        privProtocol = None
-                        privProtocolObj = config.usmNoPrivProtocol
-                        privKey = None
-                        authString = "noAuthNoPriv"
-
-                    print(f"addV3User: self.snmpEngine, {userName} {authProtocolObj}:{authKey}"
-                          f" {privProtocolObj}:{privKey}")
-
-                    config.addV3User(
-                        self.snmpEngine, userName,
-                        authProtocolObj, authKey,
-                        privProtocolObj, privKey)
-
-                    config.addVacmUser(
-                        self.snmpEngine, 3, userName, authString, (1, 3, 6))
-
-                    print(f"addVacmUser: self.snmpEngine, 3, "
-                          f"{userName}, {authString}, (1, 3, 6)")
-
-            else:
+            if "usmUsers" not in configDict:
                 raise Exception('snmp v3: missing usmUsers configuration '
                                 'in configfile!')
+
+            for usmUser, usmCreds in configDict["usmUsers"].items():
+
+                snmp_config.setUsmUser(
+                    self.snmpEngine, usmUser,
+                    usmCreds.get('authKey'), usmCreds.get('authProtocol'),
+                    usmCreds.get('privKey'), usmCreds.get('privProtocol'))
 
             # https://github.com/openstack/virtualpdu/blob/master/virtualpdu/pdu/pysnmp_handler.py
             snmpContext = context.SnmpContext(self.snmpEngine)

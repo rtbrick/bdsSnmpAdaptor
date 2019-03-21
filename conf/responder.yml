@@ -13,6 +13,15 @@ bdsSnmpAdapter:
     version: 2c # specify snmp version type=str, choices=['2c', '3']
     community: public # v2c community
     engineId: 80:00:C3:8A:04:73:79:73:4e:61:6d:65:31:32:33
+    usmUsers:
+      testUser1:
+        authKey: authkey123
+        authProtocol: md5  # md5, sha224, sha256, sha384, sha512, none
+      testUser2:
+        authKey: authkey123
+        authProtocol: md5  # md5, sha224, sha256, sha384, sha512, none
+        privKey: privkey123
+        privProtocol: des  # des, 3des, aes128, aes192, aes192blmt, aes256, aes256blmt, none
     staticOidContent:
       sysDesc: l2.pod2.nbg2.rtbrick.net
       sysContact: stefan@rtbrick.com

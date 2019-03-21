@@ -5,11 +5,16 @@ bdsSnmpAdapter:
   notificator:
     listeningIP: 0.0.0.0  #REST listening IP address
     listeningPort: 5000 #REST listening port
-    snmpTrapTargets:   #defines the SNMP server, which receives the traps
-      - 127.0.0.1
-    snmpTrapPort: 162 # defines the SNMP trap destination port
-    version: 2c # specify snmp version type=str, choices=['2c', '3']
-    community: public # v2c community
+    snmpTrapTargets:  # map of SNMP trap targets
+      3: # specify snmp version type=str, choices=['1', '2c', '3']
+        testUser1:
+          - 127.0.0.1:  # SNMP manager address
+              162       # SNMP manager port
+      2c: # specify snmp version type=str, choices=['1', '2c', '3']
+        community: public # v2c community
+          - 127.0.0.1:  # SNMP manager address
+              162       # SNMP manager port
+
     # SNMP engine ID uniquely identifies SNMP engine within an administrative
     # domain. For SNMPv3 crypto feature to work, the same SNMP engine ID value
     # should be configured at the TRAP receiver.
@@ -17,8 +22,8 @@ bdsSnmpAdapter:
     # User-based Security Model (USM) for version 3 configurations:
     # http://snmplabs.com/pysnmp/docs/api-reference.html#security-parameters
     usmUsers:
-      - testUser1:
-          authProtocol: usmHMACSHAAuthProtocol
-          authKey: authKey123
-          privProtocol: usmDESPrivProtocol
-          privKey: privkey123
+      testUser1:
+        authProtocol: md5  # md5, sha224, sha256, sha384, sha512, none
+        authKey: authkey123
+        privProtocol: des  # des, 3des, aes128, aes192, aes192blmt, aes256, aes256blmt, none
+        privKey: privkey123

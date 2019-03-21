@@ -8,8 +8,34 @@
 import os
 import tempfile
 
+from pysnmp.entity import config
 from pysnmp.hlapi.asyncio import SnmpEngine
 from pysnmp.proto.rfc1902 import OctetString
+
+from bdssnmpadaptor import error
+
+
+AUTH_PROTOCOLS = {
+  'MD5': config.usmHMACMD5AuthProtocol,
+  'SHA': config.usmHMACSHAAuthProtocol,
+  'SHA224': config.usmHMAC128SHA224AuthProtocol,
+  'SHA256': config.usmHMAC192SHA256AuthProtocol,
+  'SHA384': config.usmHMAC256SHA384AuthProtocol,
+  'SHA512': config.usmHMAC384SHA512AuthProtocol,
+  'NONE': config.usmNoAuthProtocol
+}
+
+PRIV_PROTOCOLS = {
+  'DES': config.usmDESPrivProtocol,
+  '3DES': config.usm3DESEDEPrivProtocol,
+  'AES': config.usmAesCfb128Protocol,
+  'AES128': config.usmAesCfb128Protocol,
+  'AES192': config.usmAesCfb192Protocol,
+  'AES192BLMT': config.usmAesBlumenthalCfb192Protocol,
+  'AES256': config.usmAesCfb256Protocol,
+  'AES256BLMT': config.usmAesBlumenthalCfb256Protocol,
+  'NONE': config.usmNoPrivProtocol
+}
 
 
 def getSnmpEngine(engineId=None):
@@ -66,3 +92,55 @@ def setSnmpEngineBoots(snmpEngine, stateDir):
     os.rename(fl.name, bootsFile)
 
     return boots
+
+
+def setCommunity(snmpEngine, community, version=2):
+    """Configure SNMP community name and VACM access
+    """
+    config.addV1System(snmpEngine, 'read-subtree', community)
+
+    config.addVacmUser(
+        snmpEngine, version, 'everything', 'noAuthNoPriv',
+        (1, 3, 6), (1, 3, 6), (1, 3, 6))
+
+
+def setUsmUser(snmpEngine, user, authKey, authProtocol, privKey, privProtocol):
+    """Configure SNMP USM user credentials and VACM access
+    """
+    if not authKey:
+        authProtocol = 'NONE'
+
+    elif not authProtocol:
+        authProtocol = 'MD5'
+
+    if not privKey:
+        privProtocol = 'NONE'
+
+    elif not privProtocol:
+        privProtocol = 'DES'
+
+    if (authProtocol == config.usmNoAuthProtocol and
+            privProtocol != config.usmNoPrivProtocol):
+        raise error.BdsError('SNMP privacy implies enabled authentication')
+
+    elif (authProtocol == config.usmNoAuthProtocol and
+            privProtocol == config.usmNoPrivProtocol):
+        authLevel = 'noAuthNoPriv'
+
+    elif privProtocol != config.usmNoPrivProtocol:
+        authLevel = 'authPriv'
+
+    else:
+        authLevel = 'authNoPriv'
+
+    config.addV3User(
+        snmpEngine,
+        user,
+        AUTH_PROTOCOLS[authProtocol.upper()],
+        authKey,
+        PRIV_PROTOCOLS[privProtocol.upper()],
+        privKey)
+
+    config.addVacmUser(
+        snmpEngine, 3, user, authLevel,
+        (1, 3, 6), (1, 3, 6), (1, 3, 6))
