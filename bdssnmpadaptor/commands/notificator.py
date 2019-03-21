@@ -63,19 +63,21 @@ class AsyncioTrapGenerator(object):
         if self.snmpVersion == "2c":
             self.community = configDict["community"]
 
-            self.moduleLogger.info(
-                "SNMP version {} community {}".format(
-                    self.snmpVersion, self.community))
-            # config.addV1System(self.snmpEngine, 'my-area', self.community )
+            snmp_config.setCommunity(self.snmpEngine, self.community)
 
         elif self.snmpVersion == "3":
-            usmUserDataMatrix = [
-                usmUserTuple.strip().split(",")
-                for usmUserTuple in configDict["usmUserTuples"].split(';')
-                if len(usmUserTuple) > 0]
+            if "usmUsers" not in configDict:
+                raise Exception('snmp v3: missing usmUsers configuration '
+                                'in configfile!')
+
+            for usmUser, usmCreds in configDict["usmUsers"].items():
+
+                snmp_config.setUsmUser(
+                    self.snmpEngine, usmUser,
+                    usmCreds.get('authKey'), usmCreds.get('authProtocol'),
+                    usmCreds.get('privKey'), usmCreds.get('privProtocol'))
 
         self.snmpTrapTargets = configDict["snmpTrapTargets"]
-        self.snmpTrapPort = configDict["snmpTrapPort"]
         self.trapCounter = 0
 
         self.restHttpServerObj = restHttpServerObj
@@ -122,6 +124,7 @@ class AsyncioTrapGenerator(object):
                 self.trapCounter, syslogMsgFacility,
                 syslogMsgSeverity, syslogMsgText))
 
+        # TODO: cycle over SNMP trap targets,, send out notifications
         errorIndication, errorStatus, errorIndex, varBinds = await sendNotification(
             self.snmpEngine,
             CommunityData(self.community, mpModel=1),  # mpModel defines version
@@ -228,7 +231,6 @@ class asyncioRestServer(object):
             self.snmpTrapGenerator.run_forever(),
             self.backgroundLogging()
         )
-
 
 
 def main():
