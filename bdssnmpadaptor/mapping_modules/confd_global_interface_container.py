@@ -152,9 +152,9 @@ class confd_global_interface_container(object):
                 ifPhysicalLocation = BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
                 ifSpeed = IFSPEED_LAMBDA(bdsJsonObject["attribute"]["bandwidth"])))
                 if ifSpeed  == 100000000:
-                    ifGigEtherName = "hrd_ge-" + BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
+                    ifGigEtherName = "hundredGe-" + BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
                 elif ifSpeed  == 10000000:
-                    ifGigEtherName = "ten_ge-" + BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
+                    ifGigEtherName = "tenGe-" + BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
                 else:
                     ifGigEtherName = "ge-" + BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
 
