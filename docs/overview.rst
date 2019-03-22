@@ -27,7 +27,6 @@ The following key libraries are used:
 - pysnmp 4.4.8 (both SNMP agent and manager parts)
 - aiohttp (REST server)
 - requestsp (REST client)
-- Redis 5.0
 - pyyaml
 
 The use-case for `bdsSnmpAdapter` is the integration of RtBrick Systems with
@@ -49,5 +48,4 @@ Security:
 - both SNMP v2c community name and SNMP v3 USM authentication is supported for SNMP
 - REST data exchange between RtBrick systems and bdsSnmpAdapter is unencrypted.
   This might change in the future.
-- It is expected that no other application runs on the bdsSnmpHost. Redis
-  security features are enabled by default.
+- It is expected that no other application runs on the bdsSnmpHost.

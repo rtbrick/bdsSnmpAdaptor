@@ -7,23 +7,17 @@ Modules
 Module-Overview
 ===============
 
-`bdsSnmpAdapter` utilizes 6 discrete python modules, which run as separate
-linux processes:
+The `bdsSnmpAdapter` package ships two command-line tools that can be run as
+two Linux processes:
 
-- 3 processes support SNMP GET/GETNEXT command for information retrieval:
+- One process implements Command Responder for the RtBrick system
 
-  - bdsAccessToRedis
-  - bdsSnmpTables
-  - getOidFromRedis
+  - bds-snmp-responder
 
-- 2 processes support the generation of SNMP notifications:
+- Another process supports the generation of SNMP notifications in response
+  to events in the RtBrick system:
 
-  - restServer
-  - redisToSnmpTrap
-
-- 1 management process, which collects control information from the above:
-
-  - BdsSnmpAdapterManager
+  - bds-snmp-notificator
 
 .. figure::  images/moduleOverview.pdf
    :align:   center
