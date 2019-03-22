@@ -148,10 +148,15 @@ class confd_global_interface_container(object):
                 oidSegment = "1.3.6.1.2.1.2.2.1."
                 thisSequenceNumber = bdsJsonObject["sequence"]
                 ifName = bdsJsonObject["attribute"]["interface_name"]
-
                 index = BdsMappingFunctions.ifIndexFromIfName(ifName)
-                # index =  i + 1
                 ifPhysicalLocation = BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
+                ifSpeed = IFSPEED_LAMBDA(bdsJsonObject["attribute"]["bandwidth"])))
+                if ifSpeed  == 100000000:
+                    ifGigEtherName = "hrd_ge-" + BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
+                elif ifSpeed  == 10000000:
+                    ifGigEtherName = "ten_ge-" + BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
+                else:
+                    ifGigEtherName = "ge-" + BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
 
                 targetOidDb.insertOid(newOidItem=OidDbItem(
                     bdsMappingFunc="confd_global_interface_container",
@@ -165,7 +170,7 @@ class confd_global_interface_container(object):
                     oid=oidSegment + "2." + str(index),
                     name="ifDescr",
                     pysnmpBaseType=OctetString,
-                    value=ifPhysicalLocation))
+                    value=ifGigEtherName))
 
                 targetOidDb.insertOid(newOidItem=OidDbItem(
                     bdsMappingFunc="confd_global_interface_container",
