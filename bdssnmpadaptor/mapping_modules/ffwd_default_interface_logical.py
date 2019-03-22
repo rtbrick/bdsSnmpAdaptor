@@ -54,7 +54,7 @@ class ffwd_default_interface_logical(object):
                     bdsMappingFunc="ffwd_default_interface_logical",
                     oid=oidSegment + "1." + str(index),
                     name="ifIndex",
-                    pysnmpBaseType="Integer32",
+                    pysnmpBaseType=Integer32,
                     value=int(index)))
 
             targetOidDb.insertOid(
@@ -62,7 +62,7 @@ class ffwd_default_interface_logical(object):
                     bdsMappingFunc="ffwd_default_interface_logical",
                     oid=oidSegment + "2." + str(index),
                     name="ifDescr",
-                    pysnmpBaseType="OctetString",
+                    pysnmpBaseType=OctetString,
                     value=bdsJsonObject["attribute"]["interface_name"]))
 
             targetOidDb.insertOid(
@@ -70,7 +70,7 @@ class ffwd_default_interface_logical(object):
                     bdsMappingFunc="ffwd_default_interface_logical",
                     oid=oidSegment + "3." + str(index),
                     name="ifType",
-                    pysnmpBaseType="Integer32",
+                    pysnmpBaseType=Integer32,
                     value=6))
 
         targetOidDb.releaseLock()

@@ -127,7 +127,7 @@ class confd_global_interface_physical(object):
                 bdsMappingFunc="confd_global_interface_physical",
                 oid="1.3.6.1.2.1.2.1.0",
                 name="ifIndex",
-                pysnmpBaseType="Integer32",
+                pysnmpBaseType=Integer32,
                 value=len(bdsJsonResponseDict["objects"])))
 
             targetOidDb.setLock()
@@ -146,7 +146,7 @@ class confd_global_interface_physical(object):
                         bdsMappingFunc="confd_global_interface_physical",
                         oid=oidSegment + "1." + str(index),
                         name="ifIndex",
-                        pysnmpBaseType="Integer32",
+                        pysnmpBaseType=Integer32,
                         value=int(index)))
 
                 targetOidDb.insertOid(
@@ -154,7 +154,7 @@ class confd_global_interface_physical(object):
                         bdsMappingFunc="confd_global_interface_physical",
                         oid=oidSegment + "2." + str(index),
                         name="ifDescr",
-                        pysnmpBaseType="OctetString",
+                        pysnmpBaseType=OctetString,
                         value=ifPhysicalLocation))
 
                 targetOidDb.insertOid(
@@ -162,7 +162,7 @@ class confd_global_interface_physical(object):
                         bdsMappingFunc="confd_global_interface_physical",
                         oid=oidSegment + "3." + str(index),
                         name="ifType",
-                        pysnmpBaseType="Integer32",
+                        pysnmpBaseType=Integer32,
                         value=IFTYPEMAP[int(bdsJsonObject["attribute"]["interface_type"])]))
 
                 targetOidDb.insertOid(
@@ -170,7 +170,7 @@ class confd_global_interface_physical(object):
                         bdsMappingFunc="confd_global_interface_physical",
                         oid=oidSegment + "4." + str(index),
                         name="ifMtu",
-                        pysnmpBaseType="Integer32",
+                        pysnmpBaseType=Integer32,
                         value=IFMTU_LAMBDA(bdsJsonObject["attribute"]["layer2_mtu"])))
 
                 targetOidDb.insertOid(
@@ -178,7 +178,7 @@ class confd_global_interface_physical(object):
                         bdsMappingFunc="confd_global_interface_physical",
                         oid=oidSegment + "6." + str(index),
                         name="ifPhysAddress",
-                        pysnmpBaseType="OctetString",
+                        pysnmpBaseType=OctetString,
                         pysnmpRepresentation="hexValue",
                         value=bdsJsonObject["attribute"]["mac_address"].replace(":", "")))
 
@@ -187,7 +187,7 @@ class confd_global_interface_physical(object):
                         bdsMappingFunc="confd_global_interface_physical",
                         oid=oidSegment + "7." + str(index),
                         name="ifAdminStatus",
-                        pysnmpBaseType="Integer32",
+                        pysnmpBaseType=Integer32,
                         value=IFOPERSTATUSMAP[int(bdsJsonObject["attribute"]["admin_status"])]))
 
                 targetOidDb.insertOid(
@@ -195,7 +195,7 @@ class confd_global_interface_physical(object):
                         bdsMappingFunc="confd_global_interface_physical",
                         oid=oidSegment + "8." + str(index),
                         name="ifOperStatus",
-                        pysnmpBaseType="Integer32",
+                        pysnmpBaseType=Integer32,
                         value=IFOPERSTATUSMAP[int(bdsJsonObject["attribute"]["link_status"])]))
 
                 if len(lastSequenceNumberList) == 0:  # first run
@@ -204,7 +204,7 @@ class confd_global_interface_physical(object):
                             bdsMappingFunc="confd_global_interface_physical",
                             oid=oidSegment + "9." + str(index),
                             name="ifLastChange",
-                            pysnmpBaseType="TimeTicks",
+                            pysnmpBaseType=TimeTicks,
                             value=0))
 
                 elif thisSequenceNumber != lastSequenceNumberList[i]:
@@ -213,7 +213,7 @@ class confd_global_interface_physical(object):
                             bdsMappingFunc="confd_global_interface_physical",
                             oid=oidSegment + "9." + str(index),
                             name="ifTableLastChange",
-                            pysnmpBaseType="TimeTicks",
+                            pysnmpBaseType=TimeTicks,
                             value=currentSysTime))
 
                 if len(lastSequenceNumberList) == 0:  # first run
@@ -222,7 +222,7 @@ class confd_global_interface_physical(object):
                             bdsMappingFunc="confd_global_interface_physical",
                             oid="1.3.6.1.2.1.31.1.5",
                             name="ifTableLastChange",
-                            pysnmpBaseType="TimeTicks",
+                            pysnmpBaseType=TimeTicks,
                             value=0))
 
                     targetOidDb.insertOid(
@@ -230,7 +230,7 @@ class confd_global_interface_physical(object):
                             bdsMappingFunc="confd_global_interface_physical",
                             oid="1.3.6.1.2.1.31.1.6",
                             name="ifTableLastChange",
-                            pysnmpBaseType="TimeTicks",
+                            pysnmpBaseType=TimeTicks,
                             value=0))  # Fixme - do we have to observe logicsl interfaces?
 
                 else:
@@ -239,7 +239,7 @@ class confd_global_interface_physical(object):
                             bdsMappingFunc="confd_global_interface_physical",
                             oid="1.3.6.1.2.1.31.1.5",
                             name="ifTableLastChange",
-                            pysnmpBaseType="TimeTicks",
+                            pysnmpBaseType=TimeTicks,
                             value=currentSysTime))
 
                 #
@@ -252,7 +252,7 @@ class confd_global_interface_physical(object):
                         bdsMappingFunc="confd_global_interface_container",
                         oid=oidSegment + "15." + str(index),
                         name="ifSpeed",
-                        pysnmpBaseType="Gauge32",
+                        pysnmpBaseType=Gauge32,
                         value=IFSPEED_LAMBDA(bdsJsonObject["attribute"]["bandwidth"])))
 
             targetOidDb.releaseLock()

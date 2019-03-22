@@ -62,19 +62,14 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
             if _oidDbItem.name in ["snmpEngineTime" ]:    # FIXME: add a function for realitime OIDs
                 _oidDbItem.value = int((time.time()-BIRTHDAY))
 
+
+
             if _oidDbItem.pysnmpRepresentation:
-                evalString = "{}({}='{}')".format(_oidDbItem.pysnmpBaseType,
-                                                  _oidDbItem.pysnmpRepresentation,
-                                                  _oidDbItem.value)
+               returnValue = _oidDbItem.pysnmpBaseType(
+                    f"{_oidDbItem.pysnmpRepresentation}={_oidDbItem.value}")
 
             else:
-                evalString = "{}('{}')".format(_oidDbItem.pysnmpBaseType,
-                                               _oidDbItem.value)
-            self.moduleLogger.debug(
-                "createVarbindFromOidDbItem evalString"
-                " {})".format(evalString))
-
-            returnValue = eval(evalString)
+               returnValue = _oidDbItem.pysnmpBaseType(_oidDbItem.value)
 
             self.moduleLogger.debug(
                 "createVarbindFromOidDbItem returning oid {} with "
