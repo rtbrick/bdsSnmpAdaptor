@@ -1,6 +1,7 @@
 bdsSnmpAdapter:
   loggingLevel: debug
-  rotatingLogFile: /tmp   #FIXME store this at permanent location
+    # Log to stdout unless log file is set here
+#  rotatingLogFile: /tmp   #FIXME store this at permanent location
   stateDir: /var/run/bds-snmp-notificator
   notificator:
     # temp config lines to test incomming graylog message start #

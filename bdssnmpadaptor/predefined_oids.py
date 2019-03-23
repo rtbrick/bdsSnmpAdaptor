@@ -79,8 +79,6 @@ class StaticAndPredefinedOids(object):
                 name="SysServices", pysnmpBaseType=Integer32,
                 value=6))
 
-        #
-        print(f'temp print for engineId: {staticOidDict["snmpEngineID"]}')
         targetOidDb.insertOid(
             newOidItem=OidDbItem(
                 bdsMappingFunc="StaticAndPredefinedOids",

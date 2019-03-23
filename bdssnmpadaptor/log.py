@@ -7,28 +7,35 @@
 #
 import logging
 import os
+import sys
+from logging import StreamHandler
 from logging.handlers import RotatingFileHandler
 
 
 def set_logging(configDict, moduleFileNameWithoutPy, moduleObj):
+
     logging.root.handlers = []
 
-    moduleObj.moduleLogger = logging.getLogger(moduleFileNameWithoutPy)
+    moduleLogger = logging.getLogger(moduleFileNameWithoutPy)
 
-    logFile = os.path.join(configDict['rotatingLogFile'], moduleFileNameWithoutPy)
-    logFile += ".log"
+    logFile = configDict.get('rotatingLogFile')
+    if logFile:
+        logFile = os.path.join(logFile, moduleFileNameWithoutPy)
+        logFile += ".log"
 
-    # logging.basicConfig(filename=logFile, filemode='w', level=logging.DEBUG)
+        handler = RotatingFileHandler(
+            logFile, maxBytes=1000000, backupCount=2)  # 1M rotating log
 
-    rotateHandler = RotatingFileHandler(
-        logFile, maxBytes=1000000, backupCount=2)  # 1M rotating log
+    else:
+        handler = StreamHandler(sys.stdout)
 
     formatter = logging.Formatter(
         '%(asctime)s : %(name)s : %(levelname)s : %(message)s')
-    rotateHandler.setFormatter(formatter)
 
-    logging.getLogger("").addHandler(rotateHandler)
-    #
+    handler.setFormatter(formatter)
+
+    logging.getLogger("").addHandler(handler)
+
     moduleObj.loggingLevel = configDict['loggingLevel']
 
     if moduleObj.loggingLevel == "debug":
@@ -39,3 +46,8 @@ def set_logging(configDict, moduleFileNameWithoutPy, moduleObj):
 
     elif moduleObj.loggingLevel == "warning":
         logging.getLogger().setLevel(logging.WARNING)
+
+    else:
+        logging.getLogger().setLevel(logging.ERROR)
+
+    return moduleLogger
