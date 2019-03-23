@@ -6,6 +6,7 @@
 # License: BSD License 2.0
 #
 from pysnmp.proto.rfc1902 import Integer32
+from pysnmp.proto.rfc1902 import ObjectIdentifier
 from pysnmp.proto.rfc1902 import OctetString
 
 from bdssnmpadaptor.oidDb import OidDbItem
