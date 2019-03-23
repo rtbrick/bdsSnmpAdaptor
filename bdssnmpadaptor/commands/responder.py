@@ -21,6 +21,7 @@ from bdssnmpadaptor.access import BdsAccess
 from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
 from bdssnmpadaptor.log import set_logging
 from bdssnmpadaptor import snmp_config
+from bdssnmpadaptor import error
 
 # class Uptime:
 #     birthday = time.time()
@@ -185,7 +186,6 @@ class SnmpFrontEnd(object):
 
         self.listeningAddress = configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
-        self.snmpVersion = configDict["version"]
         self.birthday = time.time()
 
         self.moduleLogger.info(
@@ -194,7 +194,7 @@ class SnmpFrontEnd(object):
 
         cliArgsDict["snmpEngineIdValue"] = self.snmpEngine.snmpEngineID.asOctets()
 
-        self.bdsAccess = BdsAccess(cliArgsDict) # Instantiation of the BDS Access Service
+        self.bdsAccess = BdsAccess(cliArgsDict)  # Instantiation of the BDS Access Service
 
         self.oidDb = self.bdsAccess.getOidDb()
 
@@ -217,50 +217,52 @@ class SnmpFrontEnd(object):
                 self.listeningAddress, self.listeningPort)
         )
 
-        if str(self.snmpVersion) == "2c":
-            self.community = configDict["community"]
+        for snmpVersion, snmpConfigEntries in configDict.get(
+                "versions", {}).items():
 
-            snmp_config.setCommunity(self.snmpEngine, self.community)
+            snmpVersion = str(snmpVersion)
 
-            snmpContext = context.SnmpContext(self.snmpEngine)
-            snmpContext.unregisterContextName(v2c.OctetString(''))
-            snmpContext.registerContextName(
-                v2c.OctetString(''),  # Context Name
-                MibInstrumController().setOidDbAndLogger(self.oidDb, cliArgsDict)
-            )
+            if snmpVersion in ('1', '2c'):
 
-            self.moduleLogger.info(
-                'SNMPv2 responder with community name {}'.format(self.community))
+                for snmpConfig in snmpConfigEntries:
 
-        elif str(self.snmpVersion) == "3":
-            if "usmUsers" not in configDict:
-                raise Exception('snmp v3: missing usmUsers configuration '
-                                'in configfile!')
+                    community = snmpConfig["community"]
 
-            for usmUser, usmCreds in configDict["usmUsers"].items():
+                    snmp_config.setCommunity(self.snmpEngine, community, version=snmpVersion)
 
-                snmp_config.setUsmUser(
-                    self.snmpEngine, usmUser,
-                    usmCreds.get('authKey'), usmCreds.get('authProtocol'),
-                    usmCreds.get('privKey'), usmCreds.get('privProtocol'))
+                    self.moduleLogger.info(
+                        'Configuring SNMPv{} community name {}'.format(snmpVersion, community))
 
-                self.moduleLogger.info(
-                    'SNMPv3 responder with user {}, auth {}/{},'
-                    ' priv {}/{}'.format(
-                        usmUser, usmCreds.get('authKey'), usmCreds.get('authProtocol'),
-                        usmCreds.get('privKey'), usmCreds.get('privProtocol')))
+            elif snmpVersion == '3':
 
-            # https://github.com/openstack/virtualpdu/blob/master/virtualpdu/pdu/pysnmp_handler.py
-            snmpContext = context.SnmpContext(self.snmpEngine)
-            snmpContext.unregisterContextName(v2c.OctetString(''))
-            snmpContext.registerContextName(
-                v2c.OctetString(''),  # Context Name
-                MibInstrumController().setOidDbAndLogger(self.oidDb, cliArgsDict)
-            )
+                for usmUser, usmCreds in snmpConfigEntries.get('usmUsers', {}).items():
 
-        else:
-            raise Exception(
-                'incorrect SNMP version string, just "2c" and "3" are supported')
+                    snmp_config.setUsmUser(
+                        self.snmpEngine, usmUser,
+                        usmCreds.get('authKey'), usmCreds.get('authProtocol'),
+                        usmCreds.get('privKey'), usmCreds.get('privProtocol'))
+
+                    self.moduleLogger.info(
+                        'Configuring SNMPv3 USM user {}, auth {}/{},'
+                        ' priv {}/{}'.format(
+                            usmUser, usmCreds.get('authKey'), usmCreds.get('authProtocol'),
+                            usmCreds.get('privKey'), usmCreds.get('privProtocol')))
+
+            else:
+                raise error.BdsError('Unknown SNMP version {}'.format(snmpVersion))
+
+        snmpContextName = v2c.OctetString('')
+
+        # https://github.com/openstack/virtualpdu/blob/master/virtualpdu/pdu/pysnmp_handler.py
+        snmpContext = context.SnmpContext(self.snmpEngine)
+        snmpContext.unregisterContextName(v2c.OctetString(''))
+        snmpContext.registerContextName(
+            snmpContextName,  # Context Name
+            MibInstrumController().setOidDbAndLogger(self.oidDb, cliArgsDict)
+        )
+
+        self.moduleLogger.info(
+            'Configuring SNMP context name "{}"'.format(snmpContextName))
 
         cmdrsp.GetCommandResponder(self.snmpEngine, snmpContext)
         cmdrsp.NextCommandResponder(self.snmpEngine, snmpContext)

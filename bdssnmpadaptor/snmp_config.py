@@ -37,6 +37,12 @@ PRIV_PROTOCOLS = {
   'NONE': config.usmNoPrivProtocol
 }
 
+MP_MODELS = {
+    '1': 1,
+    '2c': 2,
+    '3': 3
+}
+
 
 def getSnmpEngine(engineId=None):
     if engineId:
@@ -94,13 +100,15 @@ def setSnmpEngineBoots(snmpEngine, stateDir):
     return boots
 
 
-def setCommunity(snmpEngine, community, version=2):
+def setCommunity(snmpEngine, community, version='2c'):
     """Configure SNMP community name and VACM access
     """
-    config.addV1System(snmpEngine, 'read-subtree', community)
+    mpModel = MP_MODELS[version]
+
+    config.addV1System(snmpEngine, community, community)
 
     config.addVacmUser(
-        snmpEngine, version, 'everything', 'noAuthNoPriv',
+        snmpEngine, mpModel, 'everything', 'noAuthNoPriv',
         (1, 3, 6), (1, 3, 6), (1, 3, 6))
 
 
