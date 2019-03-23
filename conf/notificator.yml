@@ -1,19 +1,24 @@
 bdsSnmpAdapter:
   loggingLevel: debug
-  rotatingLogFile: /tmp/bdsSnmpAdapter_   #FIXME store this at permanent location
+  rotatingLogFile: /tmp   #FIXME store this at permanent location
   stateDir: /var/run/bds-snmp-notificator
   notificator:
+    # temp config lines to test incomming graylog message start #
+    snmpTrapServer: 127.0.0.1 #defines the SNMP server, which receives the traps
+    snmpTrapPort: 162 # defines the SNMP trap destination port
+    version: 2c # specify snmp version type=str, choices=['2c', '3']
+    community: public # v2c community
+    # temp config lines to test incomming graylog message end # 
     listeningIP: 0.0.0.0  #REST listening IP address
     listeningPort: 5000 #REST listening port
     snmpTrapTargets:  # map of SNMP trap targets
       3: # specify snmp version type=str, choices=['1', '2c', '3']
         testUser1:
           - 127.0.0.1:  # SNMP manager address
-              162       # SNMP manager port
+          #   162       # SNMP manager port
       2c: # specify snmp version type=str, choices=['1', '2c', '3']
         community: public # v2c community
-          - 127.0.0.1:  # SNMP manager address
-              162       # SNMP manager port
+        trapTarget: 127.0.0.1:162  # SNMP manager address :  SNMP manager port
 
     # SNMP engine ID uniquely identifies SNMP engine within an administrative
     # domain. For SNMPv3 crypto feature to work, the same SNMP engine ID value

@@ -27,11 +27,11 @@ from bdssnmpadaptor.log import set_logging
 from bdssnmpadaptor import snmp_config
 
 RTBRICKSYSLOGTRAP = "1.3.6.1.4.1.50058.103.1.1"
-SYSLOGMSG = "1.3.6.1.4.1.50058.102.1.1.0"
-SYSLOGMSGNUMBER = "1.3.6.1.4.1.50058.102.1.1.1.0"
-SYSLOGMSGFACILITY = "1.3.6.1.4.1.50058.102.1.1.2.0"
-SYSLOGMSGSEVERITY = "1.3.6.1.4.1.50058.102.1.1.3.0"
-SYSLOGMSGTEXT = "1.3.6.1.4.1.50058.102.1.1.4.0"
+SYSLOGMSG = "1.3.6.1.4.1.50058.104.2.1.0"
+SYSLOGMSGNUMBER = "1.3.6.1.4.1.50058.104.2.1.1.0"
+SYSLOGMSGFACILITY = "1.3.6.1.4.1.50058.104.2.1.2.0"
+SYSLOGMSGSEVERITY = "1.3.6.1.4.1.50058.104.2.1.3.0"
+SYSLOGMSGTEXT = "1.3.6.1.4.1.50058.104.2.1.4.0"
 
 
 class AsyncioTrapGenerator(object):
@@ -43,7 +43,10 @@ class AsyncioTrapGenerator(object):
         set_logging(configDict,"notificator", self)
 
         self.moduleLogger.info("original configDict: {}".format(configDict))
-
+        # temp lines for graylog client
+        self.snmpTrapServer = configDict["snmpTrapServer"]
+        self.snmpTrapPort = configDict["snmpTrapPort"]
+        # temp lines for graylog client end #
         # configDict["usmUserDataMatrix"] = [ usmUserTuple.strip().split(",")
         # for usmUserTuple in configDict["usmUserTuples"].split(';') if len(usmUserTuple) > 0 ]
         # self.moduleLogger.debug("configDict['usmUserDataMatrix']: {}".format(configDict["usmUserDataMatrix"]))
@@ -108,7 +111,7 @@ class AsyncioTrapGenerator(object):
             syslogMsgSeverity = 0
 
         try:
-            syslogMsgText = bdsLogDict["full_message"]
+            syslogMsgText = bdsLogDict["short_message"]
 
         except Exception as e:
             self.moduleLogger.error(
