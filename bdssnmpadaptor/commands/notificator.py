@@ -40,7 +40,7 @@ class AsyncioTrapGenerator(object):
         configDict = loadBdsSnmpAdapterConfigFile(
             cliArgsDict["configFile"], "notificator")
 
-        set_logging(configDict,"notificator", self)
+        self.moduleLogger = set_logging(configDict,"notificator", self)
 
         self.moduleLogger.info("original configDict: {}".format(configDict))
         # temp lines for graylog client
@@ -167,7 +167,9 @@ class AsyncioRestServer(object):
         self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
 
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"], "notificator")
-        set_logging(configDict,"notificator", self)
+
+        self.moduleLogger = set_logging(configDict,"notificator", self)
+
         self.listeningIP =  configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
 

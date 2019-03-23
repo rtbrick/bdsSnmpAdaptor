@@ -63,7 +63,7 @@ class BdsAccess(object):
     def __init__(self, cliArgsDict):
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"], "access")
 
-        set_logging(configDict, "bdsAccess", self)
+        self.moduleLogger = set_logging(configDict, "bdsAccess", self)
 
         self.moduleLogger.debug("configDict:{}".format(configDict))
         self.rtbrickHost = configDict['rtbrickHost']
