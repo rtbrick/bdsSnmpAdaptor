@@ -150,7 +150,7 @@ class confd_global_interface_container(object):
                 ifName = bdsJsonObject["attribute"]["interface_name"]
                 index = BdsMappingFunctions.ifIndexFromIfName(ifName)
                 ifPhysicalLocation = BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
-                ifSpeed = IFSPEED_LAMBDA(bdsJsonObject["attribute"]["bandwidth"])))
+                ifSpeed = IFSPEED_LAMBDA(bdsJsonObject["attribute"]["bandwidth"])
                 if ifSpeed  == 100000000:
                     ifGigEtherName = "hundredGe-" + BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
                 elif ifSpeed  == 10000000:
