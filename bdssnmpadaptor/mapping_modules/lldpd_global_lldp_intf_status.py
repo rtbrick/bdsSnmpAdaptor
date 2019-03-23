@@ -1,6 +1,18 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of bdsSnmpAdaptor software.
+#
+# Copyright (C) 2017-2019, RtBrick Inc
+# License: BSD License 2.0
+#
 import binascii
 import struct
 import time
+
+from pysnmp.proto.rfc1902 import Gauge32
+from pysnmp.proto.rfc1902 import Integer32
+from pysnmp.proto.rfc1902 import OctetString
+from pysnmp.proto.rfc1902 import TimeTicks
 
 from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
 from bdssnmpadaptor.oidDb import OidDbItem
@@ -8,6 +20,7 @@ from bdssnmpadaptor.oidDb import OidDbItem
 IFTYPEMAP = {
     1: 6  # ethernet-csmacd(6)
 }
+
 IFOPERSTATUSMAP = {
     0: 2,  # down(2)
     1: 1,  # up(1),       -- ready to pass packets

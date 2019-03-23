@@ -5,6 +5,8 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
+from pysnmp.proto.rfc1902 import OctetString
+
 from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
 from bdssnmpadaptor.oidDb import OidDbItem
 

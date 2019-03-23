@@ -5,6 +5,9 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
+from pysnmp.proto.rfc1902 import Integer32
+from pysnmp.proto.rfc1902 import OctetString
+
 from bdssnmpadaptor.oidDb import OidDbItem
 
 # running(1),

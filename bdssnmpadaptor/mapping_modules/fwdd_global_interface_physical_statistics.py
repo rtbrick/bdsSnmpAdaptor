@@ -5,11 +5,14 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
+import binascii
+import struct
+
+from pysnmp.proto.rfc1902 import Counter32
+from pysnmp.proto.rfc1902 import Gauge32
+
 from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
 from bdssnmpadaptor.oidDb import OidDbItem
-
-import struct
-import binascii
 
 HEX_STRING_LAMBDA = lambda x: int(x, 16)
 
