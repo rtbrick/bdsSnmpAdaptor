@@ -12,15 +12,15 @@ bdsSnmpAdapter:
     listeningIP: 0.0.0.0  #SNMP get/getNext listening IP address
     listeningPort: 161 #SNMP get/getNext listening port
     engineId: 80:00:C3:8A:04:73:79:73:4e:61:6d:65:31:32:33
-    versions:  # specify snmp version type=str, choices=['2c', '3']
-      1:
+    versions:  # SNMP versions map, choices=['1', '2c', '3']
+      1:  # list of configuration maps
         - public:
           community: public
-      2c:
+      2c:  # list of configuration maps
         - public:
           community: public
       3:
-        usmUsers:
+        usmUsers:  # map of USM users and their configuration
           testUser1:
             authKey: authkey123
             authProtocol: md5  # md5, sha224, sha256, sha384, sha512, none
