@@ -9,6 +9,7 @@ Welcome to bdsSnmpAdapter's documentation!
 .. toctree::
   :hidden:
 
+  installation
   overview
   modules
   oids
