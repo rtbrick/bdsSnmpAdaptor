@@ -107,8 +107,8 @@ For `SYSV` init scripts:
 
 .. code-block:: bash
 
-    $ tar zxvf bdsSnmpAdaptor-*.tar.gz bdsSnmpAdaptor-*/sysv
-    $ sudo cp bdsSnmpAdaptor-0.0.1/sysv/onl/* /etc/init.d
+    $ tar zxvf bdsSnmpAdaptor-*.tar.gz bdsSnmpAdaptor-*/sysvinit
+    $ sudo cp bdsSnmpAdaptor-0.0.1/sysvinit/onl/* /etc/init.d
     $ for x in 2 3 4 5
         sudo ln -s /etc/init.d/bds-snmp-responder /etc/rc.$xd/S02bds-snmp-responder
         sudo ln -s /etc/init.d/bds-snmp-notificator /etc/rc.$xd/S02bds-snmp-notificator
