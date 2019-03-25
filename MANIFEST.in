@@ -1,5 +1,7 @@
 include *.txt *.md *.rst
 recursive-include tests *.pcap *.py
+recursive-include systemd *.unit
+recursive-include sysvinit *
 include docs Makefile
 recursive-include docs *.rst *.conf *.svg *.ico *.py *.pdf
 recursive-include conf *.yml
