@@ -232,7 +232,7 @@ class confd_global_interface_physical(object):
                     targetOidDb.insertOid(
                         newOidItem=OidDbItem(
                             bdsMappingFunc="confd_global_interface_physical",
-                            oid="1.3.6.1.2.1.31.1.5",
+                            oid="1.3.6.1.2.1.31.1.5.0",
                             name="ifTableLastChange",
                             pysnmpBaseType=TimeTicks,
                             value=0))
@@ -240,7 +240,7 @@ class confd_global_interface_physical(object):
                     targetOidDb.insertOid(
                         newOidItem=OidDbItem(
                             bdsMappingFunc="confd_global_interface_physical",
-                            oid="1.3.6.1.2.1.31.1.6",
+                            oid="1.3.6.1.2.1.31.1.6.0",
                             name="ifTableLastChange",
                             pysnmpBaseType=TimeTicks,
                             value=0))  # Fixme - do we have to observe logicsl interfaces?
@@ -249,7 +249,7 @@ class confd_global_interface_physical(object):
                     targetOidDb.insertOid(
                         newOidItem=OidDbItem(
                             bdsMappingFunc="confd_global_interface_physical",
-                            oid="1.3.6.1.2.1.31.1.5",
+                            oid="1.3.6.1.2.1.31.1.5.0",
                             name="ifTableLastChange",
                             pysnmpBaseType=TimeTicks,
                             value=currentSysTime))
