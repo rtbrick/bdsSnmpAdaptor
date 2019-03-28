@@ -8,20 +8,22 @@
 #
 import argparse
 import asyncio
+import os
 import sys
 import time
 
 from pysnmp.carrier.asyncio.dgram import udp
-from pysnmp.entity import engine, config
+from pysnmp.entity import config
 from pysnmp.entity.rfc3413 import cmdrsp, context
 from pysnmp.proto.api import v2c
 from pysnmp.smi import instrum
 
+from bdssnmpadaptor import daemon
+from bdssnmpadaptor import error
+from bdssnmpadaptor import snmp_config
 from bdssnmpadaptor.access import BdsAccess
 from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
 from bdssnmpadaptor.log import set_logging
-from bdssnmpadaptor import snmp_config
-from bdssnmpadaptor import error
 
 # class Uptime:
 #     birthday = time.time()
@@ -285,12 +287,28 @@ def main():
     parser = argparse.ArgumentParser(
         epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
 
-    parser.add_argument("-f", "--configFile",
-                        default="bdsSnmpRetrieveAdaptor.yml", type=str,
-                        help="config file")
+    parser.add_argument(
+        "-f", "--configFile",
+        default="bdsSnmpRetrieveAdaptor.yml", type=str,
+        help="Path to config file")
+    parser.add_argument(
+        '--daemonize', action='store_true',
+        help="Fork and run as a background process")
+    parser.add_argument(
+        '--pidfile',  type=str,
+        help="Path to a PID file the process would create")
 
     cliargs = parser.parse_args()
+
     cliArgsDict = vars(cliargs)
+
+    cliargs.configFile = os.path.abspath(cliargs.configFile)
+
+    if cliargs.daemonize:
+        daemon.daemonize()
+
+    if cliargs.pidfile:
+        daemon.pidfile(cliargs.pidfile)
 
     mySnmpFrontEnd = SnmpFrontEnd(cliArgsDict)
 

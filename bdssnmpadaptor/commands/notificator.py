@@ -9,9 +9,10 @@
 import argparse
 import asyncio
 import json
+import os
 import sys
-from aiohttp import web
 
+from aiohttp import web
 from pysnmp.hlapi.asyncio import CommunityData
 from pysnmp.hlapi.asyncio import ContextData
 from pysnmp.hlapi.asyncio import NotificationType
@@ -22,9 +23,10 @@ from pysnmp.proto.rfc1902 import Integer32
 from pysnmp.proto.rfc1902 import OctetString
 from pysnmp.proto.rfc1902 import Unsigned32
 
+from bdssnmpadaptor import daemon
+from bdssnmpadaptor import snmp_config
 from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
 from bdssnmpadaptor.log import set_logging
-from bdssnmpadaptor import snmp_config
 
 RTBRICKSYSLOGTRAP = "1.3.6.1.4.1.50058.103.1.1"
 SYSLOGMSG = "1.3.6.1.4.1.50058.104.2.1.0"
@@ -246,10 +248,25 @@ def main():
         epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument(
-        "-f", "--configFile", default="./bdsSnmpTrapAdaptor.yml", type=str,
+        "-f", "--configFile", default="bdsSnmpTrapAdaptor.yml", type=str,
         help="config file")
+    parser.add_argument(
+        '--daemonize', action='store_true',
+        help="Fork and run as a background process")
+    parser.add_argument(
+        '--pidfile',  type=str,
+        help="Path to a PID file the process would create")
 
     cliargs = parser.parse_args()
+
+    cliargs.configFile = os.path.abspath(cliargs.configFile)
+
+    if cliargs.daemonize:
+        daemon.daemonize()
+
+    if cliargs.pidfile:
+        daemon.pidfile(cliargs.pidfile)
+
     cliArgsDict = vars(cliargs)
 
     myRestHttpServer = AsyncioRestServer(cliArgsDict)
