@@ -40,7 +40,7 @@ class AsyncioTrapGenerator(object):
 
     def __init__(self, cliArgsDict, restHttpServerObj):
         configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict["configFile"], "notificator")
+            cliArgsDict["config"], "notificator")
 
         self.moduleLogger = set_logging(configDict,"notificator", self)
 
@@ -168,7 +168,7 @@ class AsyncioRestServer(object):
 
         self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
 
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"], "notificator")
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["config"], "notificator")
 
         self.moduleLogger = set_logging(configDict,"notificator", self)
 
@@ -248,7 +248,7 @@ def main():
         epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument(
-        "-f", "--configFile", default="bdsSnmpTrapAdaptor.yml", type=str,
+        "-f", "--config", default="bdsSnmpTrapAdaptor.yml", type=str,
         help="config file")
     parser.add_argument(
         '--daemonize', action='store_true',
@@ -259,7 +259,7 @@ def main():
 
     cliargs = parser.parse_args()
 
-    cliargs.configFile = os.path.abspath(cliargs.configFile)
+    cliargs.config = os.path.abspath(cliargs.config)
 
     if cliargs.daemonize:
         daemon.daemonize()

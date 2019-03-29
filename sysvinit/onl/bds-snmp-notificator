@@ -15,11 +15,11 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="BDS SNMP Notification Originator"
 NAME=bds-snmp-notificator
 
-BDSSNMPRSP=bds-snmp-notificator
-BDSSNMPRSP_OPTIONS="--configFile /etc/bds-snmp-adaptor/notificator.yml"
-
 DAEMON=/usr/local/bin/bds-snmp-notificator
 PIDFILE=/run/bds-snmp-notificator.pid
+
+BDSSNMPRSP=bds-snmp-notificator
+BDSSNMPRSP_OPTIONS="--config /etc/bds-snmp-adaptor/notificator.yml --pidfile $PIDFILE"
 
 SCRIPTNAME=/etc/init.d/$NAME
 

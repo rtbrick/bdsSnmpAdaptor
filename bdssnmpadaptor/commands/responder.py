@@ -85,7 +85,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         self.moduleFileNameWithoutPy = "responder"
 
         configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict["configFile"], self.moduleFileNameWithoutPy)
+            cliArgsDict["config"], self.moduleFileNameWithoutPy)
 
         self.moduleLogger = set_logging(
             configDict, self.moduleFileNameWithoutPy, self)
@@ -174,7 +174,7 @@ class SnmpFrontEnd(object):
 
     def __init__(self,cliArgsDict):
         configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict["configFile"], "responder")
+            cliArgsDict["config"], "responder")
 
         self.moduleLogger = set_logging(configDict,"SnmpFrontEnd",self)
 
@@ -288,7 +288,7 @@ def main():
         epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument(
-        "-f", "--configFile",
+        "-f", "--config",
         default="bdsSnmpRetrieveAdaptor.yml", type=str,
         help="Path to config file")
     parser.add_argument(
@@ -302,7 +302,7 @@ def main():
 
     cliArgsDict = vars(cliargs)
 
-    cliargs.configFile = os.path.abspath(cliargs.configFile)
+    cliargs.config = os.path.abspath(cliargs.config)
 
     if cliargs.daemonize:
         daemon.daemonize()
