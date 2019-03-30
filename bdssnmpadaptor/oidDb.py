@@ -18,7 +18,7 @@ class OidDb(object):
 
     def __init__(self, cliArgsDict):
         configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict["configFile"], "oidDb")
+            cliArgsDict["config"], "oidDb")
 
         self.moduleLogger = set_logging(configDict, "oidDb", self)
 

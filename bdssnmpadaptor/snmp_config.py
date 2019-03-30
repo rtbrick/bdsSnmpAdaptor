@@ -8,12 +8,12 @@
 import os
 import tempfile
 
+from pysnmp.carrier.asyncio.dgram import udp
 from pysnmp.entity import config
-from pysnmp.hlapi.asyncio import SnmpEngine
+from pysnmp.entity.engine import SnmpEngine
 from pysnmp.proto.rfc1902 import OctetString
 
 from bdssnmpadaptor import error
-
 
 AUTH_PROTOCOLS = {
   'MD5': config.usmHMACMD5AuthProtocol,
@@ -100,19 +100,24 @@ def setSnmpEngineBoots(snmpEngine, stateDir):
     return boots
 
 
-def setCommunity(snmpEngine, community, version='2c'):
+def setCommunity(snmpEngine, security, community, version='2c', tag=''):
     """Configure SNMP community name and VACM access
     """
     mpModel = MP_MODELS[version]
+    authLevel = 'noAuthNoPriv'
 
-    config.addV1System(snmpEngine, community, community)
+    config.addV1System(
+        snmpEngine, security, communityName=community, transportTag=tag)
 
     config.addVacmUser(
-        snmpEngine, mpModel, 'everything', 'noAuthNoPriv',
+        snmpEngine, mpModel, security, authLevel,
         (1, 3, 6), (1, 3, 6), (1, 3, 6))
 
+    return authLevel
 
-def setUsmUser(snmpEngine, user, authKey, authProtocol, privKey, privProtocol):
+
+def setUsmUser(snmpEngine, security, user, authKey, authProtocol,
+               privKey, privProtocol):
     """Configure SNMP USM user credentials and VACM access
     """
     if not authKey:
@@ -126,6 +131,9 @@ def setUsmUser(snmpEngine, user, authKey, authProtocol, privKey, privProtocol):
 
     elif not privProtocol:
         privProtocol = 'DES'
+
+    authProtocol = AUTH_PROTOCOLS[authProtocol.upper()]
+    privProtocol = PRIV_PROTOCOLS[privProtocol.upper()]
 
     if (authProtocol == config.usmNoAuthProtocol and
             privProtocol != config.usmNoPrivProtocol):
@@ -144,11 +152,61 @@ def setUsmUser(snmpEngine, user, authKey, authProtocol, privKey, privProtocol):
     config.addV3User(
         snmpEngine,
         user,
-        AUTH_PROTOCOLS[authProtocol.upper()],
+        authProtocol,
         authKey,
-        PRIV_PROTOCOLS[privProtocol.upper()],
-        privKey)
+        privProtocol,
+        privKey,
+        securityName=security)
 
     config.addVacmUser(
-        snmpEngine, 3, user, authLevel,
+        snmpEngine, 3, security, authLevel,
         (1, 3, 6), (1, 3, 6), (1, 3, 6))
+
+    return authLevel
+
+
+def _getTrapCreds(security):
+    return security + '-creds'
+
+
+def _getTrapTargetName(security):
+    return security + '-target'
+
+
+def setTrapTarget(snmpEngine, security, dst, tag=''):
+    """Configure SNMP TRAP target
+    """
+    config.addTargetAddr(
+        snmpEngine, _getTrapTargetName(security), udp.domainName, dst,
+        _getTrapCreds(security), tagList=tag)
+
+
+def setTrapVersion(snmpEngine, security, authLevel, version='2c'):
+    """Configure SNMP TRAP target
+    """
+    mpModel = MP_MODELS[version]
+
+    if mpModel < 3:
+        mpModel -= 1
+
+    config.addTargetParams(
+        snmpEngine, _getTrapCreds(security), security, authLevel, mpModel)
+
+
+def setTrapTargets(snmpEngine, tag, kind='trap'):
+    targets = 'all-targets'
+
+    config.addNotificationTarget(
+        snmpEngine, targets, 'filter', tag, kind)
+
+    config.addContext(snmpEngine, '')
+
+    return targets
+
+
+def setSnmpTransport(snmpEngine):
+    config.addTransport(
+        snmpEngine,
+        udp.domainName,
+        udp.UdpAsyncioTransport().openClientMode()
+    )

@@ -11,19 +11,18 @@ import asyncio
 import json
 import os
 import sys
+import time
 
 from aiohttp import web
-from pysnmp.hlapi.asyncio import CommunityData
-from pysnmp.hlapi.asyncio import ContextData
-from pysnmp.hlapi.asyncio import NotificationType
-from pysnmp.hlapi.asyncio import ObjectIdentity
-from pysnmp.hlapi.asyncio import UdpTransportTarget
-from pysnmp.hlapi.asyncio import sendNotification
+from pysnmp.entity.rfc3413 import ntforg
 from pysnmp.proto.rfc1902 import Integer32
+from pysnmp.proto.rfc1902 import ObjectIdentifier
 from pysnmp.proto.rfc1902 import OctetString
+from pysnmp.proto.rfc1902 import TimeTicks
 from pysnmp.proto.rfc1902 import Unsigned32
 
 from bdssnmpadaptor import daemon
+from bdssnmpadaptor import error
 from bdssnmpadaptor import snmp_config
 from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
 from bdssnmpadaptor.log import set_logging
@@ -38,16 +37,16 @@ SYSLOGMSGTEXT = "1.3.6.1.4.1.50058.104.2.1.4.0"
 
 class AsyncioTrapGenerator(object):
 
+    TARGETS_TAG = 'mgrs'
+
     def __init__(self, cliArgsDict, restHttpServerObj):
         configDict = loadBdsSnmpAdapterConfigFile(
             cliArgsDict["config"], "notificator")
 
-        self.moduleLogger = set_logging(configDict,"notificator", self)
+        self.moduleLogger = set_logging(configDict, "notificator", self)
 
         self.moduleLogger.info("original configDict: {}".format(configDict))
-        # temp lines for graylog client
-        self.snmpTrapServer = configDict["snmpTrapServer"]
-        self.snmpTrapPort = configDict["snmpTrapPort"]
+
         # temp lines for graylog client end #
         # configDict["usmUserDataMatrix"] = [ usmUserTuple.strip().split(",")
         # for usmUserTuple in configDict["usmUserTuples"].split(';') if len(usmUserTuple) > 0 ]
@@ -61,26 +60,76 @@ class AsyncioTrapGenerator(object):
         engineBoots = snmp_config.setSnmpEngineBoots(
             self.snmpEngine, configDict.get('stateDir', '.'))
 
-        self.snmpVersion = configDict["version"]
+        snmp_config.setSnmpTransport(self.snmpEngine)
 
-        if self.snmpVersion == "2c":
-            self.community = configDict["community"]
+        self.targets = snmp_config.setTrapTargets(self.snmpEngine, self.TARGETS_TAG)
 
-            snmp_config.setCommunity(self.snmpEngine, self.community)
+        authEntries = {}
 
-        elif self.snmpVersion == "3":
-            if "usmUsers" not in configDict:
-                raise Exception('snmp v3: missing usmUsers configuration '
-                                'in configfile!')
+        for snmpVersion, snmpConfigEntries in configDict.get(
+                "versions", {}).items():
 
-            for usmUser, usmCreds in configDict["usmUsers"].items():
+            snmpVersion = str(snmpVersion)
 
-                snmp_config.setUsmUser(
-                    self.snmpEngine, usmUser,
-                    usmCreds.get('authKey'), usmCreds.get('authProtocol'),
-                    usmCreds.get('privKey'), usmCreds.get('privProtocol'))
+            if snmpVersion in ('1', '2c'):
 
-        self.snmpTrapTargets = configDict["snmpTrapTargets"]
+                for security, snmpConfig in snmpConfigEntries.items():
+
+                    community = snmpConfig["community"]
+
+                    authLevel = snmp_config.setCommunity(
+                        self.snmpEngine, security, community, version=snmpVersion, tag=self.TARGETS_TAG)
+
+                    self.moduleLogger.info(
+                        'Configuring SNMPv{} security name {}, community '
+                        'name {}'.format(snmpVersion, security, community))
+
+                    authEntries[security] = snmpVersion, authLevel
+
+            elif snmpVersion == '3':
+
+                for security, usmCreds in snmpConfigEntries.get('usmUsers', {}).items():
+
+                    authLevel = snmp_config.setUsmUser(
+                        self.snmpEngine, security,
+                        usmCreds.get('user'),
+                        usmCreds.get('authKey'), usmCreds.get('authProtocol'),
+                        usmCreds.get('privKey'), usmCreds.get('privProtocol'))
+
+                    self.moduleLogger.info(
+                        'Configuring SNMPv3 USM security {}, user {}, auth {}/{},'
+                        ' priv {}/{}'.format(
+                            security,
+                            usmCreds.get('user'),
+                            usmCreds.get('authKey'), usmCreds.get('authProtocol'),
+                            usmCreds.get('privKey'), usmCreds.get('privProtocol')))
+
+                    authEntries[security] = snmpVersion, authLevel
+
+            else:
+                raise error.BdsError('Unknown SNMP version {}'.format(snmpVersion))
+
+            self.birthday = time.time()
+
+        for targetName, targetConfig in configDict.get('snmpTrapTargets', {}).items():
+
+            address, port = targetConfig['address'], int(targetConfig.get('port', 162))
+            security = targetConfig['security-name']
+
+            snmp_config.setTrapTarget(
+                self.snmpEngine, security, (address, port), self.TARGETS_TAG)
+
+            snmpVersion, authLevel = authEntries[security]
+
+            snmp_config.setTrapVersion(
+                self.snmpEngine, security, authLevel, snmpVersion)
+
+            self.moduleLogger.info(
+                'Configuring target {}:{} using security '
+                'name {}'.format(address, port, security))
+
+        self.ntfOrg = ntforg.NotificationOriginator()
+
         self.trapCounter = 0
 
         self.restHttpServerObj = restHttpServerObj
@@ -127,31 +176,48 @@ class AsyncioTrapGenerator(object):
                 self.trapCounter, syslogMsgFacility,
                 syslogMsgSeverity, syslogMsgText))
 
-        # TODO: cycle over SNMP trap targets,, send out notifications
-        errorIndication, errorStatus, errorIndex, varBinds = await sendNotification(
+        def cbFun(snmpEngine, sendRequestHandle, errorIndication,
+                  errorStatus, errorIndex, varBinds, cbCtx):
+            if errorIndication:
+                self.moduleLogger.error(
+                    'notification {} failed: {}'.format(sendRequestHandle, errorIndication))
+
+            else:
+                self.moduleLogger.error(
+                    'notification {} succeeded'.format(sendRequestHandle))
+
+        uptime = int((time.time() - self.birthday) * 100)
+        coldStart = ObjectIdentifier('1.3.6.1.6.3.1.1.5.1')
+
+        varBinds = [
+            (ObjectIdentifier('1.3.6.1.2.1.1.3.0'), TimeTicks(uptime)),
+            (ObjectIdentifier('1.3.6.1.6.3.1.1.4.1.0'), coldStart),
+            (ObjectIdentifier('1.3.6.1.6.3.1.1.4.3.0'), ObjectIdentifier(RTBRICKSYSLOGTRAP)),
+            (ObjectIdentifier(SYSLOGMSGNUMBER), Unsigned32(self.trapCounter)),
+            (ObjectIdentifier(SYSLOGMSGFACILITY), OctetString(syslogMsgFacility)),
+            (ObjectIdentifier(SYSLOGMSGSEVERITY), Integer32(syslogMsgSeverity)),
+            (ObjectIdentifier(SYSLOGMSGTEXT), OctetString(syslogMsgText))
+        ]
+
+        sendRequestHandle = self.ntfOrg.sendVarBinds(
             self.snmpEngine,
-            CommunityData(self.community, mpModel=1),  # mpModel defines version
-            UdpTransportTarget((self.snmpTrapServer, self.snmpTrapPort)),
-            ContextData(),
-            'trap',
-            NotificationType(
-                ObjectIdentity(RTBRICKSYSLOGTRAP)
-            ).addVarBinds(
-                # ('1.3.6.1.6.3.1.1.4.3.0',RTBRICKSYSLOGTRAP),
-                (SYSLOGMSGNUMBER, Unsigned32(self.trapCounter)),
-                (SYSLOGMSGFACILITY, OctetString(syslogMsgFacility)),
-                (SYSLOGMSGSEVERITY, Integer32(syslogMsgSeverity)),
-                (SYSLOGMSGTEXT, OctetString(syslogMsgText))
-            )
+            # Notification targets
+            self.targets,
+            None, '',  # contextEngineId, contextName
+            varBinds,
+            cbFun
         )
-        if errorIndication:
-            self.moduleLogger.error(errorIndication)
+
+        self.moduleLogger.debug(
+            'notification {} submitted'.format(sendRequestHandle or ''))
 
     async def run_forever(self):
 
         while True:
             await asyncio.sleep(0.001)
-            if len(self.restHttpServerObj.bdsLogsToBeProcessedList) > 0:
+
+            if self.restHttpServerObj.bdsLogsToBeProcessedList:
+
                 bdsLogToBeProcessed = self.restHttpServerObj.bdsLogsToBeProcessedList.pop(0)
 
                 self.moduleLogger.debug("bdsLogToBeProcessed: {}".format(bdsLogToBeProcessed))
@@ -166,13 +232,13 @@ class AsyncioRestServer(object):
 
     def __init__(self, cliArgsDict):
 
-        self.moduleFileNameWithoutPy = sys.modules[__name__].__file__.split(".")[0]
+        self.moduleFileNameWithoutPy, _ = os.path.splitext(os.path.basename(__file__))
 
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["config"], "notificator")
 
-        self.moduleLogger = set_logging(configDict,"notificator", self)
+        self.moduleLogger = set_logging(configDict, "notificator", self)
 
-        self.listeningIP =  configDict["listeningIP"]
+        self.listeningIP = configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
 
         self.requestCounter = 0
@@ -239,7 +305,6 @@ class AsyncioRestServer(object):
 
 
 def main():
-
     epilogTXT = """
 
     ... to be added """
@@ -254,7 +319,7 @@ def main():
         '--daemonize', action='store_true',
         help="Fork and run as a background process")
     parser.add_argument(
-        '--pidfile',  type=str,
+        '--pidfile', type=str,
         help="Path to a PID file the process would create")
 
     cliargs = parser.parse_args()

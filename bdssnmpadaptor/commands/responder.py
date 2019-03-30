@@ -82,7 +82,8 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
 
     def setOidDbAndLogger(self, _oidDb, cliArgsDict):
         self._oidDb = _oidDb
-        self.moduleFileNameWithoutPy = "responder"
+
+        self.moduleFileNameWithoutPy, _ = os.path.splitext(os.path.basename(__file__))
 
         configDict = loadBdsSnmpAdapterConfigFile(
             cliArgsDict["config"], self.moduleFileNameWithoutPy)
@@ -226,28 +227,33 @@ class SnmpFrontEnd(object):
 
             if snmpVersion in ('1', '2c'):
 
-                for snmpConfig in snmpConfigEntries:
+                for security, snmpConfig in snmpConfigEntries.items():
 
                     community = snmpConfig["community"]
 
-                    snmp_config.setCommunity(self.snmpEngine, community, version=snmpVersion)
+                    snmp_config.setCommunity(
+                        self.snmpEngine, security, community, version=snmpVersion)
 
                     self.moduleLogger.info(
-                        'Configuring SNMPv{} community name {}'.format(snmpVersion, community))
+                        'Configuring SNMPv{} security name {}, community '
+                        'name {}'.format(snmpVersion, security, community))
 
             elif snmpVersion == '3':
 
-                for usmUser, usmCreds in snmpConfigEntries.get('usmUsers', {}).items():
+                for security, usmCreds in snmpConfigEntries.get('usmUsers', {}).items():
 
                     snmp_config.setUsmUser(
-                        self.snmpEngine, usmUser,
+                        self.snmpEngine, security,
+                        usmCreds.get('user'),
                         usmCreds.get('authKey'), usmCreds.get('authProtocol'),
                         usmCreds.get('privKey'), usmCreds.get('privProtocol'))
 
                     self.moduleLogger.info(
-                        'Configuring SNMPv3 USM user {}, auth {}/{},'
+                        'Configuring SNMPv3 USM security {}, user {}, auth {}/{},'
                         ' priv {}/{}'.format(
-                            usmUser, usmCreds.get('authKey'), usmCreds.get('authProtocol'),
+                            security,
+                            usmCreds.get('user'),
+                            usmCreds.get('authKey'), usmCreds.get('authProtocol'),
                             usmCreds.get('privKey'), usmCreds.get('privProtocol')))
 
             else:
