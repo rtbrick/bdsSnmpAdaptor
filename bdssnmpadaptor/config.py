@@ -9,11 +9,11 @@ import sys
 import yaml
 
 
-def loadBdsSnmpAdapterConfigFile(configFile,moduleName):
+def loadBdsSnmpAdapterConfigFile(config, moduleName):
     data = {}
 
     try:
-        with open(configFile, "r") as stream:
+        with open(config, "r") as stream:
             data = yaml.load(stream)
 
     except Exception as e:

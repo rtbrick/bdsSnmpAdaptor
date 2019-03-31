@@ -61,7 +61,7 @@ REQUEST_MAPPING_DICTS = {
 class BdsAccess(object):
 
     def __init__(self, cliArgsDict):
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"], "access")
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["config"], "access")
 
         self.moduleLogger = set_logging(configDict, "bdsAccess", self)
 
@@ -72,7 +72,7 @@ class BdsAccess(object):
         # self.rtbrickContainerName = configDict['rtbrickContainerName']
         self.staticOidDict = {}
 
-        d = loadBdsSnmpAdapterConfigFile(cliArgsDict["configFile"], "responder")
+        d = loadBdsSnmpAdapterConfigFile(cliArgsDict["config"], "responder")
         if "staticOidContent" in d:
             for oidName in [ "sysDesc","sysContact","sysName","sysLocation"]:
                 if oidName in d["staticOidContent"]:
@@ -220,7 +220,7 @@ def main():
         epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument(
-        "-f", "--configFile", default="./bdsAccessConfig.yml", type=str,
+        "-f", "--config", default="./bdsAccessConfig.yml", type=str,
         help="config file")
 
     cliargs = parser.parse_args()

@@ -6,25 +6,27 @@ bdsSnmpAdapter:
   access:
     rtbrickHost: 10.0.3.10
     rtbrickPorts:
-     - confd: 2002  #Define the rest port on which confd listens"
-     - fwdd-hald: 5002  #Define the rest port on which fwwd listens"
+     - confd: 2002  # confd REST API listens on this port"
+     - fwdd-hald: 5002  # fwwd REST API listens on this port"
   responder:
-    listeningIP: 0.0.0.0  #SNMP get/getNext listening IP address
-    listeningPort: 161 #SNMP get/getNext listening port
+    listeningIP: 0.0.0.0  # SNMP command responder listens on this address
+    listeningPort: 161  # SNMP command responder listens on this port
     engineId: 80:00:C3:8A:04:73:79:73:4e:61:6d:65:31:32:33
     versions:  # SNMP versions map, choices=['1', '2c', '3']
-      1:  # list of configuration maps
-        - public:
+      1:  # map of configuration maps
+        manager-A:  # SNMP security name
           community: public
-      2c:  # list of configuration maps
-        - public:
+      2c:  # map of configuration maps
+        manager-B:  # SNMP security name
           community: public
       3:
         usmUsers:  # map of USM users and their configuration
-          testUser1:
+          user1:  # descriptive SNMP security name
+            user: testUser1  # USM user name
             authKey: authkey123
             authProtocol: md5  # md5, sha224, sha256, sha384, sha512, none
-          testUser2:
+          user2:  # descriptive SNMP security name
+            user: testUser2  # USM user name
             authKey: authkey123
             authProtocol: md5  # md5, sha224, sha256, sha384, sha512, none
             privKey: privkey123
