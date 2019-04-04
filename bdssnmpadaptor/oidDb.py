@@ -37,7 +37,7 @@ class OidDb(object):
             self.moduleLogger.debug(f"creating {newOidItem.oid} {newOidItem.value}")
             self.oidDict[newOidItem.oid] = newOidItem
 
-            if self.firstItem == None:
+            if self.firstItem is None:
                 self.firstItem = newOidItem
 
             else:
@@ -56,7 +56,7 @@ class OidDb(object):
 
                         cacheIterItem = iterItem
 
-                        if iterItem.nextOidObj == None:
+                        if iterItem.nextOidObj is None:
                             endFlag = True
                             break
 
@@ -92,7 +92,7 @@ class OidDb(object):
                     iterItem = iterItem.nextOidObj
 
             else:
-                if iterItem.nextOidObj != None:
+                if iterItem.nextOidObj is not None:
 
                     if iterItem.nextOidObj.oid.startswith(oidPrefix):
 
@@ -118,14 +118,14 @@ class OidDb(object):
                     nextItem = iterItem.nextOidObj
                     self.moduleLogger.debug(f"deleting {iterItem.oid}")
                     self.oidDict.pop(iterItem.oid, None)
-                    del (iterItem)
+                    del iterItem
                     iterItem = nextItem
 
                 else:
                     iterItem = iterItem.nextOidObj
 
             else:
-                if iterItem.nextOidObj != None:
+                if iterItem.nextOidObj is not None:
 
                     if iterItem.bdsMappingFunc == bdsMappingFunc:
                         deleteItem = iterItem.nextOidObj
@@ -217,7 +217,7 @@ class OidDb(object):
         returnStr = ""
         iterItem = self.firstItem
 
-        while iterItem != None:
+        while iterItem is not None:
             returnStr += iterItem.oid + "\n"
             iterItem = iterItem.nextOidObj
 
@@ -309,6 +309,9 @@ class OidDbItem(object):
         elif isinstance(oid2, OidDbItem):
             oid2AsList = oid2.oidAsList
 
+        else:
+            raise ValueError('Unsupported type %s in comparison' % type(oid2))
+
         pos = 0
 
         while pos < len(self.oidAsList) and pos < len(oid2AsList):
@@ -337,6 +340,9 @@ class OidDbItem(object):
 
         elif isinstance(oid2, OidDbItem):
             oid2AsList = oid2.oidAsList
+
+        else:
+            raise ValueError('Unsupported type %s in comparison' % type(oid2))
 
         pos = 0
 

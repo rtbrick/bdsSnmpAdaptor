@@ -123,7 +123,7 @@ class confd_global_interface_physical(object):
     """
 
     @classmethod
-    async def setOids(self, bdsJsonResponseDict, targetOidDb, lastSequenceNumberList, birthday):
+    async def setOids(cls, bdsJsonResponseDict, targetOidDb, lastSequenceNumberList, birthday):
         newSequenceNumberList = []
 
         for i, bdsJsonObject in enumerate(bdsJsonResponseDict["objects"]):
