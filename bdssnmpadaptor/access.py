@@ -26,32 +26,32 @@ BIRTHDAY = time.time()
 
 REQUEST_MAPPING_DICTS = {
     "confd_local.system.software.info.confd": {
-        "mappingFunc": confd_local_system_software_info_confd,
+        "mappingFunc": confd_local_system_software_info_confd.ConfdLocalSystemSoftwareInfoConfd,
         "bdsRequestDict": {'process': 'confd',
                            'urlSuffix': 'bds/table/walk?format=raw',
                            'table': 'local.system.software.info.confd'}
     },
     "confd_global_startup_status_confd": {
-        "mappingFunc": confd_global_startup_status_confd,
+        "mappingFunc": confd_global_startup_status_confd.ConfdGlobalStartupStatusConfd,
         "bdsRequestDict": {'process': 'confd',
                            'urlSuffix': 'bds/table/walk?format=raw',
                            'table': 'global.startup.status.confd'}
     },
     "confd_global_interface_physical": {
-        "mappingFunc": confd_global_interface_physical,
+        "mappingFunc": confd_global_interface_physical.ConfdGlobalInterfacePhysical,
         "bdsRequestDict": {'process': 'confd',
                            'urlSuffix': 'bds/table/walk?format=raw',
                            'table': 'global.interface.physical'}
     }
     # "ffwd_default_interface_logical" : {
-    #     "mappingFunc": ffwd_default_interface_logical,
+    #     "mappingFunc": ffwd_default_interface_logical.FfwdDefaultInterfaceLogical,
     #     "lastSequenceHash": None,
     #     "bdsRequestDict": {'process': 'fwdd-hald',      ## Check
     #                        'urlSuffix':'bds/table/walk?format=raw',
     #                        'table':'default.interface.logical'}
     #  },
     # "fwdd_global_interface_physical_statistics" : {
-    #     "mappingFunc": fwdd_global_interface_physical_statistics,
+    #     "mappingFunc": fwdd_global_interface_physical_statistics.FwddGlobalInterfacePhysicalStatistics,
     #     "bdsRequestDict": {'process': 'fwdd-hald',      ## Check
     #                        'urlSuffix':'bds/table/walk?format=raw',
     #                        'table':'global.interface.physical.statistics'}

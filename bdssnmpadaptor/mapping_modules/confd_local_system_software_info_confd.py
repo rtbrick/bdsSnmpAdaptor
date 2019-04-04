@@ -11,7 +11,7 @@ from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
 from bdssnmpadaptor.oidDb import OidDbItem
 
 
-class confd_local_system_software_info_confd(object):
+class ConfdLocalSystemSoftwareInfoConfd(object):
     """Local system software information
     """
 
@@ -22,7 +22,7 @@ class confd_local_system_software_info_confd(object):
 
         targetOidDb.insertOid(
             newOidItem=OidDbItem(
-                bdsMappingFunc="confd_local_system_software_info_confd",
+                bdsMappingFunc=__name__,
                 oid="1.3.6.1.2.1.1.1.0",
                 name="sysDescr", pysnmpBaseType=OctetString,
                 value=swString))
