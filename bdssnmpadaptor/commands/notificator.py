@@ -187,12 +187,10 @@ class AsyncioTrapGenerator(object):
                     'notification {} succeeded'.format(sendRequestHandle))
 
         uptime = int((time.time() - self.birthday) * 100)
-        coldStart = ObjectIdentifier('1.3.6.1.6.3.1.1.5.1')
 
         varBinds = [
             (ObjectIdentifier('1.3.6.1.2.1.1.3.0'), TimeTicks(uptime)),
-            (ObjectIdentifier('1.3.6.1.6.3.1.1.4.1.0'), coldStart),
-            (ObjectIdentifier('1.3.6.1.6.3.1.1.4.3.0'), ObjectIdentifier(RTBRICKSYSLOGTRAP)),
+            (ObjectIdentifier('1.3.6.1.6.3.1.1.4.1.0'), ObjectIdentifier(RTBRICKSYSLOGTRAP)),
             (ObjectIdentifier(SYSLOGMSGNUMBER), Unsigned32(self.trapCounter)),
             (ObjectIdentifier(SYSLOGMSGFACILITY), OctetString(syslogMsgFacility)),
             (ObjectIdentifier(SYSLOGMSGSEVERITY), Integer32(syslogMsgSeverity)),
