@@ -9,6 +9,11 @@ import binascii
 import struct
 import time
 
+from pysnmp.proto.rfc1902 import Gauge32
+from pysnmp.proto.rfc1902 import Integer32
+from pysnmp.proto.rfc1902 import OctetString
+from pysnmp.proto.rfc1902 import TimeTicks
+
 from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
 from bdssnmpadaptor.oidDb import OidDbItem
 

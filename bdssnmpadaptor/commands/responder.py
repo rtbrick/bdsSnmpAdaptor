@@ -57,7 +57,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
     def createVarbindFromOidDbItem(self, _oidDbItem):
         baseType = _oidDbItem.pysnmpBaseType  # FIXME catch exception
 
-        if _oidDbItem.value != None:
+        if _oidDbItem.value is not None:
             if _oidDbItem.name in ["sysUptime", "hrSystemUptime" ]:    # FIXME: add a function for realitime OIDs
                 _oidDbItem.value = int((time.time()-BIRTHDAY)*100)
 

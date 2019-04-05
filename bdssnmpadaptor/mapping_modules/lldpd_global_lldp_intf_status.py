@@ -124,7 +124,7 @@ class lldpd_global_lldp_intf_status(object):
     """
 
     @classmethod
-    async def setOids(self, bdsJsonResponseDict, targetOidDb, lastSequenceNumberList, birthday):
+    async def setOids(cls, bdsJsonResponseDict, targetOidDb, lastSequenceNumberList, birthday):
         newSequenceNumberList = []
         for i, bdsJsonObject in enumerate(bdsJsonResponseDict["objects"]):
             newSequenceNumberList.append(bdsJsonObject["sequence"])

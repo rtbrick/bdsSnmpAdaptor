@@ -9,17 +9,18 @@
 import argparse
 import asyncio
 import logging
+import sys
 import time
 
 import aiohttp
 
 from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
 from bdssnmpadaptor.log import set_logging
+from bdssnmpadaptor.mapping_modules import confd_global_interface_physical
+from bdssnmpadaptor.mapping_modules import confd_global_startup_status_confd
+from bdssnmpadaptor.mapping_modules import confd_local_system_software_info_confd
 from bdssnmpadaptor.oidDb import OidDb
 from bdssnmpadaptor.predefined_oids import StaticAndPredefinedOids
-from bdssnmpadaptor.mapping_modules.confd_local_system_software_info_confd import confd_local_system_software_info_confd
-from bdssnmpadaptor.mapping_modules.confd_global_startup_status_confd import confd_global_startup_status_confd
-from bdssnmpadaptor.mapping_modules.confd_global_interface_physical import confd_global_interface_physical
 
 BIRTHDAY = time.time()
 
@@ -93,6 +94,10 @@ class BdsAccess(object):
         self.requestMappingDict = REQUEST_MAPPING_DICTS
         self.responseJsonDicts = {}
         self.oidDb = OidDb(cliArgsDict)
+
+        # used for hashing numbers of objects and hash over sequence numbers
+        self.tableSequenceListDict = {}
+
         # 'logging': 'warning'
         # do more stuff here. e.g. connecectivity checks etc
 
@@ -176,7 +181,6 @@ class BdsAccess(object):
         self.tableSequenceListDict[bdsRequestDictKey] = sequenceNumberList
 
     async def run_forever(self):
-        self.tableSequenceListDict = {}  # used for hashing numbers of abjects and hash over sequence numbers
 
         while True:
             await StaticAndPredefinedOids.setOids(self.oidDb, self.staticOidDict)

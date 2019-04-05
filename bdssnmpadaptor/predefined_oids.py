@@ -29,7 +29,7 @@ class StaticAndPredefinedOids(object):
     """
 
     @classmethod
-    async def setOids(self, targetOidDb, staticOidDict):
+    async def setOids(cls, targetOidDb, staticOidDict):
         targetOidDb.insertOid(
             newOidItem=OidDbItem(
                 bdsMappingFunc="StaticAndPredefinedOids",
