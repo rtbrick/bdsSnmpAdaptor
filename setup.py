@@ -7,7 +7,7 @@
 #
 import os
 import sys
-import unittest as unittest
+import unittest
 
 classifiers = """\
 Development Status :: 4 - Beta
