@@ -38,7 +38,7 @@ IFSPEED_LAMBDA = lambda x: int(
 # HEX_STRING_LAMBDA = lambda x : int(x,16)
 # IFMTU_LAMBDA = lambda x : int("".join([m[2:4]+m[0:2] for m in [x[i:i+4] for i in range(0,len(x),4)]]),16)
 
-class confd_global_interface_physical(object):
+class ConfdGlobalInterfacePhysical(object):
     """
         curl -X POST -H "Content-Type: application/json" -H "Accept: */*" -H "connection: close"\
                        -H "Accept-Encoding: application/json"\
@@ -123,7 +123,8 @@ class confd_global_interface_physical(object):
     """
 
     @classmethod
-    async def setOids(cls, bdsJsonResponseDict, targetOidDb, lastSequenceNumberList, birthday):
+    async def setOids(cls, bdsJsonResponseDict, targetOidDb,
+                      lastSequenceNumberList, birthday):
         newSequenceNumberList = []
 
         for i, bdsJsonObject in enumerate(bdsJsonResponseDict["objects"]):
@@ -136,7 +137,7 @@ class confd_global_interface_physical(object):
             currentSysTime = int((time.time() - birthday) * 100)
 
             targetOidDb.insertOid(newOidItem=OidDbItem(
-                bdsMappingFunc="confd_global_interface_physical",
+                bdsMappingFunc=__name__,
                 oid="1.3.6.1.2.1.2.1.0",
                 name="ifIndex",
                 pysnmpBaseType=Integer32,
@@ -155,7 +156,7 @@ class confd_global_interface_physical(object):
 
                 targetOidDb.insertOid(
                     newOidItem=OidDbItem(
-                        bdsMappingFunc="confd_global_interface_physical",
+                        bdsMappingFunc=__name__,
                         oid=oidSegment + "1." + str(index),
                         name="ifIndex",
                         pysnmpBaseType=Integer32,
@@ -163,7 +164,7 @@ class confd_global_interface_physical(object):
 
                 targetOidDb.insertOid(
                     newOidItem=OidDbItem(
-                        bdsMappingFunc="confd_global_interface_physical",
+                        bdsMappingFunc=__name__,
                         oid=oidSegment + "2." + str(index),
                         name="ifDescr",
                         pysnmpBaseType=OctetString,
@@ -171,7 +172,7 @@ class confd_global_interface_physical(object):
 
                 targetOidDb.insertOid(
                     newOidItem=OidDbItem(
-                        bdsMappingFunc="confd_global_interface_physical",
+                        bdsMappingFunc=__name__,
                         oid=oidSegment + "3." + str(index),
                         name="ifType",
                         pysnmpBaseType=Integer32,
@@ -179,7 +180,7 @@ class confd_global_interface_physical(object):
 
                 targetOidDb.insertOid(
                     newOidItem=OidDbItem(
-                        bdsMappingFunc="confd_global_interface_physical",
+                        bdsMappingFunc=__name__,
                         oid=oidSegment + "4." + str(index),
                         name="ifMtu",
                         pysnmpBaseType=Integer32,
@@ -187,7 +188,7 @@ class confd_global_interface_physical(object):
 
                 targetOidDb.insertOid(
                     newOidItem=OidDbItem(
-                        bdsMappingFunc="confd_global_interface_physical",
+                        bdsMappingFunc=__name__,
                         oid=oidSegment + "6." + str(index),
                         name="ifPhysAddress",
                         pysnmpBaseType=OctetString,
@@ -196,7 +197,7 @@ class confd_global_interface_physical(object):
 
                 targetOidDb.insertOid(
                     newOidItem=OidDbItem(
-                        bdsMappingFunc="confd_global_interface_physical",
+                        bdsMappingFunc=__name__,
                         oid=oidSegment + "7." + str(index),
                         name="ifAdminStatus",
                         pysnmpBaseType=Integer32,
@@ -204,7 +205,7 @@ class confd_global_interface_physical(object):
 
                 targetOidDb.insertOid(
                     newOidItem=OidDbItem(
-                        bdsMappingFunc="confd_global_interface_physical",
+                        bdsMappingFunc=__name__,
                         oid=oidSegment + "8." + str(index),
                         name="ifOperStatus",
                         pysnmpBaseType=Integer32,
@@ -213,7 +214,7 @@ class confd_global_interface_physical(object):
                 if len(lastSequenceNumberList) == 0:  # first run
                     targetOidDb.insertOid(
                         newOidItem=OidDbItem(
-                            bdsMappingFunc="confd_global_interface_physical",
+                            bdsMappingFunc=__name__,
                             oid=oidSegment + "9." + str(index),
                             name="ifLastChange",
                             pysnmpBaseType=TimeTicks,
@@ -222,7 +223,7 @@ class confd_global_interface_physical(object):
                 elif thisSequenceNumber != lastSequenceNumberList[i]:
                     targetOidDb.insertOid(
                         newOidItem=OidDbItem(
-                            bdsMappingFunc="confd_global_interface_physical",
+                            bdsMappingFunc=__name__,
                             oid=oidSegment + "9." + str(index),
                             name="ifTableLastChange",
                             pysnmpBaseType=TimeTicks,
@@ -231,7 +232,7 @@ class confd_global_interface_physical(object):
                 if len(lastSequenceNumberList) == 0:  # first run
                     targetOidDb.insertOid(
                         newOidItem=OidDbItem(
-                            bdsMappingFunc="confd_global_interface_physical",
+                            bdsMappingFunc=__name__,
                             oid="1.3.6.1.2.1.31.1.5.0",
                             name="ifTableLastChange",
                             pysnmpBaseType=TimeTicks,
@@ -239,7 +240,7 @@ class confd_global_interface_physical(object):
 
                     targetOidDb.insertOid(
                         newOidItem=OidDbItem(
-                            bdsMappingFunc="confd_global_interface_physical",
+                            bdsMappingFunc=__name__,
                             oid="1.3.6.1.2.1.31.1.6.0",
                             name="ifTableLastChange",
                             pysnmpBaseType=TimeTicks,
@@ -248,7 +249,7 @@ class confd_global_interface_physical(object):
                 else:
                     targetOidDb.insertOid(
                         newOidItem=OidDbItem(
-                            bdsMappingFunc="confd_global_interface_physical",
+                            bdsMappingFunc=__name__,
                             oid="1.3.6.1.2.1.31.1.5.0",
                             name="ifTableLastChange",
                             pysnmpBaseType=TimeTicks,

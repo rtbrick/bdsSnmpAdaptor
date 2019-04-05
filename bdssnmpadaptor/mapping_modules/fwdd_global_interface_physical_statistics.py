@@ -21,7 +21,7 @@ LELL_LAMBDA = lambda x: int(
     littleEndianLongLongStruct.unpack(binascii.unhexlify(x))[0])
 
 
-class fwdd_global_interface_physical_statistics(object):
+class FwddGlobalInterfacePhysicalStatistics(object):
     """Physical interface statistics
 
     curl -X POST -H "Content-Type: application/json" -H "Accept: */*" -H "connection: close"\
@@ -146,7 +146,7 @@ class fwdd_global_interface_physical_statistics(object):
             ifPhysicalLocation = BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="fwdd_global_interface_physical_statistics",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "10." + str(index),
                     name="ifInOctets",
                     pysnmpBaseType=Counter32,
@@ -154,7 +154,7 @@ class fwdd_global_interface_physical_statistics(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="fwdd_global_interface_physical_statistics",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "11." + str(index),
                     name="ifInUcastPkts",
                     pysnmpBaseType=Counter32,
@@ -162,7 +162,7 @@ class fwdd_global_interface_physical_statistics(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="fwdd_global_interface_physical_statistics",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "12." + str(index),
                     name="ifInNUcastPkts",
                     pysnmpBaseType=Counter32,
@@ -170,7 +170,7 @@ class fwdd_global_interface_physical_statistics(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="fwdd_global_interface_physical_statistics",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "13." + str(index),
                     name="ifInDiscards",
                     pysnmpBaseType=Counter32,
@@ -178,7 +178,7 @@ class fwdd_global_interface_physical_statistics(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="fwdd_global_interface_physical_statistics",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "14." + str(index),
                     name="ifInErrors",
                     pysnmpBaseType=Counter32,
@@ -186,7 +186,7 @@ class fwdd_global_interface_physical_statistics(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="fwdd_global_interface_physical_statistics",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "15." + str(index),
                     name="ifInUnknownProtos",
                     pysnmpBaseType=Counter32,
@@ -194,7 +194,7 @@ class fwdd_global_interface_physical_statistics(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="fwdd_global_interface_physical_statistics",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "16." + str(index),
                     name="ifOutOctets",
                     pysnmpBaseType=Counter32,
@@ -202,7 +202,7 @@ class fwdd_global_interface_physical_statistics(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="fwdd_global_interface_physical_statistics",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "17." + str(index),
                     name="ifOutUcastPkts",
                     pysnmpBaseType=Counter32,
@@ -210,7 +210,7 @@ class fwdd_global_interface_physical_statistics(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="fwdd_global_interface_physical_statistics",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "18." + str(index),
                     name="ifOutNUcastPkts",
                     pysnmpBaseType=Counter32,
@@ -218,7 +218,7 @@ class fwdd_global_interface_physical_statistics(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="fwdd_global_interface_physical_statistics",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "19." + str(index),
                     name="ifOutDiscards",
                     pysnmpBaseType=Counter32,
@@ -226,7 +226,7 @@ class fwdd_global_interface_physical_statistics(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="fwdd_global_interface_physical_statistics",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "20." + str(index),
                     name="ifOutErrors",
                     pysnmpBaseType=Counter32,
@@ -234,7 +234,7 @@ class fwdd_global_interface_physical_statistics(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="fwdd_global_interface_physical_statistics",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "21." + str(index),
                     name="ifOutQLen",
                     pysnmpBaseType=Gauge32,

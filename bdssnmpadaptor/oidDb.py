@@ -238,7 +238,7 @@ class OidDbItem(object):
             bdsMappingFunc(string): used to mark, which mapping function owns this oid. (used for delete)
             oid(string): oid as string, separated by dots.
             name(string): name of the oid, should map with MIB identifier name, altough this is not enforced
-            pysnmpBaseType(string): used for conversion of value, options are defined in pysnmp.proto.rfc1902
+            pysnmpBaseType(class): used for conversion of value, options are defined in pysnmp.proto.rfc1902
             pysnmpRepresentation(string): used to siganal hexValue representation for stringsself.
             value: object that holds the value of the oid. Type is flexible, subject to oidself
             bdsRequest: obsolete ###FIXME deprecate

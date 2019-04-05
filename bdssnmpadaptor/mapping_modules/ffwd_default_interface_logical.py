@@ -12,7 +12,7 @@ from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
 from bdssnmpadaptor.oidDb import OidDbItem
 
 
-class ffwd_default_interface_logical(object):
+class FfwdDefaultInterfaceLogical(object):
     """Logical interface
 
     curl -X POST -H "Content-Type: application/json" -H "Accept: */*" -H "connection: close"\
@@ -54,7 +54,7 @@ class ffwd_default_interface_logical(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="ffwd_default_interface_logical",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "1." + str(index),
                     name="ifIndex",
                     pysnmpBaseType=Integer32,
@@ -62,7 +62,7 @@ class ffwd_default_interface_logical(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="ffwd_default_interface_logical",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "2." + str(index),
                     name="ifDescr",
                     pysnmpBaseType=OctetString,
@@ -70,7 +70,7 @@ class ffwd_default_interface_logical(object):
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
-                    bdsMappingFunc="ffwd_default_interface_logical",
+                    bdsMappingFunc=__name__,
                     oid=oidSegment + "3." + str(index),
                     name="ifType",
                     pysnmpBaseType=Integer32,
