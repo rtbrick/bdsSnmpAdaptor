@@ -116,8 +116,8 @@ def setCommunity(snmpEngine, security, community, version='2c', tag=''):
     return authLevel
 
 
-def setUsmUser(snmpEngine, security, user, authKey, authProtocol,
-               privKey, privProtocol):
+def setUsmUser(snmpEngine, security, user, authKey=None, authProtocol=None,
+               privKey=None, privProtocol=None):
     """Configure SNMP USM user credentials and VACM access
     """
     if not authKey:
