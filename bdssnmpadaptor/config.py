@@ -10,7 +10,6 @@ import yaml
 
 
 def loadBdsSnmpAdapterConfigFile(config, moduleName):
-    data = {}
 
     try:
         with open(config, "r") as stream:
