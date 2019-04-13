@@ -8,7 +8,8 @@
 import unittest
 
 suite = unittest.TestLoader().loadTestsFromNames(
-    ['tests.unit.test_error.suite']
+    ['tests.unit.test_error.suite',
+     'tests.unit.test_snmp_config.suite']
 )
 
 
