@@ -11,6 +11,7 @@ suite = unittest.TestLoader().loadTestsFromNames(
     ['tests.unit.test_error.suite',
      'tests.unit.test_snmp_config.suite',
      'tests.unit.test_oiddb.suite']
+     'tests.unit.test_config.suite']
 )
 
 
