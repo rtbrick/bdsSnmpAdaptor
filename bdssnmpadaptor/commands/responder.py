@@ -65,9 +65,13 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
                 _oidDbItem.value = int((time.time()-BIRTHDAY))
 
             if _oidDbItem.pysnmpRepresentation:
-               returnValue = _oidDbItem.pysnmpBaseType(
-                    f"{_oidDbItem.pysnmpRepresentation}={_oidDbItem.value}")
-
+                if _oidDbItem.pysnmpRepresentation == "hexValue":
+                    #print(f"hexValue: {_oidDbItem.value}")
+                    returnValue = _oidDbItem.pysnmpBaseType(
+                        hexValue = str(_oidDbItem.value) )
+                    #print(returnValue)
+                else:
+                    returnValue = _oidDbItem.pysnmpBaseType(_oidDbItem.value)   ## is there a better way of exception handling
             else:
                returnValue = _oidDbItem.pysnmpBaseType(_oidDbItem.value)
 
