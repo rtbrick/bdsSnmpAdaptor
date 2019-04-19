@@ -152,7 +152,7 @@ class ConfdGlobalInterfacePhysical(object):
                 ifName = bdsJsonObject["attribute"]["interface_name"]
                 index = BdsMappingFunctions.ifIndexFromIfName(ifName)
                 # index =  i + 1
-                #ifPhysicalLocation = BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
+                ifPhysicalLocation = BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
 
 
                 targetOidDb.insertOid(
