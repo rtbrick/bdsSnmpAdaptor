@@ -207,12 +207,11 @@ class BdsAccess(object):
                         tableSequenceList = []  # required for the first run
 
                     # print(bdsRequestDictKey)
-                    try:
-                        await mappingfunc.setOids(responseJsonDict, self.oidDb, tableSequenceList, BIRTHDAY)
-                    except Exception as e:
-                        print(e)
-                        self.moduleLogger.error(
-                            "mappingfunc {} raise Exception: {}".format(mappingfunc, e))
+                    await mappingfunc.setOids(responseJsonDict, self.oidDb, tableSequenceList, BIRTHDAY)
+                    #except Exception as e:
+                    #    print(e)
+                    #    self.moduleLogger.error(
+                    #        "mappingfunc {} raise Exception: {}".format(mappingfunc, e))
                     await self.setTableSequenceDict(bdsRequestDictKey, responseJsonDict)
 
             # print(self.tableSequenceListDict)
