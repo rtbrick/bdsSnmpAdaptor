@@ -54,6 +54,7 @@ class BdsMappingFunctions(object):
                     ifIndexList[2]) * 4096
                 return ifIndex
         elif ifPrefix in [ "lo" ]:
+            ifIndexList = ifNameString.split("-")[1].split("/")
             ifIndex = (int(ifIndexList[0])+8) * 4096 * 128 * 128 * 8 + int(ifIndexList[1]) * 4096 * 128 + int(
                 ifIndexList[2]) * 4096
             return ifIndex
