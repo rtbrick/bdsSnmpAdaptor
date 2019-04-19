@@ -29,29 +29,34 @@ class BdsMappingFunctions(object):
 
     @classmethod
     def ifIndexFromIfName(cls, ifNameString):
-        ifIndexList = ifNameString.split("-")[1].split("/")
-        if len(ifIndexList) == 5:
-            if int(ifIndexList[4]) == 0:
-                ifIndex = int(ifIndexList[0]) * 4096 * 128 * 128 * 16 + int(ifIndexList[1]) * 4096 * 128 * 128 + int(
-                    ifIndexList[2]) * 4096 * 128 + int(ifIndexList[3]) * 4096 + (int(ifIndexList[4]) + 1)
+        ifPrefix = ifNameString.split("-")[0]
+        if ifPrefix in [ "ifp", "ifc", "ifl" ]:
+            ifIndexList = ifNameString.split("-")[1].split("/")
+            if len(ifIndexList) == 5:
+                if int(ifIndexList[4]) == 0:
+                    ifIndex = int(ifIndexList[0]) * 4096 * 128 * 128 * 8 + int(ifIndexList[1]) * 4096 * 128 * 128 + int(
+                        ifIndexList[2]) * 4096 * 128 + int(ifIndexList[3]) * 4096 + (int(ifIndexList[4]) + 1)
 
-            else:
-                ifIndex = int(ifIndexList[0]) * 4096 * 128 * 128 * 16 + int(ifIndexList[1]) * 4096 * 128 * 128 + int(
-                    ifIndexList[2]) * 4096 * 128 + int(ifIndexList[3]) * 4096 + int(ifIndexList[4])
+                else:
+                    ifIndex = int(ifIndexList[0]) * 4096 * 128 * 128 * 8 + int(ifIndexList[1]) * 4096 * 128 * 128 + int(
+                        ifIndexList[2]) * 4096 * 128 + int(ifIndexList[3]) * 4096 + int(ifIndexList[4])
 
-            return ifIndex
+                return ifIndex
 
-        elif len(ifIndexList) == 4:
-            ifIndex = int(ifIndexList[0]) * 4096 * 128 * 128 * 16 + int(ifIndexList[1]) * 4096 * 128 * 128 + int(
-                ifIndexList[2]) * 4096 * 128 + int(ifIndexList[3]) * 4096
+            elif len(ifIndexList) == 4:
+                ifIndex = int(ifIndexList[0]) * 4096 * 128 * 128 * 8 + int(ifIndexList[1]) * 4096 * 128 * 128 + int(
+                    ifIndexList[2]) * 4096 * 128 + int(ifIndexList[3]) * 4096
 
-            return ifIndex
+                return ifIndex
 
-        elif len(ifIndexList) == 3:
-            ifIndex = int(ifIndexList[0]) * 4096 * 128 * 128 + int(ifIndexList[1]) * 4096 * 128 + int(
+            elif len(ifIndexList) == 3:
+                ifIndex = int(ifIndexList[0]) * 4096 * 128 * 128 + int(ifIndexList[1]) * 4096 * 128 + int(
+                    ifIndexList[2]) * 4096
+                return ifIndex
+        elif ifPrefix in [ "lo" ]:
+            ifIndex = (int(ifIndexList[0])+8) * 4096 * 128 * 128 * 8 + int(ifIndexList[1]) * 4096 * 128 + int(
                 ifIndexList[2]) * 4096
             return ifIndex
-
         else:
             return None
 
