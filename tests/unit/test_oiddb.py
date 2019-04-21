@@ -11,7 +11,7 @@ import unittest
 from bdssnmpadaptor import oidDb
 
 
-class OidDbTestCase(unittest.TestCase):
+class OidDbItemTestCase(unittest.TestCase):
 
     def test___init__(self):
         oid = oidDb.OidDbItem(
@@ -51,6 +51,12 @@ class OidDbTestCase(unittest.TestCase):
 
         self.assertIsInstance(str(oid), str)
         self.assertTrue(str(oid))
+
+
+class OidDbTestCase(unittest.TestCase):
+
+    def setUp(self):
+        super(OidDbTestCase, self).setUp()
 
 
 suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])
