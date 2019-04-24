@@ -71,7 +71,6 @@ class OidDb(object):
                         newOidItem.nextOidObj = iterItem
 
     def deleteOidsWithPrefix(self, oidPrefix):
-        deleteOidStringList = []
         iterItem = self.firstItem
 
         while iterItem is not None:
@@ -263,37 +262,21 @@ class OidDbItem(object):
         self.pysnmpBaseType = pysnmpBaseType
         self.pysnmpRepresentation = pysnmpRepresentation
         self.value = value
-        # if self.pysnmpRepresentation:
-        #     evalString = "{}({}='{}')".format(self.pysnmpBaseType,
-        #                                       self.pysnmpRepresentation,
-        #                                       self.value)
-        # else:
-        #     evalString = "{}('{}')".format(self.pysnmpBaseType,
-        #                                    self.value)
-        # try:
-        #     self.encodedValue = eval(evalString )
-        # except Exception as e:
-        #     self.encodedValue = None
-        #     raise Exception(f'cannot encode value for {self.name} - evalString {evalString}')
         self.bdsRequest = bdsRequest
         self.nextOidObj = None
 
     def _encodeValue(self):
 
-        if self.pysnmpRepresentation:
-            evalString = "{}({}='{}')".format(
-                self.pysnmpBaseType, self.pysnmpRepresentation, self.value)
+        representation = (self.pysnmpRepresentation
+                          if self.pysnmpRepresentation else 'value')
 
-        else:
-            evalString = "{}('{}')".format(
-                self.pysnmpBaseType, self.value)
         try:
-            self.encodedValue = eval(evalString)
+            self.encodedValue = self.pysnmpBaseType(**{representation: self.value})
 
-        except Exception as e:
+        except Exception as ex:
             self.encodedValue = None
-            raise Exception(f'cannot encode value for {self.name} - evalString'
-                            f' {evalString}')
+            raise Exception(f'cannot encode value for {self.name}, representation '
+                            f'{representation}: {ex}')
 
     def getNextOid(self):
         if self.nextOidObj:

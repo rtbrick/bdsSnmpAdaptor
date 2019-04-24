@@ -20,8 +20,6 @@ Unsigned32 = v2c.Unsigned32
 IpAddress = v2c.IpAddress
 
 
-
-
 class StaticAndPredefinedOids(object):
     """
 
