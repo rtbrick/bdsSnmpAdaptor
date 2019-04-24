@@ -55,34 +55,26 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         SNMP_TYPE_MAP[unicode] = v2c.OctetString
 
     def createVarbindFromOidDbItem(self, _oidDbItem):
-        baseType = _oidDbItem.pysnmpBaseType  # FIXME catch exception
-
-        if _oidDbItem.value is not None:
-            if _oidDbItem.name in ["sysUptime", "hrSystemUptime" ]:    # FIXME: add a function for realitime OIDs
-                _oidDbItem.value = int((time.time()-BIRTHDAY)*100)
-
-            if _oidDbItem.name in ["snmpEngineTime" ]:    # FIXME: add a function for realitime OIDs
-                _oidDbItem.value = int((time.time()-BIRTHDAY))
-
-            if _oidDbItem.pysnmpRepresentation:
-                if _oidDbItem.pysnmpRepresentation == "hexValue":
-                    #print(f"hexValue: {_oidDbItem.value}")
-                    returnValue = _oidDbItem.pysnmpBaseType(
-                        hexValue = str(_oidDbItem.value) )
-                    #print(returnValue)
-                else:
-                    returnValue = _oidDbItem.pysnmpBaseType(_oidDbItem.value)   ## is there a better way of exception handling
-            else:
-               returnValue = _oidDbItem.pysnmpBaseType(_oidDbItem.value)
-
-            self.moduleLogger.debug(
-                "createVarbindFromOidDbItem returning oid {} with "
-                "value {} ".format(_oidDbItem.oid, returnValue))
-
-            return _oidDbItem.oid, returnValue
-
-        else:
+        if _oidDbItem.value is None:
             return _oidDbItem.oid, v2c.NoSuchObject()
+
+        if _oidDbItem.name in ["sysUptime", "hrSystemUptime" ]:    # FIXME: add a function for realitime OIDs
+            _oidDbItem.value = int((time.time()-BIRTHDAY)*100)
+
+        if _oidDbItem.name in ["snmpEngineTime" ]:    # FIXME: add a function for realitime OIDs
+            _oidDbItem.value = int((time.time()-BIRTHDAY))
+
+        representation = (_oidDbItem.pysnmpRepresentation
+                          if _oidDbItem.pysnmpRepresentation else 'value')
+
+        returnValue = _oidDbItem.pysnmpBaseType(
+            **{representation: _oidDbItem.value})
+
+        self.moduleLogger.debug(
+            "createVarbindFromOidDbItem returning oid {} with "
+            "value {} ".format(_oidDbItem.oid, returnValue))
+
+        return _oidDbItem.oid, returnValue
 
     def setOidDbAndLogger(self, _oidDb, cliArgsDict):
         self._oidDb = _oidDb
