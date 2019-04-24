@@ -71,7 +71,6 @@ class OidDb(object):
                         newOidItem.nextOidObj = iterItem
 
     def deleteOidsWithPrefix(self, oidPrefix):
-        deleteOidStringList = []
         iterItem = self.firstItem
 
         while iterItem is not None:
