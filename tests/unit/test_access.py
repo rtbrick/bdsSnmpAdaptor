@@ -71,7 +71,7 @@ bdsSnmpAdapter:
         {'mappingFunc': asynctest.Mock(setOids=asynctest.CoroutineMock())})
     @asynctest.patch.dict(
         access.REQUEST_MAPPING_DICTS[
-            'confd_local_system_software_info_confd'],
+            'confd_local.system.software.info.confd'],
         {'mappingFunc': asynctest.Mock(setOids=asynctest.CoroutineMock())})
     def test_run_forever(self, mock_predefined_oids, mock_http):
         mock_session = mock_http.return_value.__aenter__.return_value
@@ -102,7 +102,7 @@ bdsSnmpAdapter:
             self.JSON_RESPONSE, mock.ANY, mock.ANY, mock.ANY)
 
         mock_sw = access.REQUEST_MAPPING_DICTS[
-            'confd_local_system_software_info_confd']['mappingFunc']
+            'confd_local.system.software.info.confd']['mappingFunc']
         mock_sw.setOids.assert_called_once_with(
             self.JSON_RESPONSE, mock.ANY, mock.ANY, mock.ANY)
 
