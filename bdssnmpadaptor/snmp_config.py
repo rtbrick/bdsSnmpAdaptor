@@ -11,6 +11,8 @@ import tempfile
 from pysnmp.carrier.asyncio.dgram import udp
 from pysnmp.entity import config
 from pysnmp.entity.engine import SnmpEngine
+from pysnmp.entity.rfc3413 import context
+from pysnmp.proto.api import v2c
 from pysnmp.proto.rfc1902 import OctetString
 
 from bdssnmpadaptor import error
@@ -204,9 +206,27 @@ def setTrapTargets(snmpEngine, tag, kind='trap'):
     return targets
 
 
-def setSnmpTransport(snmpEngine):
+def setMibController(snmpEngine, controller):
+    snmpContext = v2c.OctetString('')
+
+    # https://github.com/openstack/virtualpdu/blob/master/virtualpdu/pdu/pysnmp_handler.py
+    snmpContext = context.SnmpContext(snmpEngine)
+    snmpContext.unregisterContextName(snmpContext)
+    snmpContext.registerContextName(snmpContext, controller)
+
+    return snmpContext
+
+
+def setSnmpTransport(snmpEngine, listen=None):
+    transport = udp.UdpAsyncioTransport()
+
+    if listen:
+        transport = transport.openServerMode(listen)
+    else:
+        transport = transport.openClientMode()
+
     config.addTransport(
         snmpEngine,
         udp.domainName,
-        udp.UdpAsyncioTransport().openClientMode()
+        transport
     )
