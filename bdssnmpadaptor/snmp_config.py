@@ -175,7 +175,7 @@ def _getTrapTargetName(security):
     return security + '-target'
 
 
-def setTrapTarget(snmpEngine, security, dst, tag=''):
+def setTrapTargetAddress(snmpEngine, security, dst, tag=''):
     """Configure SNMP TRAP target
     """
     config.addTargetAddr(
@@ -195,7 +195,7 @@ def setTrapVersion(snmpEngine, security, authLevel, version='2c'):
         snmpEngine, _getTrapCreds(security), security, authLevel, mpModel)
 
 
-def setTrapTargets(snmpEngine, tag, kind='trap'):
+def setTrapTypeForTag(snmpEngine, tag, kind='trap'):
     targets = 'all-targets'
 
     config.addNotificationTarget(

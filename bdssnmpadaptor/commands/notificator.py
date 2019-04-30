@@ -35,7 +35,7 @@ SYSLOGMSGSEVERITY = "1.3.6.1.4.1.50058.104.2.1.3.0"
 SYSLOGMSGTEXT = "1.3.6.1.4.1.50058.104.2.1.4.0"
 
 
-class AsyncioTrapGenerator(object):
+class SnmpTrapGenerator(object):
 
     TARGETS_TAG = 'mgrs'
 
@@ -62,7 +62,7 @@ class AsyncioTrapGenerator(object):
 
         snmp_config.setSnmpTransport(self.snmpEngine)
 
-        self.targets = snmp_config.setTrapTargets(self.snmpEngine, self.TARGETS_TAG)
+        self.targets = snmp_config.setTrapTypeForTag(self.snmpEngine, self.TARGETS_TAG)
 
         authEntries = {}
 
@@ -116,7 +116,7 @@ class AsyncioTrapGenerator(object):
             address, port = targetConfig['address'], int(targetConfig.get('port', 162))
             security = targetConfig['security-name']
 
-            snmp_config.setTrapTarget(
+            snmp_config.setTrapTargetAddress(
                 self.snmpEngine, security, (address, port), self.TARGETS_TAG)
 
             snmpVersion, authLevel = authEntries[security]
@@ -242,7 +242,7 @@ class AsyncioRestServer(object):
         self.requestCounter = 0
 
         self.bdsLogsToBeProcessedList = []
-        self.snmpTrapGenerator = AsyncioTrapGenerator(cliArgsDict, self)
+        self.snmpTrapGenerator = SnmpTrapGenerator(cliArgsDict, self)
 
     async def handler(self, request):
 

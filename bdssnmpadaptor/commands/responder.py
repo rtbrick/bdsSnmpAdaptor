@@ -161,7 +161,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         return returnList
 
 
-class SnmpFrontEnd(object):
+class SnmpCommandResponder(object):
     """
 
     """
@@ -295,7 +295,7 @@ def main():
     if cliargs.pidfile:
         daemon.pidfile(cliargs.pidfile)
 
-    mySnmpFrontEnd = SnmpFrontEnd(cliArgsDict)
+    mySnmpFrontEnd = SnmpCommandResponder(cliArgsDict)
 
     loop = asyncio.get_event_loop()
 

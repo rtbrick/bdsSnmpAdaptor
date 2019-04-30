@@ -14,7 +14,7 @@ from unittest import mock
 from bdssnmpadaptor.commands import responder
 
 
-class SnmpFrontEndTestCase(unittest.TestCase):
+class SnmpCommandResponderTestCase(unittest.TestCase):
 
     CONFIG = """
 bdsSnmpAdapter:
@@ -45,12 +45,6 @@ bdsSnmpAdapter:
             privProtocol: des  # des, 3des, aes128, aes192, aes192blmt, aes256, aes256blmt, none
 """
 
-    def setUp(self):
-        self.my_loop = asyncio.get_event_loop()
-        self.addCleanup(self.my_loop.close)
-
-        super(SnmpFrontEndTestCase, self).setUp()
-
     @mock.patch('bdssnmpadaptor.commands.responder.snmp_config', autospec=True)
     @mock.patch('bdssnmpadaptor.commands.responder.BdsAccess', autospec=True)
     def test___init__(self, mock_access, mock_snmp_config):
@@ -60,7 +54,7 @@ bdsSnmpAdapter:
                 side_effect=[io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG)]):
-            responder.SnmpFrontEnd({'config': '/file'})
+            responder.SnmpCommandResponder({'config': '/file'})
 
         mock_access.assert_called_once_with(mock.ANY)
         mock_oiddb = mock_access.return_value.getOidDb
@@ -79,6 +73,16 @@ bdsSnmpAdapter:
         ]
         mock_snmp_config.setCommunity.assert_has_calls(
             mock_setCommunity_calls)
+
+        mock_setUsmUser_calls = [
+            mock.call(mock_snmpEngine, 'user1', 'testUser1',
+                      'authkey123', 'md5', None, None),
+            mock.call(mock_snmpEngine, 'user2', 'testUser2',
+                      'authkey123', 'md5', 'privkey123', 'des'),
+
+        ]
+        mock_snmp_config.setUsmUser.assert_has_calls(
+            mock_setUsmUser_calls)
 
         mock_snmp_config.setMibController.assert_called_once_with(
             mock_snmpEngine, mock.ANY)
