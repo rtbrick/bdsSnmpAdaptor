@@ -92,7 +92,6 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         return self
 
     def readVars(self, varBinds, acInfo=(None, None)):
-        collonSeparatedVarbindList = [', '.join(str(x[0]) for x in varBinds)]
 
         self.moduleLogger.info('GET request var-binds: {}'.format(varBinds))
 
