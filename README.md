@@ -1,5 +1,6 @@
 
 [![Build status](https://travis-ci.org/rtbrick/bdsSnmpAdaptor.svg?branch=master)](https://travis-ci.org/rtbrick/bdsSnmpAdaptor)
+[![Coverage Status](https://img.shields.io/codecov/c/github/rtbrick/bdsSnmpAdaptor.svg)](https://codecov.io/github/rtbrick/bdsSnmpAdaptor)
 [![GitHub license](https://img.shields.io/badge/license-BSD-blue.svg)](https://raw.githubusercontent.com/rtbrick/bdsSnmpAdaptor/master/LICENSE.rst)
 
 Copyright (C) 2017-2019, RtBrick Inc
