@@ -6,10 +6,7 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
-import argparse
 import asyncio
-import logging
-import sys
 import time
 
 import aiohttp
@@ -62,6 +59,7 @@ REQUEST_MAPPING_DICTS = {
 class BdsAccess(object):
 
     def __init__(self, cliArgsDict):
+
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["config"], "access")
 
         self.moduleLogger = set_logging(configDict, "bdsAccess", self)
@@ -75,7 +73,7 @@ class BdsAccess(object):
 
         d = loadBdsSnmpAdapterConfigFile(cliArgsDict["config"], "responder")
         if "staticOidContent" in d:
-            for oidName in [ "sysDesc","sysContact","sysName","sysLocation"]:
+            for oidName in ["sysDesc", "sysContact", "sysName", "sysLocation"]:
                 if oidName in d["staticOidContent"]:
                     self.staticOidDict[oidName] = d["staticOidContent"][oidName]
                 else:
@@ -88,10 +86,8 @@ class BdsAccess(object):
                 else:
                     self.staticOidDict[oidName] = "to be defined"
 
-        self.staticOidDict["snmpEngineID"] = cliArgsDict["snmpEngineIdValue"]
-        self.expirytimer = 50 ### FIXME
+        self.expirytimer = 50  ### FIXME
         self.responseSequence = 0
-        self.requestMappingDict = REQUEST_MAPPING_DICTS
         self.responseJsonDicts = {}
         self.oidDb = OidDb(cliArgsDict)
 
@@ -185,11 +181,11 @@ class BdsAccess(object):
         while True:
             await StaticAndPredefinedOids.setOids(self.oidDb, self.staticOidDict)
 
-            for bdsRequestDictKey in self.requestMappingDict:
+            for bdsRequestDictKey in REQUEST_MAPPING_DICTS:
                 self.moduleLogger.debug("working on {}".format(bdsRequestDictKey))
 
-                bdsRequestDict = self.requestMappingDict[bdsRequestDictKey]["bdsRequestDict"]
-                mappingfunc = self.requestMappingDict[bdsRequestDictKey]["mappingFunc"]
+                bdsRequestDict = REQUEST_MAPPING_DICTS[bdsRequestDictKey]["bdsRequestDict"]
+                mappingfunc = REQUEST_MAPPING_DICTS[bdsRequestDictKey]["mappingFunc"]
                 bdsProcess = bdsRequestDict['process']
                 bdsTable = bdsRequestDict['table']
                 resultFlag, responseJsonDict = await self.getJson(bdsRequestDict)
@@ -208,7 +204,7 @@ class BdsAccess(object):
 
                     # print(bdsRequestDictKey)
                     await mappingfunc.setOids(responseJsonDict, self.oidDb, tableSequenceList, BIRTHDAY)
-                    #except Exception as e:
+                    # except Exception as e:
                     #    print(e)
                     #    self.moduleLogger.error(
                     #        "mappingfunc {} raise Exception: {}".format(mappingfunc, e))
@@ -216,40 +212,3 @@ class BdsAccess(object):
 
             # print(self.tableSequenceListDict)
             await asyncio.sleep(5)
-
-
-def main():
-    logging.getLogger().setLevel(logging.DEBUG)  # FIXME set level from cliargs
-    epilogTXT = """
-
-    ... to be added """
-
-    parser = argparse.ArgumentParser(
-        epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
-
-    parser.add_argument(
-        "-f", "--config", default="./bdsAccessConfig.yml", type=str,
-        help="config file")
-
-    cliargs = parser.parse_args()
-    cliArgsDict = vars(cliargs)
-
-    logging.debug(cliArgsDict)
-
-    myBdsAccess = BdsAccess(cliArgsDict)
-
-    loop = asyncio.get_event_loop()
-
-    try:
-        loop.run_until_complete(myBdsAccess.run_forever())
-
-    except KeyboardInterrupt:
-        pass
-
-    loop.close()
-
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
