@@ -12,9 +12,7 @@ import os
 import sys
 import time
 
-from pysnmp.carrier.asyncio.dgram import udp
-from pysnmp.entity import config
-from pysnmp.entity.rfc3413 import cmdrsp, context
+from pysnmp.entity.rfc3413 import cmdrsp
 from pysnmp.proto.api import v2c
 from pysnmp.smi import instrum
 
@@ -58,11 +56,11 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         if _oidDbItem.value is None:
             return _oidDbItem.oid, v2c.NoSuchObject()
 
-        if _oidDbItem.name in ["sysUptime", "hrSystemUptime" ]:    # FIXME: add a function for realitime OIDs
-            _oidDbItem.value = int((time.time()-BIRTHDAY)*100)
+        if _oidDbItem.name in ["sysUptime", "hrSystemUptime"]:  # FIXME: add a function for realitime OIDs
+            _oidDbItem.value = int((time.time() - BIRTHDAY) * 100)
 
-        if _oidDbItem.name in ["snmpEngineTime" ]:    # FIXME: add a function for realitime OIDs
-            _oidDbItem.value = int((time.time()-BIRTHDAY))
+        if _oidDbItem.name in ["snmpEngineTime"]:  # FIXME: add a function for realitime OIDs
+            _oidDbItem.value = int((time.time() - BIRTHDAY))
 
         representation = (_oidDbItem.pysnmpRepresentation
                           if _oidDbItem.pysnmpRepresentation else 'value')
@@ -105,8 +103,8 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
                 oidDbItemObj = self._oidDb.getObjFromOid(str(oid))
 
             except Exception as exc:
-                #self.moduleLogger.info('oidDb failure: {}'.format(exc))
-                valueDict = None                               # FIXME
+                # self.moduleLogger.info('oidDb failure: {}'.format(exc))
+                valueDict = None  # FIXME
 
             else:
                 self.moduleLogger.debug(f'oidDb returned\n{oidDbItemObj}for oid: {oid}')
@@ -169,11 +167,11 @@ class SnmpFrontEnd(object):
 
     """
 
-    def __init__(self,cliArgsDict):
+    def __init__(self, cliArgsDict):
         configDict = loadBdsSnmpAdapterConfigFile(
             cliArgsDict["config"], "responder")
 
-        self.moduleLogger = set_logging(configDict,"SnmpFrontEnd",self)
+        self.moduleLogger = set_logging(configDict, "SnmpFrontEnd", self)
 
         self.moduleLogger.debug("configDict:{}".format(configDict))
 
@@ -199,13 +197,8 @@ class SnmpFrontEnd(object):
 
         # UDP over IPv4
         try:
-            config.addTransport(
-                self.snmpEngine,
-                udp.domainName,
-                udp.UdpTransport().openServerMode(
-                    (self.listeningAddress, self.listeningPort)
-                )
-            )
+            snmp_config.setSnmpTransport(
+                self.snmpEngine, (self.listeningAddress, self.listeningPort))
 
         except Exception as exc:
             self.moduleLogger.error('SNMP transport error: {}'.format(exc))
@@ -224,7 +217,6 @@ class SnmpFrontEnd(object):
             if snmpVersion in ('1', '2c'):
 
                 for security, snmpConfig in snmpConfigEntries.items():
-
                     community = snmpConfig["community"]
 
                     snmp_config.setCommunity(
@@ -237,7 +229,6 @@ class SnmpFrontEnd(object):
             elif snmpVersion == '3':
 
                 for security, usmCreds in snmpConfigEntries.get('usmUsers', {}).items():
-
                     snmp_config.setUsmUser(
                         self.snmpEngine, security,
                         usmCreds.get('user'),
@@ -255,18 +246,12 @@ class SnmpFrontEnd(object):
             else:
                 raise error.BdsError('Unknown SNMP version {}'.format(snmpVersion))
 
-        snmpContextName = v2c.OctetString('')
-
-        # https://github.com/openstack/virtualpdu/blob/master/virtualpdu/pdu/pysnmp_handler.py
-        snmpContext = context.SnmpContext(self.snmpEngine)
-        snmpContext.unregisterContextName(v2c.OctetString(''))
-        snmpContext.registerContextName(
-            snmpContextName,  # Context Name
-            MibInstrumController().setOidDbAndLogger(self.oidDb, cliArgsDict)
-        )
+        snmpContext = snmp_config.setMibController(
+            self.snmpEngine,
+            MibInstrumController().setOidDbAndLogger(self.oidDb, cliArgsDict))
 
         self.moduleLogger.info(
-            'Configuring SNMP context name "{}"'.format(snmpContextName))
+            'Configuring SNMP context name "{}"'.format(snmpContext))
 
         cmdrsp.GetCommandResponder(self.snmpEngine, snmpContext)
         cmdrsp.NextCommandResponder(self.snmpEngine, snmpContext)
@@ -281,7 +266,6 @@ class SnmpFrontEnd(object):
 
 
 def main():
-
     epilogTXT = """
 
     ... to be added """
@@ -297,7 +281,7 @@ def main():
         '--daemonize', action='store_true',
         help="Fork and run as a background process")
     parser.add_argument(
-        '--pidfile',  type=str,
+        '--pidfile', type=str,
         help="Path to a PID file the process would create")
 
     cliargs = parser.parse_args()
