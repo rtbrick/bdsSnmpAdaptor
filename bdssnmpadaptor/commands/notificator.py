@@ -138,7 +138,7 @@ class SnmpTrapGenerator(object):
             self.snmpEngine, engineBoots))
 
     async def sendTrap(self, bdsLogDict):
-        self.moduleLogger.debug(
+        self.moduleLogger.info(
             "sendTrap bdsLogDict: {}".format(bdsLogDict))
 
         self.trapCounter += 1
@@ -171,7 +171,7 @@ class SnmpTrapGenerator(object):
 
             syslogMsgText = "error"
 
-        self.moduleLogger.debug(
+        self.moduleLogger.info(
             "data sendTrap {} {} {} {}".format(
                 self.trapCounter, syslogMsgFacility,
                 syslogMsgSeverity, syslogMsgText))
@@ -206,7 +206,7 @@ class SnmpTrapGenerator(object):
             cbFun
         )
 
-        self.moduleLogger.debug(
+        self.moduleLogger.info(
             'notification {} submitted'.format(sendRequestHandle or ''))
 
     async def run_forever(self):
@@ -218,7 +218,7 @@ class SnmpTrapGenerator(object):
 
                 bdsLogToBeProcessed = self.restHttpServerObj.bdsLogsToBeProcessedList.pop(0)
 
-                self.moduleLogger.debug("bdsLogToBeProcessed: {}".format(bdsLogToBeProcessed))
+                self.moduleLogger.info("bdsLogToBeProcessed: {}".format(bdsLogToBeProcessed))
 
                 await self.sendTrap(bdsLogToBeProcessed)
 

@@ -109,5 +109,5 @@ venv.bak/
 .DS_Store
 
 # PPTs
-*.ppt
-*.pptx
+**.ppt
+**.pptx
