@@ -8,7 +8,8 @@
 import unittest
 
 suite = unittest.TestLoader().loadTestsFromNames(
-    ['test_responder']
+    ['test_responder',
+     'test_notificator']
 )
 
 
