@@ -281,10 +281,10 @@ class AsyncioRestServer(object):
 
     async def backgroundLogging(self):
         while True:
-            self.moduleLogger.debug(
-                "restServer Running - process list length: {}".format(
-                    len(self.bdsLogsToBeProcessedList)))
-            await asyncio.sleep(1)
+            #self.moduleLogger.debug(
+            #    "restServer Running - process list length: {}".format(
+            #        len(self.bdsLogsToBeProcessedList)))
+            await asyncio.sleep(0.1)
 
     async def run_forever(self):
         server = web.Server(self.handler)
