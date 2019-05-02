@@ -8,13 +8,9 @@
 import unittest
 
 suite = unittest.TestLoader().loadTestsFromNames(
-    ['tests.unit.test_error.suite',
-     'tests.unit.test_snmp_config.suite',
-     'tests.unit.test_oiddb.suite',
-     'tests.unit.test_mapping_functions.suite',
-     'tests.unit.test_access.suite',
-     'tests.unit.test_config.suite',
-     'mapping_modules']
+    ['test_confd_global_interface_physical',
+     'test_confd_global_startup_status_confd',
+     'test_confd_local_system_software_info_confd']
 )
 
 
