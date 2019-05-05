@@ -82,8 +82,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         configDict = loadBdsSnmpAdapterConfigFile(
             cliArgsDict["config"], self.moduleFileNameWithoutPy)
 
-        self.moduleLogger = set_logging(
-            configDict, self.moduleFileNameWithoutPy, self)
+        self.moduleLogger = set_logging(configDict, __class__.__name__)
 
         self.moduleLogger.debug(
             f"MibInstrumController set _oidDB: firstItem "
@@ -170,7 +169,7 @@ class SnmpCommandResponder(object):
         configDict = loadBdsSnmpAdapterConfigFile(
             cliArgsDict["config"], "responder")
 
-        self.moduleLogger = set_logging(configDict, "SnmpFrontEnd", self)
+        self.moduleLogger = set_logging(configDict, __class__.__name__)
 
         self.moduleLogger.debug("configDict:{}".format(configDict))
 
