@@ -207,12 +207,12 @@ def setTrapTypeForTag(snmpEngine, tag, kind='trap'):
 
 
 def setMibController(snmpEngine, controller):
-    snmpContext = v2c.OctetString('')
+    snmpContextName = v2c.OctetString('')
 
     # https://github.com/openstack/virtualpdu/blob/master/virtualpdu/pdu/pysnmp_handler.py
     snmpContext = context.SnmpContext(snmpEngine)
-    snmpContext.unregisterContextName(snmpContext)
-    snmpContext.registerContextName(snmpContext, controller)
+    snmpContext.unregisterContextName(snmpContextName)
+    snmpContext.registerContextName(snmpContextName, controller)
 
     return snmpContext
 
