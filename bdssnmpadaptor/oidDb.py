@@ -20,7 +20,7 @@ class OidDb(object):
         configDict = loadBdsSnmpAdapterConfigFile(
             cliArgsDict["config"], "oidDb")
 
-        self.moduleLogger = set_logging(configDict, "oidDb", self)
+        self.moduleLogger = set_logging(configDict, __class__.__name__)
 
         self.moduleLogger.debug("configDict:{}".format(configDict))
 

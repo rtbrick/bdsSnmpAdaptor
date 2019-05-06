@@ -43,7 +43,7 @@ class SnmpTrapGenerator(object):
         configDict = loadBdsSnmpAdapterConfigFile(
             cliArgsDict["config"], "notificator")
 
-        self.moduleLogger = set_logging(configDict, "notificator", self)
+        self.moduleLogger = set_logging(configDict, __class__.__name__)
 
         self.moduleLogger.info("original configDict: {}".format(configDict))
 
@@ -234,7 +234,7 @@ class AsyncioRestServer(object):
 
         configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["config"], "notificator")
 
-        self.moduleLogger = set_logging(configDict, "notificator", self)
+        self.moduleLogger = set_logging(configDict, __class__.__name__)
 
         self.listeningIP = configDict["listeningIP"]
         self.listeningPort = configDict["listeningPort"]
