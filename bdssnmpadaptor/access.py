@@ -22,34 +22,34 @@ from bdssnmpadaptor.predefined_oids import StaticAndPredefinedOids
 BIRTHDAY = time.time()
 
 REQUEST_MAPPING_DICTS = {
-    "confd_local.system.software.info.confd": {
-        "mappingFunc": confd_local_system_software_info_confd.ConfdLocalSystemSoftwareInfoConfd,
-        "bdsRequestDict": {'process': 'confd',
+    'confd_local.system.software.info.confd': {
+        'mappingFunc': confd_local_system_software_info_confd.ConfdLocalSystemSoftwareInfoConfd,
+        'bdsRequestDict': {'process': 'confd',
                            'urlSuffix': 'bds/table/walk?format=raw',
                            'table': 'local.system.software.info.confd'}
     },
-    "confd_global_startup_status_confd": {
-        "mappingFunc": confd_global_startup_status_confd.ConfdGlobalStartupStatusConfd,
-        "bdsRequestDict": {'process': 'confd',
+    'confd_global_startup_status_confd': {
+        'mappingFunc': confd_global_startup_status_confd.ConfdGlobalStartupStatusConfd,
+        'bdsRequestDict': {'process': 'confd',
                            'urlSuffix': 'bds/table/walk?format=raw',
                            'table': 'global.startup.status.confd'}
     },
-    "confd_global_interface_physical": {
-        "mappingFunc": confd_global_interface_physical.ConfdGlobalInterfacePhysical,
-        "bdsRequestDict": {'process': 'confd',
+    'confd_global_interface_physical': {
+        'mappingFunc': confd_global_interface_physical.ConfdGlobalInterfacePhysical,
+        'bdsRequestDict': {'process': 'confd',
                            'urlSuffix': 'bds/table/walk?format=raw',
                            'table': 'global.interface.physical'}
     }
-    # "ffwd_default_interface_logical" : {
-    #     "mappingFunc": ffwd_default_interface_logical.FfwdDefaultInterfaceLogical,
-    #     "lastSequenceHash": None,
-    #     "bdsRequestDict": {'process': 'fwdd-hald',      ## Check
+    # 'ffwd_default_interface_logical' : {
+    #     'mappingFunc': ffwd_default_interface_logical.FfwdDefaultInterfaceLogical,
+    #     'lastSequenceHash': None,
+    #     'bdsRequestDict': {'process': 'fwdd-hald',      ## Check
     #                        'urlSuffix':'bds/table/walk?format=raw',
     #                        'table':'default.interface.logical'}
     #  },
-    # "fwdd_global_interface_physical_statistics" : {
-    #     "mappingFunc": fwdd_global_interface_physical_statistics.FwddGlobalInterfacePhysicalStatistics,
-    #     "bdsRequestDict": {'process': 'fwdd-hald',      ## Check
+    # 'fwdd_global_interface_physical_statistics' : {
+    #     'mappingFunc': fwdd_global_interface_physical_statistics.FwddGlobalInterfacePhysicalStatistics,
+    #     'bdsRequestDict': {'process': 'fwdd-hald',      ## Check
     #                        'urlSuffix':'bds/table/walk?format=raw',
     #                        'table':'global.interface.physical.statistics'}
     #   }
@@ -60,31 +60,31 @@ class BdsAccess(object):
 
     def __init__(self, cliArgsDict):
 
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["config"], "access")
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict['config'], 'access')
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
-        self.moduleLogger.debug("configDict:{}".format(configDict))
+        self.moduleLogger.debug('configDict:{}'.format(configDict))
         self.rtbrickHost = configDict['rtbrickHost']
         self.rtbrickPorts = (configDict['rtbrickPorts'])
         # self.rtbrickCtrldPort = configDict['rtbrickCtrldPort']
         # self.rtbrickContainerName = configDict['rtbrickContainerName']
         self.staticOidDict = {}
 
-        d = loadBdsSnmpAdapterConfigFile(cliArgsDict["config"], "responder")
-        if "staticOidContent" in d:
-            for oidName in ["sysDesc", "sysContact", "sysName", "sysLocation"]:
-                if oidName in d["staticOidContent"]:
-                    self.staticOidDict[oidName] = d["staticOidContent"][oidName]
+        d = loadBdsSnmpAdapterConfigFile(cliArgsDict['config'], 'responder')
+        if 'staticOidContent' in d:
+            for oidName in ['sysDesc', 'sysContact', 'sysName', 'sysLocation']:
+                if oidName in d['staticOidContent']:
+                    self.staticOidDict[oidName] = d['staticOidContent'][oidName]
                 else:
-                    self.staticOidDict[oidName] = "to be defined"
+                    self.staticOidDict[oidName] = 'to be defined'
 
-            for oidName in ["engineId"]:
-                if oidName in d["staticOidContent"]:
-                    self.staticOidDict[oidName] = d["staticOidContent"][oidName]
+            for oidName in ['engineId']:
+                if oidName in d['staticOidContent']:
+                    self.staticOidDict[oidName] = d['staticOidContent'][oidName]
 
                 else:
-                    self.staticOidDict[oidName] = "to be defined"
+                    self.staticOidDict[oidName] = 'to be defined'
 
         self.expirytimer = 50  ### FIXME
         self.responseJsonDicts = {}
@@ -104,7 +104,7 @@ class BdsAccess(object):
         bdsSuffix = bdsRequestDict['urlSuffix']
         bdsTable = bdsRequestDict['table']
 
-        if "attributes" in bdsRequestDict:
+        if 'attributes' in bdsRequestDict:
             attributeDict = {}
 
             for attribute in bdsRequestDict['attributes']:
@@ -134,10 +134,10 @@ class BdsAccess(object):
 
         rtbrickPort = int(rtbrickProcessPortDict[bdsProcess])
 
-        url = "http://{}:{}/{}".format(
+        url = 'http://{}:{}/{}'.format(
             self.rtbrickHost, rtbrickPort, bdsSuffix)
 
-        # url = "http://{}:{}/api/application-rest-proxy/{}/{}/{}".format(self.rtbrickHost,
+        # url = 'http://{}:{}/api/application-rest-proxy/{}/{}/{}'.format(self.rtbrickHost,
         #                                self.rtbrickCtrldPort,
         #                                self.rtbrickContainerName,
         #                                bdsProcess,
@@ -169,8 +169,8 @@ class BdsAccess(object):
     async def setTableSequenceDict(self, bdsRequestDictKey, responseJsonDict):
         sequenceNumberList = []
 
-        for i, bdsJsonObject in enumerate(responseJsonDict["objects"]):
-            sequenceNumberList.append(bdsJsonObject["sequence"])
+        for i, bdsJsonObject in enumerate(responseJsonDict['objects']):
+            sequenceNumberList.append(bdsJsonObject['sequence'])
 
         self.tableSequenceListDict[bdsRequestDictKey] = sequenceNumberList
 
@@ -191,8 +191,8 @@ class BdsAccess(object):
             for bdsRequestDictKey in REQUEST_MAPPING_DICTS:
                 self.moduleLogger.debug(f'working on {bdsRequestDictKey}')
 
-                bdsRequestDict = REQUEST_MAPPING_DICTS[bdsRequestDictKey]["bdsRequestDict"]
-                mappingfunc = REQUEST_MAPPING_DICTS[bdsRequestDictKey]["mappingFunc"]
+                bdsRequestDict = REQUEST_MAPPING_DICTS[bdsRequestDictKey]['bdsRequestDict']
+                mappingfunc = REQUEST_MAPPING_DICTS[bdsRequestDictKey]['mappingFunc']
                 bdsProcess = bdsRequestDict['process']
                 bdsTable = bdsRequestDict['table']
 
@@ -202,7 +202,7 @@ class BdsAccess(object):
                     self.moduleLogger.error('BDS JSON is not available')
                     continue
 
-                responseTableKey = "{}_{}".format(bdsProcess, bdsTable)
+                responseTableKey = '{}_{}'.format(bdsProcess, bdsTable)
 
                 self.responseJsonDicts[responseTableKey] = responseJsonDict
 

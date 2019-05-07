@@ -46,7 +46,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
     SNMP_TYPE_MAP = {
         int: v2c.Integer32,
         str: v2c.OctetString,
-        "pysnmp.proto.rfc1902.ObjectIdentifier": v2c.ObjectIdentifier
+        'pysnmp.proto.rfc1902.ObjectIdentifier': v2c.ObjectIdentifier
     }
 
     if sys.version_info[0] < 3:
@@ -56,10 +56,10 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         if _oidDbItem.value is None:
             return _oidDbItem.oid, v2c.NoSuchObject()
 
-        if _oidDbItem.name in ["sysUptime", "hrSystemUptime"]:  # FIXME: add a function for realitime OIDs
+        if _oidDbItem.name in ['sysUptime', 'hrSystemUptime']:  # FIXME: add a function for realitime OIDs
             _oidDbItem.value = int((time.time() - BIRTHDAY) * 100)
 
-        if _oidDbItem.name in ["snmpEngineTime"]:  # FIXME: add a function for realitime OIDs
+        if _oidDbItem.name in ['snmpEngineTime']:  # FIXME: add a function for realitime OIDs
             _oidDbItem.value = int((time.time() - BIRTHDAY))
 
         representation = (_oidDbItem.pysnmpRepresentation
@@ -80,7 +80,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         self.moduleFileNameWithoutPy, _ = os.path.splitext(os.path.basename(__file__))
 
         configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict["config"], self.moduleFileNameWithoutPy)
+            cliArgsDict['config'], self.moduleFileNameWithoutPy)
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
@@ -164,11 +164,11 @@ class SnmpCommandResponder(object):
 
     def __init__(self, cliArgsDict):
         configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict["config"], "responder")
+            cliArgsDict['config'], 'responder')
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
-        self.moduleLogger.debug("configDict:{}".format(configDict))
+        self.moduleLogger.debug('configDict:{}'.format(configDict))
 
         self.snmpEngine = snmp_config.getSnmpEngine(
             engineId=configDict.get('engineId'))
@@ -176,15 +176,15 @@ class SnmpCommandResponder(object):
         engineBoots = snmp_config.setSnmpEngineBoots(
             self.snmpEngine, configDict.get('stateDir', '.'))
 
-        self.listeningAddress = configDict["listeningIP"]
-        self.listeningPort = configDict["listeningPort"]
+        self.listeningAddress = configDict['listeningIP']
+        self.listeningPort = configDict['listeningPort']
         self.birthday = time.time()
 
         self.moduleLogger.info(
             'Running SNMP engine ID {}, boots {}'.format(
                 self.snmpEngine.snmpEngineID.prettyPrint(), engineBoots))
 
-        cliArgsDict["snmpEngineIdValue"] = self.snmpEngine.snmpEngineID.asOctets()
+        cliArgsDict['snmpEngineIdValue'] = self.snmpEngine.snmpEngineID.asOctets()
 
         self.bdsAccess = BdsAccess(cliArgsDict)  # Instantiation of the BDS Access Service
 
@@ -205,14 +205,14 @@ class SnmpCommandResponder(object):
         )
 
         for snmpVersion, snmpConfigEntries in configDict.get(
-                "versions", {}).items():
+                'versions', {}).items():
 
             snmpVersion = str(snmpVersion)
 
             if snmpVersion in ('1', '2c'):
 
                 for security, snmpConfig in snmpConfigEntries.items():
-                    community = snmpConfig["community"]
+                    community = snmpConfig['community']
 
                     snmp_config.setCommunity(
                         self.snmpEngine, security, community, version=snmpVersion)
@@ -269,15 +269,15 @@ def main():
         epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument(
-        "-f", "--config",
-        default="bdsSnmpRetrieveAdaptor.yml", type=str,
-        help="Path to config file")
+        '-f', '--config',
+        default='bdsSnmpRetrieveAdaptor.yml', type=str,
+        help='Path to config file')
     parser.add_argument(
         '--daemonize', action='store_true',
-        help="Fork and run as a background process")
+        help='Fork and run as a background process')
     parser.add_argument(
         '--pidfile', type=str,
-        help="Path to a PID file the process would create")
+        help='Path to a PID file the process would create')
 
     cliargs = parser.parse_args()
 
@@ -306,5 +306,5 @@ def main():
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())

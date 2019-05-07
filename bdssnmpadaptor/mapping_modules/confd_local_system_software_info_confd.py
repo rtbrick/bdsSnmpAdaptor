@@ -23,14 +23,14 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
         targetOidDb.insertOid(
             newOidItem=OidDbItem(
                 bdsMappingFunc=__name__,
-                oid="1.3.6.1.2.1.1.1.0",
-                name="sysDescr", pysnmpBaseType=OctetString,
+                oid='1.3.6.1.2.1.1.1.0',
+                name='sysDescr', pysnmpBaseType=OctetString,
                 value=swString))
 
         # oidSegment = "1.3.6.1.2.1.1.1.0"
         # targetOidDb.setLock()
         # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
-        # for index,bdsJsonObject in enumerate(bdsJsonResponseDict["objects"]):
+        # for index,bdsJsonObject in enumerate(bdsJsonResponseDict['objects"]):
         #     #indexString = bdsJsonObject["attribute"]["library"]
         #     #indexCharList = [str(ord(c)) for c in indexString]
         #     #index = str(len(indexCharList)) + "." + ".".join(indexCharList)  # FIXME add description

@@ -1,6 +1,5 @@
 import binascii
 import struct
-import time
 
 bigEndianFloatStruct = struct.Struct('>f')
 littleEndianIntStruct = struct.Struct('<i')
@@ -10,7 +9,7 @@ IFMTU_LAMBDA = lambda x: int(
 IFSPEED_LAMBDA = lambda x: int(
     round(bigEndianFloatStruct.unpack(binascii.unhexlify(x))[0] / 1000) / 1000000 * 8) * 1000
 
-timeString = "a03d475c642e696e"
+timeString = 'a03d475c642e696e'
 x = timeString[:8]
 timeString2 = timeString[8:]
 
