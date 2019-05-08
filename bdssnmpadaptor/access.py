@@ -64,7 +64,7 @@ class BdsAccess(object):
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
-        self.moduleLogger.debug('configDict:{}'.format(configDict))
+        self.moduleLogger.debug(f'configDict:{configDict}')
         self.rtbrickHost = configDict['rtbrickHost']
         self.rtbrickPorts = (configDict['rtbrickPorts'])
         # self.rtbrickCtrldPort = configDict['rtbrickCtrldPort']
@@ -134,14 +134,8 @@ class BdsAccess(object):
 
         rtbrickPort = int(rtbrickProcessPortDict[bdsProcess])
 
-        url = 'http://{}:{}/{}'.format(
-            self.rtbrickHost, rtbrickPort, bdsSuffix)
+        url = f'http://{self.rtbrickHost}:{rtbrickPort}/{bdsSuffix}'
 
-        # url = 'http://{}:{}/api/application-rest-proxy/{}/{}/{}'.format(self.rtbrickHost,
-        #                                self.rtbrickCtrldPort,
-        #                                self.rtbrickContainerName,
-        #                                bdsProcess,
-        #                                bdsSuffix)
         try:
             headers = {
                 'Content-Type': 'application/json'
@@ -202,7 +196,7 @@ class BdsAccess(object):
                     self.moduleLogger.error('BDS JSON is not available')
                     continue
 
-                responseTableKey = '{}_{}'.format(bdsProcess, bdsTable)
+                responseTableKey = f'{bdsProcess}_{bdsTable}'
 
                 self.responseJsonDicts[responseTableKey] = responseJsonDict
 

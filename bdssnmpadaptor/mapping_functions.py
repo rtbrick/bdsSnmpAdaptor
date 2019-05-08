@@ -19,8 +19,9 @@ class BdsMappingFunctions(object):
             if swModule['attribute']['library'] in ['libbds', 'libconfd',
                                                     'libisis', 'lwip',
                                                     'libfwdd', 'libbgp', 'bd']:
-                returnString += (' {}:{}'.format(
-                    swModule['attribute']['library'], swModule['attribute']['version']))
+                returnString += (
+                    f' {swModule["attribute"]["library"]}:'
+                    f'{swModule["attribute"]["version"]}')
 
         return returnString
 

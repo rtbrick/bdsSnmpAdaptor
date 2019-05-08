@@ -49,9 +49,6 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         'pysnmp.proto.rfc1902.ObjectIdentifier': v2c.ObjectIdentifier
     }
 
-    if sys.version_info[0] < 3:
-        SNMP_TYPE_MAP[unicode] = v2c.OctetString
-
     def createVarbindFromOidDbItem(self, _oidDbItem):
         if _oidDbItem.value is None:
             return _oidDbItem.oid, v2c.NoSuchObject()
@@ -168,7 +165,7 @@ class SnmpCommandResponder(object):
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
-        self.moduleLogger.debug('configDict:{}'.format(configDict))
+        self.moduleLogger.debug(f'configDict:{configDict}')
 
         self.snmpEngine = snmp_config.getSnmpEngine(
             engineId=configDict.get('engineId'))
@@ -181,8 +178,8 @@ class SnmpCommandResponder(object):
         self.birthday = time.time()
 
         self.moduleLogger.info(
-            'Running SNMP engine ID {}, boots {}'.format(
-                self.snmpEngine.snmpEngineID.prettyPrint(), engineBoots))
+            f'Running SNMP engine ID {self.snmpEngine.snmpEngineID.prettyPrint()}, '
+            f'boots {engineBoots}')
 
         cliArgsDict['snmpEngineIdValue'] = self.snmpEngine.snmpEngineID.asOctets()
 
@@ -196,13 +193,12 @@ class SnmpCommandResponder(object):
                 self.snmpEngine, (self.listeningAddress, self.listeningPort))
 
         except Exception as exc:
-            self.moduleLogger.error('SNMP transport error: {}'.format(exc))
+            self.moduleLogger.error(f'SNMP transport error: {exc}')
             raise
 
         self.moduleLogger.info(
-            'SnmpEngine UDPv4 listening on {} {}'.format(
-                self.listeningAddress, self.listeningPort)
-        )
+            f'SnmpEngine UDPv4 listening on {self.listeningAddress} '
+            f'{self.listeningPort}')
 
         for snmpVersion, snmpConfigEntries in configDict.get(
                 'versions', {}).items():
@@ -218,8 +214,8 @@ class SnmpCommandResponder(object):
                         self.snmpEngine, security, community, version=snmpVersion)
 
                     self.moduleLogger.info(
-                        'Configuring SNMPv{} security name {}, community '
-                        'name {}'.format(snmpVersion, security, community))
+                        f'Configuring SNMPv{snmpVersion} security name '
+                        f'{security}, community name {community}')
 
             elif snmpVersion == '3':
 
@@ -231,22 +227,20 @@ class SnmpCommandResponder(object):
                         usmCreds.get('privKey'), usmCreds.get('privProtocol'))
 
                     self.moduleLogger.info(
-                        'Configuring SNMPv3 USM security {}, user {}, auth {}/{},'
-                        ' priv {}/{}'.format(
-                            security,
-                            usmCreds.get('user'),
-                            usmCreds.get('authKey'), usmCreds.get('authProtocol'),
-                            usmCreds.get('privKey'), usmCreds.get('privProtocol')))
+                        f'Configuring SNMPv3 USM security {security}, user '
+                        f'{usmCreds.get("user")}, '
+                        f'auth {usmCreds.get("authKey")}/{usmCreds.get("authProtocol")}, '
+                        f'priv {usmCreds.get("privKey")}/{usmCreds.get("privProtocol")}')
 
             else:
-                raise error.BdsError('Unknown SNMP version {}'.format(snmpVersion))
+                raise error.BdsError('Unknown SNMP version {snmpVersion}')
 
         snmpContext = snmp_config.setMibController(
             self.snmpEngine,
             MibInstrumController().setOidDbAndLogger(self.oidDb, cliArgsDict))
 
         self.moduleLogger.info(
-            'Configuring SNMP context name "{}"'.format(snmpContext))
+            f'Configuring SNMP context name "{snmpContext}"')
 
         cmdrsp.GetCommandResponder(self.snmpEngine, snmpContext)
         cmdrsp.NextCommandResponder(self.snmpEngine, snmpContext)

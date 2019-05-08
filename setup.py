@@ -20,15 +20,7 @@ Intended Audience :: Telecommunications Industry
 License :: OSI Approved :: BSD License
 Natural Language :: English
 Operating System :: OS Independent
-Programming Language :: Python :: 2
-Programming Language :: Python :: 2.6
-Programming Language :: Python :: 2.7
 Programming Language :: Python :: 3
-Programming Language :: Python :: 3.1
-Programming Language :: Python :: 3.2
-Programming Language :: Python :: 3.3
-Programming Language :: Python :: 3.4
-Programming Language :: Python :: 3.5
 Programming Language :: Python :: 3.6
 Programming Language :: Python :: 3.7
 Topic :: Communications
@@ -37,8 +29,8 @@ Topic :: Software Development :: Libraries :: Python Modules
 
 requires = open('requirements.txt').read()
 
-if sys.version_info[:2] < (2, 6):
-    print("ERROR: this package requires Python 2.6 or later!")
+if sys.version_info[:2] < (3, 6):
+    print("ERROR: this package requires Python 3.6 or later!")
     sys.exit(1)
 
 try:
