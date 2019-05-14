@@ -163,11 +163,11 @@ class OidDb(object):
 
             if searchOid in self.oidDict:  # directMatches
                 self.moduleLogger.debug(
-                    'getNextOid found {}'.format(self.oidDict[searchOid].oid))
+                    f'getNextOid found {self.oidDict[searchOid].oid}')
 
                 if self.oidDict[searchOid].nextOidObj:
                     self.moduleLogger.debug(
-                        'getNextOid returns {}'.format(self.oidDict[searchOid].nextOidObj.oid))
+                        f'getNextOid returns {self.oidDict[searchOid].nextOidObj.oid}')
                     return self.oidDict[searchOid].nextOidObj.oid
 
                 else:
@@ -293,7 +293,7 @@ class OidDbItem(object):
             oid2AsList = oid2.oidAsList
 
         else:
-            raise ValueError('Unsupported type %s in comparison' % type(oid2))
+            raise ValueError(f'Unsupported type {type(oid2)} in comparison')
 
         pos = 0
 
@@ -325,7 +325,7 @@ class OidDbItem(object):
             oid2AsList = oid2.oidAsList
 
         else:
-            raise ValueError('Unsupported type %s in comparison' % type(oid2))
+            raise ValueError(f'Unsupported type {type(oid2)} in comparison')
 
         pos = 0
 
@@ -350,23 +350,35 @@ class OidDbItem(object):
         return True
 
     def __str__(self):
-        returnStr = '#' * 60 + '\n'
-        returnStr += 'oid           :{}\n'.format(self.oid)
-        returnStr += 'name          :{}\n'.format(self.name)
-        returnStr += 'pysnmp type   :{}\n'.format(self.pysnmpBaseType)
+        returnStr = f"""\
+############################################################
+OID:         {self.oid}            
+Name:        {self.name}
+SNMP type:   {self.pysnmpBaseType}
+"""
 
         if self.value is not None:
-            returnStr += 'value         :{}\n'.format(self.value)
+            returnStr += f"""\
+Value:       {self.value}
+"""
 
-        if self.pysnmpRepresentation:
-            returnStr += 'pysnmp fmt    :{}\n'.format(self.pysnmpRepresentation)
+        if self.pysnmpRepresentation is not None:
+            returnStr += f"""\
+SNMP format: {self.pysnmpRepresentation}
+"""
 
         if self.bdsRequest:
-            returnStr += 'bdsRequest    :{}\n'.format(self.bdsRequest)
+            returnStr += f"""\
+BDS request: {self.bdsRequest}
+"""
 
         if self.nextOidObj:
-            returnStr += 'nextOid       :{}\n'.format(self.nextOidObj.oid)
+            returnStr += f"""\
+Next OID:    {self.nextOidObj.oid}
+"""
 
-        returnStr += '#' * 60 + '\n'
+        returnStr += f"""\
+############################################################
+"""
 
         return returnStr

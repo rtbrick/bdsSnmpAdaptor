@@ -97,12 +97,10 @@ class SnmpTrapGenerator(object):
                         usmCreds.get('privKey'), usmCreds.get('privProtocol'))
 
                     self.moduleLogger.info(
-                        'Configuring SNMPv3 USM security {}, user {}, auth {}/{}, '
-                        'priv {}/{}'.format(
-                            security,
-                            usmCreds.get('user'),
-                            usmCreds.get('authKey'), usmCreds.get('authProtocol'),
-                            usmCreds.get('privKey'), usmCreds.get('privProtocol')))
+                        f'Configuring SNMPv3 USM security {security}, user '
+                        f'{usmCreds.get("user")}, '
+                        f'auth {usmCreds.get("authKey")}/{usmCreds.get("authProtocol")}, '
+                        f'priv {usmCreds.get("privKey")}/{usmCreds.get("privProtocol")}')
 
                     authEntries[security] = snmpVersion, authLevel
 
@@ -204,7 +202,7 @@ class SnmpTrapGenerator(object):
         )
 
         self.moduleLogger.info(
-            'notification {} submitted'.format(sendRequestHandle or ''))
+            f'notification {sendRequestHandle or ""} submitted')
 
     async def run_forever(self):
 
@@ -281,9 +279,6 @@ class AsyncioRestServer(object):
 
     async def backgroundLogging(self):
         while True:
-            #self.moduleLogger.debug(
-            #    'restServer Running - process list length: {}'.format(
-            #        len(self.bdsLogsToBeProcessedList)))
             await asyncio.sleep(0.1)
 
     async def run_forever(self):

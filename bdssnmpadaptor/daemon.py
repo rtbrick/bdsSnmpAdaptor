@@ -22,8 +22,8 @@ def daemonize():
             # exit first parent
             os._exit(0)
 
-    except OSError as ex:
-        raise BdsError('Fork #1 failed: %s' % ex)
+    except OSError as exc:
+        raise BdsError(f'Fork #1 failed: {exc}')
 
     # decouple from parent environment
     try:
@@ -42,8 +42,8 @@ def daemonize():
             # exit from second parent
             os._exit(0)
 
-    except OSError as ex:
-        raise BdsError('Fork #2 failed: %s' % ex)
+    except OSError as exc:
+        raise BdsError(f'Fork #2 failed: {exc}')
 
     def signal_cb(s, f):
         raise KeyboardInterrupt
@@ -84,7 +84,7 @@ def pidfile(filename):
                 os.kill(pid, 0)
 
                 raise BdsError(
-                    'Process %s still running (see %s)' % (pid, filename))
+                    f'Process {pid} still running (see {filename})')
 
             except (IOError, ProcessLookupError, ValueError):
                 pass
@@ -94,6 +94,6 @@ def pidfile(filename):
             os.close(fd)
             os.rename(nm, filename)
 
-    except Exception as ex:
+    except Exception as exc:
         raise BdsError(
-            'Failed to create PID file %s: %s' % (filename, ex))
+            f'Failed to create PID file {filename}: {exc}')
