@@ -6,8 +6,26 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
+from bisect import bisect
+from collections import OrderedDict
+
 from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
 from bdssnmpadaptor.log import set_logging
+
+
+def lazilySorted(func):
+    def wrapper(self, *args, **kwargs):
+        if self.dirty:
+            self.oidDict = OrderedDict(
+                sorted(self.oidDict.items(), key=lambda x: x[1]))
+            self.dirty = False
+
+            self.moduleLogger.debug(
+                f'resorted OIDs in OID DB: {self.oidDict.keys()}')
+
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class OidDb(object):
@@ -25,183 +43,71 @@ class OidDb(object):
         self.moduleLogger.debug('configDict:{}'.format(configDict))
 
         self.firstItem = None  # root of the DB chain
-        self.oidDict = {}  # this dict holds all OID items in this # DB
+        self.oidDict = OrderedDict()  # this dict holds all OID items in this # DB
+        self.dirty = True  # DB needs sorting
         self.lock = False  # not implemented yet, locker for insertOid
 
     def insertOid(self, newOidItem):
-        if newOidItem.oid in self.oidDict:
-            self.moduleLogger.debug(f'updating {newOidItem.oid} {newOidItem.value}')
-            self.oidDict[newOidItem.oid].value = newOidItem.value
-
-        else:  # new oid to sorted data structure will be added
-            self.moduleLogger.debug(f'creating {newOidItem.oid} {newOidItem.value}')
-            self.oidDict[newOidItem.oid] = newOidItem
-
-            if self.firstItem is None:
-                self.firstItem = newOidItem
-
-            else:
-                if newOidItem < self.firstItem:
-                    tempItem = self.firstItem
-                    self.firstItem = newOidItem
-                    self.firstItem.nextOidObj = tempItem
-
-                else:
-                    iterItem = self.firstItem
-                    cacheIterItem = iterItem
-                    endFlag = False
-                    i = 0
-                    while iterItem < newOidItem:
-                        i += 1
-
-                        cacheIterItem = iterItem
-
-                        if iterItem.nextOidObj is None:
-                            endFlag = True
-                            break
-
-                        else:
-                            iterItem = iterItem.nextOidObj
-
-                    if endFlag:
-                        cacheIterItem.nextOidObj = newOidItem
-
-                    else:
-                        cacheIterItem.nextOidObj = newOidItem
-                        newOidItem.nextOidObj = iterItem
+        self.moduleLogger.debug(
+            f'{"updating" if newOidItem.oid in self.oidDict else "adding"} '
+            f'{newOidItem.oid} {newOidItem.value}')
+        self.oidDict[newOidItem.oid] = newOidItem
+        self.dirty = True
 
     def deleteOidsWithPrefix(self, oidPrefix):
-        iterItem = self.firstItem
-
-        while iterItem is not None:
-
-            if iterItem == self.firstItem:
-
-                if iterItem.oid.startswith(oidPrefix):
-                    self.firstItem = iterItem.nextOidObj
-                    nextItem = iterItem.nextOidObj
-                    self.moduleLogger.debug(f'deleting {iterItem.oid}')
-                    self.oidDict.pop(iterItem.oid, None)
-
-                    del iterItem
-
-                    iterItem = nextItem
-
-                else:
-                    iterItem = iterItem.nextOidObj
-
-            else:
-                if iterItem.nextOidObj is not None:
-
-                    if iterItem.nextOidObj.oid.startswith(oidPrefix):
-
-                        deleteItem = iterItem.nextOidObj
-                        iterItem.nextOidObj = iterItem.nextOidObj.nextOidObj
-                        self.moduleLogger.debug(f'deleting {deleteItem.oid}')
-                        self.oidDict.pop(deleteItem.oid, None)
-                        del deleteItem
-
-                    else:
-                        iterItem = iterItem.nextOidObj
-
-                else:
-                    iterItem = iterItem.nextOidObj
+        for oid in tuple(self.oidDict):
+            if oid.startswith(oidPrefix):
+                self.moduleLogger.debug(
+                    f'deleting {oid} by prefix {oidPrefix}')
+                del self.oidDict[oid]
+                self.dirty = True
 
     def deleteOidsFromBdsMappingFunc(self, bdsMappingFunc):
-        iterItem = self.firstItem
+        for oid, item in tuple(self.oidDict.items()):
+            if item.bdsMappingFunc == bdsMappingFunc:
+                self.moduleLogger.debug(
+                    f'deleting {oid} by func {bdsMappingFunc}')
+                del self.oidDict[oid]
+                self.dirty = True
 
-        while iterItem is not None:
-            if iterItem == self.firstItem:
-                if iterItem.bdsMappingFunc == bdsMappingFunc:
-                    self.firstItem = iterItem.nextOidObj
-                    nextItem = iterItem.nextOidObj
-                    self.moduleLogger.debug(f'deleting {iterItem.oid}')
-                    self.oidDict.pop(iterItem.oid, None)
-                    del iterItem
-                    iterItem = nextItem
-
-                else:
-                    iterItem = iterItem.nextOidObj
-
-            else:
-                if iterItem.nextOidObj is not None:
-
-                    if iterItem.bdsMappingFunc == bdsMappingFunc:
-                        deleteItem = iterItem.nextOidObj
-                        iterItem.nextOidObj = iterItem.nextOidObj.nextOidObj
-
-                        self.moduleLogger.debug(f'deleting {deleteItem.oid}')
-                        self.oidDict.pop(deleteItem.oid, None)
-
-                        del deleteItem
-
-                    else:
-                        iterItem = iterItem.nextOidObj
-
-                else:
-                    iterItem = iterItem.nextOidObj
-
+    @lazilySorted
     def getFirstItem(self):
-        return self.firstItem
+        if self.oidDict:
+            first = tuple(self.oidDict)[0]
+            return self.oidDict[first]
+
+        self.moduleLogger.warning(f'OID DB is empty')
 
     def getObjFromOid(self, oid):
-        if oid in self.oidDict:
-            self.moduleLogger.debug(
-                f'getObjFromOid found in oidDict')
+        try:
             return self.oidDict[oid]
 
-        else:
+        except KeyError:
             self.moduleLogger.warning(
-                f'getObjFromOid did NOT found in oidDict')
-            return
+                f'requested OID {oid} is not found in OID DB')
 
+    @lazilySorted
     def getNextOid(self, searchOid):
-        # print(f'getNextOid searchOid:{searchOid}')
-        self.moduleLogger.debug(f'getNextOid searchOid:{searchOid}')
+        self.moduleLogger.debug(
+            f'searching for OID next to {searchOid}')
 
-        if self.firstItem:
+        sortedItems = tuple(self.oidDict.values())
 
-            if searchOid in self.oidDict:  # directMatches
-                self.moduleLogger.debug(
-                    f'getNextOid found {self.oidDict[searchOid].oid}')
+        searchItem = (searchOid if isinstance(searchOid, OidDbItem)
+                      else OidDbItem(oid=searchOid))
 
-                if self.oidDict[searchOid].nextOidObj:
-                    self.moduleLogger.debug(
-                        f'getNextOid returns {self.oidDict[searchOid].nextOidObj.oid}')
-                    return self.oidDict[searchOid].nextOidObj.oid
+        nextIdx = bisect(sortedItems, searchItem)
 
-                else:
-                    self.moduleLogger.warning('getNextOid returns None as not nextOidObj')
-                    return
+        try:
+            nextItem = sortedItems[nextIdx]
 
-            else:  # find first oid which is greater than searchOid
-                # elif self.firstItem.oid.startswith(searchOid):   # Fixme
-                #     self.moduleLogger.debug('getNextOid returns start oid {}'.format(self.firstItem.oid))
-                #     return self.firstItem.oid
-                if self.firstItem > OidDbItem(oid=searchOid):
-                    return self.firstItem.oid
-
-                else:
-                    # print(f'iterItem = self.firstItem')
-                    iterItem = self.firstItem
-
-                    while (iterItem < OidDbItem(oid=searchOid)
-                           and iterItem.nextOidObj is not None):
-                        # print (iterItem.oid,searchOid)
-                        if iterItem.nextOidObj > OidDbItem(oid=searchOid):
-                            return iterItem.nextOidObj.oid
-
-                        else:
-                            iterItem = iterItem.nextOidObj
-
-                    self.moduleLogger.warning(
-                        'getNextOid None as none oid is greater')
-
-                    return
-        else:
-            self.moduleLogger.warning(
-                'getNextOid returns None as no firstItem')
+        except IndexError:
+            self.moduleLogger.warning(f'no next OID found past {searchItem.oid}')
             return
+
+        self.moduleLogger.debug(f'next OID to {searchItem.oid} is {nextItem.oid}')
+
+        return nextItem.oid
 
     def setLock(self):
         self.lock = True
@@ -212,15 +118,9 @@ class OidDb(object):
     def isLocked(self):
         return self.lock
 
+    @lazilySorted
     def __str__(self):
-        returnStr = ''
-        iterItem = self.firstItem
-
-        while iterItem is not None:
-            returnStr += iterItem.oid + '\n'
-            iterItem = iterItem.nextOidObj
-
-        return returnStr
+        return '\n'.join(self.oidDict)
 
 
 class OidDbItem(object):
@@ -263,7 +163,6 @@ class OidDbItem(object):
         self.pysnmpRepresentation = pysnmpRepresentation
         self.value = value
         self.bdsRequest = bdsRequest
-        self.nextOidObj = None
 
     def _encodeValue(self):
 
@@ -277,13 +176,6 @@ class OidDbItem(object):
             self.encodedValue = None
             raise Exception(f'cannot encode value for {self.name}, representation '
                             f'{representation}: {ex}')
-
-    def getNextOid(self):
-        if self.nextOidObj:
-            return self.nextOidObj.oid
-
-        else:
-            return
 
     def _getOidAsList(self, oid2):
         if isinstance(oid2, str):
@@ -321,11 +213,6 @@ SNMP format: {self.pysnmpRepresentation}
         if self.bdsRequest:
             returnStr += f"""\
 BDS request: {self.bdsRequest}
-"""
-
-        if self.nextOidObj:
-            returnStr += f"""\
-Next OID:    {self.nextOidObj.oid}
 """
 
         returnStr += f"""\
