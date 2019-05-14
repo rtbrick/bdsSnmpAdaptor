@@ -87,7 +87,6 @@ class BdsAccess(object):
                     self.staticOidDict[oidName] = "to be defined"
 
         self.expirytimer = 50  ### FIXME
-        self.responseSequence = 0
         self.responseJsonDicts = {}
         self.oidDb = OidDb(cliArgsDict)
 
@@ -154,19 +153,18 @@ class BdsAccess(object):
                                         json=requestData) as response:
                     responseJsonDict = await response.json(content_type='application/json')
 
-        except Exception as e:
-            print("Exception: #{}#".format(e))
-            return False, e
+        except Exception as exc:
+            self.moduleLogger.error(f'HTTP request for {url} failed: {exc}')
+            return False, exc
 
-        else:
-            if response.status != 200:
-                self.moduleLogger.error("received {} for {}".format(response.status, url))
-                return False, "status != 200"
+        if response.status != 200:
+            self.moduleLogger.error(f'received {response.status} for {url}')
+            return False, 'status != 200'
 
-            else:
-                self.moduleLogger.info("received {} for {}".format(response.status, url))
-                self.moduleLogger.debug(response)
-                return True, responseJsonDict
+        self.moduleLogger.info(f'received HTTP {response.status} for {url}')
+        self.moduleLogger.debug(f'HTTP response {response}')
+
+        return True, responseJsonDict
 
     async def setTableSequenceDict(self, bdsRequestDictKey, responseJsonDict):
         sequenceNumberList = []
@@ -179,36 +177,53 @@ class BdsAccess(object):
     async def run_forever(self):
 
         while True:
-            await StaticAndPredefinedOids.setOids(self.oidDb, self.staticOidDict)
+            await asyncio.sleep(5)
+
+            try:
+                await StaticAndPredefinedOids.setOids(
+                    self.oidDb, self.staticOidDict)
+
+            except Exception as exc:
+                self.moduleLogger.error(
+                    f'failed at populating OID DB with predefined OIDs: {exc}')
+                continue
 
             for bdsRequestDictKey in REQUEST_MAPPING_DICTS:
-                self.moduleLogger.debug("working on {}".format(bdsRequestDictKey))
+                self.moduleLogger.debug(f'working on {bdsRequestDictKey}')
 
                 bdsRequestDict = REQUEST_MAPPING_DICTS[bdsRequestDictKey]["bdsRequestDict"]
                 mappingfunc = REQUEST_MAPPING_DICTS[bdsRequestDictKey]["mappingFunc"]
                 bdsProcess = bdsRequestDict['process']
                 bdsTable = bdsRequestDict['table']
+
                 resultFlag, responseJsonDict = await self.getJson(bdsRequestDict)
 
-                if resultFlag:
-                    responseTableKey = "{}_{}".format(bdsProcess, bdsTable)
-                    self.responseJsonDicts[responseTableKey] = responseJsonDict
-                    self.moduleLogger.debug(
-                        "self.responseJsonDicts[{}] {}".format(responseTableKey, responseJsonDict))
+                if not resultFlag:
+                    self.moduleLogger.error('BDS JSON is not available')
+                    continue
 
-                    if bdsRequestDictKey in self.tableSequenceListDict:
-                        tableSequenceList = self.tableSequenceListDict[bdsRequestDictKey]
+                responseTableKey = "{}_{}".format(bdsProcess, bdsTable)
 
-                    else:
-                        tableSequenceList = []  # required for the first run
+                self.responseJsonDicts[responseTableKey] = responseJsonDict
 
-                    # print(bdsRequestDictKey)
-                    await mappingfunc.setOids(responseJsonDict, self.oidDb, tableSequenceList, BIRTHDAY)
-                    # except Exception as e:
-                    #    print(e)
-                    #    self.moduleLogger.error(
-                    #        "mappingfunc {} raise Exception: {}".format(mappingfunc, e))
-                    await self.setTableSequenceDict(bdsRequestDictKey, responseJsonDict)
+                self.moduleLogger.debug(
+                    f'responseJsonDicts[{responseTableKey}] {responseJsonDict}')
 
-            # print(self.tableSequenceListDict)
-            await asyncio.sleep(5)
+                if bdsRequestDictKey in self.tableSequenceListDict:
+                    tableSequenceList = self.tableSequenceListDict[bdsRequestDictKey]
+
+                else:
+                    tableSequenceList = []  # required for the first run
+
+                try:
+                    await mappingfunc.setOids(
+                        responseJsonDict, self.oidDb, tableSequenceList, BIRTHDAY)
+
+                except Exception as exc:
+                    self.moduleLogger.error(
+                        f'failed at populating OID DB from BDS response: {exc}')
+                    continue
+
+                await self.setTableSequenceDict(bdsRequestDictKey, responseJsonDict)
+
+                self.moduleLogger.debug(f'successfully refreshed OID DB')

@@ -69,8 +69,8 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
             **{representation: _oidDbItem.value})
 
         self.moduleLogger.debug(
-            "createVarbindFromOidDbItem returning oid {} with "
-            "value {} ".format(_oidDbItem.oid, returnValue))
+            f'createVarbindFromOidDbItem returning oid '
+            f'{_oidDbItem.oid} with value {_oidDbItem.value}')
 
         return _oidDbItem.oid, returnValue
 
@@ -85,14 +85,14 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
         self.moduleLogger.debug(
-            f"MibInstrumController set _oidDB: firstItem "
-            f"{self._oidDb.firstItem}")
+            f'MibInstrumController set _oidDB: firstItem '
+            f'{self._oidDb.firstItem}')
 
         return self
 
-    def readVars(self, varBinds, acInfo=(None, None)):
+    def readVars(self, varBinds, *args, **kwargs):
 
-        self.moduleLogger.info('GET request var-binds: {}'.format(varBinds))
+        self.moduleLogger.info(f'GET request var-binds: {varBinds}')
 
         returnList = []
 
@@ -101,67 +101,64 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
                 oidDbItemObj = self._oidDb.getObjFromOid(str(oid))
 
             except Exception as exc:
-                # self.moduleLogger.info('oidDb failure: {}'.format(exc))
-                valueDict = None  # FIXME
+                self.moduleLogger.error(f'oidDb read failed for {oid}: {exc}')
+                returnList.append((oid, v2c.NoSuchInstance()))
+                continue
 
-            else:
-                self.moduleLogger.debug(f'oidDb returned\n{oidDbItemObj}for oid: {oid}')
+            self.moduleLogger.debug(
+                f'oidDb GET returned {oidDbItemObj} for oid: {oid}')
 
-                if oidDbItemObj is None:
-                    self.moduleLogger.warning(
-                        f'_oidDb return None for oid: {oid}')
+            if oidDbItemObj is None:
+                returnList.append((oid, v2c.NoSuchObject()))
+                continue
 
-                    # self.moduleLogger.info (f'_oidDb return None for oid: {oid}')
-                    returnList.append((oid, v2c.NoSuchObject()))
+            returnList.append(self.createVarbindFromOidDbItem(oidDbItemObj))
 
-                else:
-                    self.moduleLogger.debug(
-                        f'createVarbindFromOidDbItem with {oidDbItemObj.oid}')
-
-                    returnList.append(self.createVarbindFromOidDbItem(oidDbItemObj))
-
-        self.moduleLogger.debug('GET response var-binds: {}'.format(returnList))
+        self.moduleLogger.debug(
+            f'GET response var-binds: {returnList}')
 
         return returnList
 
-    def readNextVars(self, varBinds, acInfo=(None, None)):
+    def readNextVars(self, varBinds, *args, **kwargs):
         """ process get next request
 
         """
+        self.moduleLogger.info(f'GETNEXT request var-binds: {varBinds}')
+
         returnList = []
 
-        self.moduleLogger.info('GETNEXT request var-binds: {}'.format(varBinds))
-
         for oid, value in varBinds:
-            self.moduleLogger.debug(
-                'entry for-loop {},{} in varBinds'.format(oid, value))
-
             nextOidString = self._oidDb.getNextOid(str(oid))
 
-            # self.moduleLogger.info(f'nextOidString: {nextOidString}')
+            self.moduleLogger.debug(
+                f'request OID is {oid}, next OID is {nextOidString}')
+
             try:
                 oidDbItemObj = self._oidDb.getObjFromOid(nextOidString)
 
-            except Exception as e:
-                self.moduleLogger.info('oidDb failure: {}'.format(e))
+            except Exception as exc:
+                self.moduleLogger.error(f'oidDb read failed for {oid}: {exc}')
+                returnList.append((oid, v2c.EndOfMibView()))
+                continue
 
-            else:
-                # self.moduleLogger.info(f'oidDb returned\n{oidDbItemObj}for oid: {nextOidString}')
-                if oidDbItemObj is None:
-                    # self.moduleLogger.info('return [ ("0.0", v2c.EndOfMibView()) ]')
-                    returnList.append(("0.0", v2c.EndOfMibView()))
+            self.moduleLogger.debug(
+                f'oidDb GETNEXT returned {oidDbItemObj} for oid: {oid}')
 
-                else:
-                    # self.moduleLogger.info(f'createVarbindFromOidDbItem with {oidDbItemObj.oid}')
-                    returnList.append(self.createVarbindFromOidDbItem(oidDbItemObj))
+            if oidDbItemObj is None:
+                returnList.append((oid, v2c.EndOfMibView()))
+                continue
 
-        self.moduleLogger.debug('GETNEXT response var-binds: {}'.format(returnList))
+            returnList.append(self.createVarbindFromOidDbItem(oidDbItemObj))
+
+        self.moduleLogger.debug(
+            f'GETNEXT response var-binds: {returnList}')
 
         return returnList
 
 
 class SnmpCommandResponder(object):
-    """
+    """SNMP Command Responder (AKA SNMP Agent) implementation.
+
 
     """
 
