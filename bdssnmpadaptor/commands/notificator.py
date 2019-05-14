@@ -45,14 +45,14 @@ class SnmpTrapGenerator(object):
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
-        self.moduleLogger.info("original configDict: {}".format(configDict))
+        self.moduleLogger.info(f'original configDict: {configDict}')
 
         # temp lines for graylog client end #
         # configDict["usmUserDataMatrix"] = [ usmUserTuple.strip().split(",")
         # for usmUserTuple in configDict["usmUserTuples"].split(';') if len(usmUserTuple) > 0 ]
         # self.moduleLogger.debug("configDict['usmUserDataMatrix']: {}".format(configDict["usmUserDataMatrix"]))
         # configDict["usmUsers"] = []
-        self.moduleLogger.info("modified configDict: {}".format(configDict))
+        self.moduleLogger.info(f'modified configDict: {configDict}')
 
         self.snmpEngine = snmp_config.getSnmpEngine(
             engineId=configDict.get('engineId'))
@@ -81,8 +81,8 @@ class SnmpTrapGenerator(object):
                         self.snmpEngine, security, community, version=snmpVersion, tag=self.TARGETS_TAG)
 
                     self.moduleLogger.info(
-                        'Configuring SNMPv{} security name {}, community '
-                        'name {}'.format(snmpVersion, security, community))
+                        f'Configuring SNMPv{snmpVersion} security name '
+                        f'{security}, community name {community}')
 
                     authEntries[security] = snmpVersion, authLevel
 
@@ -97,8 +97,8 @@ class SnmpTrapGenerator(object):
                         usmCreds.get('privKey'), usmCreds.get('privProtocol'))
 
                     self.moduleLogger.info(
-                        'Configuring SNMPv3 USM security {}, user {}, auth {}/{},'
-                        ' priv {}/{}'.format(
+                        'Configuring SNMPv3 USM security {}, user {}, auth {}/{}, '
+                        'priv {}/{}'.format(
                             security,
                             usmCreds.get('user'),
                             usmCreds.get('authKey'), usmCreds.get('authProtocol'),
@@ -107,7 +107,7 @@ class SnmpTrapGenerator(object):
                     authEntries[security] = snmpVersion, authLevel
 
             else:
-                raise error.BdsError('Unknown SNMP version {}'.format(snmpVersion))
+                raise error.BdsError(f'Unknown SNMP version {snmpVersion}')
 
             self.birthday = time.time()
 
@@ -125,8 +125,8 @@ class SnmpTrapGenerator(object):
                 self.snmpEngine, security, authLevel, snmpVersion)
 
             self.moduleLogger.info(
-                'Configuring target {}:{} using security '
-                'name {}'.format(address, port, security))
+                f'Configuring target {address}:{port} using security '
+                f'name {security}')
 
         self.ntfOrg = ntforg.NotificationOriginator()
 
@@ -134,57 +134,54 @@ class SnmpTrapGenerator(object):
 
         self.restHttpServerObj = restHttpServerObj
 
-        self.moduleLogger.info('Running SNMP engine ID {}, boots {}'.format(
-            self.snmpEngine, engineBoots))
+        self.moduleLogger.info(
+            f'Running SNMP engine ID {self.snmpEngine}, boots {engineBoots}')
 
     async def sendTrap(self, bdsLogDict):
-        self.moduleLogger.info(
-            "sendTrap bdsLogDict: {}".format(bdsLogDict))
+        self.moduleLogger.info(f'sendTrap bdsLogDict: {bdsLogDict}')
 
         self.trapCounter += 1
 
         try:
             syslogMsgFacility = bdsLogDict["host"]
 
-        except Exception as e:
+        except KeyError:
             self.moduleLogger.error(
-                "cannot set syslogMsgFacility from bdsLogDict: "
-                "{}".format(bdsLogDict, e))
-            syslogMsgFacility = "error"
+                f'cannot get syslog facility from {bdsLogDict}')
+            syslogMsgFacility = 'error'
 
         try:
             syslogMsgSeverity = bdsLogDict["level"]
 
-        except Exception as e:
+        except KeyError:
             self.moduleLogger.error(
-                "cannot set syslogMsgSeverity from bdsLogDict: "
-                "{}".format(bdsLogDict, e))
+                f'cannot get syslog severity from {bdsLogDict}')
             syslogMsgSeverity = 0
 
         try:
             syslogMsgText = bdsLogDict["short_message"]
 
-        except Exception as e:
+        except KeyError:
             self.moduleLogger.error(
-                "connot set syslogMsgText from bdsLogDict: "
-                "{}".format(bdsLogDict, e))
+                f'cannot get syslog message text from bdsLogDict '
+                f'{bdsLogDict}')
 
-            syslogMsgText = "error"
+            syslogMsgText = 'error'
 
         self.moduleLogger.info(
-            "data sendTrap {} {} {} {}".format(
-                self.trapCounter, syslogMsgFacility,
-                syslogMsgSeverity, syslogMsgText))
+            f'data sendTrap {self.trapCounter} {syslogMsgFacility} '
+            f'{syslogMsgSeverity} {syslogMsgText}')
 
         def cbFun(snmpEngine, sendRequestHandle, errorIndication,
                   errorStatus, errorIndex, varBinds, cbCtx):
             if errorIndication:
                 self.moduleLogger.error(
-                    'notification {} failed: {}'.format(sendRequestHandle, errorIndication))
+                    f'notification {sendRequestHandle} failed: '
+                    f'{errorIndication}')
 
             else:
                 self.moduleLogger.error(
-                    'notification {} succeeded'.format(sendRequestHandle))
+                    f'notification {sendRequestHandle} succeeded')
 
         uptime = int((time.time() - self.birthday) * 100)
 
@@ -214,13 +211,19 @@ class SnmpTrapGenerator(object):
         while True:
             await asyncio.sleep(0.001)
 
-            if self.restHttpServerObj.bdsLogsToBeProcessedList:
-
+            try:
                 bdsLogToBeProcessed = self.restHttpServerObj.bdsLogsToBeProcessedList.pop(0)
 
-                self.moduleLogger.info("bdsLogToBeProcessed: {}".format(bdsLogToBeProcessed))
+            except IndexError:
+                continue
 
+            self.moduleLogger.info(f'new log record: {bdsLogToBeProcessed}')
+
+            try:
                 await self.sendTrap(bdsLogToBeProcessed)
+
+            except Exception as exc:
+                self.moduleLogger.error(f'TRAP not sent: {exc}')
 
     async def closeSnmpEngine(self):
         self.snmpEngine.transportDispatcher.closeDispatcher()
@@ -245,37 +248,34 @@ class AsyncioRestServer(object):
         self.snmpTrapGenerator = SnmpTrapGenerator(cliArgsDict, self)
 
     async def handler(self, request):
+        """Handle HTTP request
 
-        """| Coroutine that accepts a Request instance as its only argument.
-           | Returnes 200 with a copy of the incoming header dict.
-
+        A coroutine that accepts a Request instance as its only argument.
+        Returns 200 with a copy of the incoming header dict.
         """
         peerIP = request._transport_peername[0]
 
         self.requestCounter += 1
 
         self.moduleLogger.info(
-            "handler: incoming request peerIP:{}".format(
-                peerIP, request.headers, self.requestCounter))
-        # self.moduleLogger.debug ("handler: peerIP:{} headers:{} counter:{}
-        # ".format(peerIP,request.headers,self.requestCounter))
+            f'handler: incoming request peerIP {peerIP}, headers '
+            f'{request.headers}, count {self.requestCounter}')
 
         data = {
             'headers': dict(request.headers)
         }
 
-        jsonTxt = await request.text()  #
+        jsonTxt = await request.text()
 
         try:
             bdsLogDict = json.loads(jsonTxt)
 
-        except Exception as e:
+        except Exception as exc:
             self.moduleLogger.error(
-                "connot convert json to dict:{} {}".format(jsonTxt, e))
+                f'cannot convert JSON to dict {jsonTxt}: {exc}')
 
         else:
             self.bdsLogsToBeProcessedList.append(bdsLogDict)
-            # await self.snmpTrapGenerator.sendTrap(bdsLogDict)
 
         return web.json_response(data)
 
