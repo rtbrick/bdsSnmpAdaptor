@@ -285,69 +285,20 @@ class OidDbItem(object):
         else:
             return
 
+    def _getOidAsList(self, oid2):
+        if isinstance(oid2, str):
+            return [int(x) for x in oid2.split('.')]
+
+        elif isinstance(oid2, OidDbItem):
+            return oid2.oidAsList
+
+        raise ValueError(f'Unsupported type {type(oid2)} in comparison')
+
     def __lt__(self, oid2):
-        if isinstance(oid2, str):
-            oid2AsList = [int(x) for x in oid2.split('.')]
+        return self.oidAsList < self._getOidAsList(oid2)
 
-        elif isinstance(oid2, OidDbItem):
-            oid2AsList = oid2.oidAsList
-
-        else:
-            raise ValueError(f'Unsupported type {type(oid2)} in comparison')
-
-        pos = 0
-
-        while pos < len(self.oidAsList) and pos < len(oid2AsList):
-            if oid2AsList[pos] < self.oidAsList[pos]:
-                return False
-
-            if oid2AsList[pos] > self.oidAsList[pos]:
-                return True
-
-            pos += 1
-
-        if len(self.oidAsList) < len(oid2AsList):
-            return True
-
-        if len(self.oidAsList) > len(oid2AsList):
-            return False
-
-        if self.oidAsList == oid2AsList:
-            return False
-
-        return True
-
-    def __gt__(self, oid2):
-        if isinstance(oid2, str):
-            oid2AsList = [int(x) for x in oid2.split('.')]
-
-        elif isinstance(oid2, OidDbItem):
-            oid2AsList = oid2.oidAsList
-
-        else:
-            raise ValueError(f'Unsupported type {type(oid2)} in comparison')
-
-        pos = 0
-
-        while pos < len(self.oidAsList) and pos < len(oid2AsList):
-            if oid2AsList[pos] > self.oidAsList[pos]:
-                return False
-
-            if oid2AsList[pos] < self.oidAsList[pos]:
-                return True
-
-            pos += 1
-
-        if len(self.oidAsList) < len(oid2AsList):
-            return False
-
-        if len(self.oidAsList) > len(oid2AsList):
-            return True
-
-        if self.oidAsList == oid2AsList:
-            return False
-
-        return True
+    def __eq__(self, oid2):
+        return self.oidAsList == self._getOidAsList(oid2)
 
     def __str__(self):
         returnStr = f"""\

@@ -37,6 +37,11 @@ class OidDbItemTestCase(unittest.TestCase):
 
         self.assertLess(oid1, oid2)
         self.assertGreater(oid2, oid1)
+
+    def test___eq__(self):
+        oid1 = oidDb.OidDbItem(oid='1.3.6.7.8')
+        oid2 = oidDb.OidDbItem(oid='1.3.6.8.1')
+
         self.assertNotEqual(oid1, oid2)
         self.assertEqual(oid1, oid1)
 
