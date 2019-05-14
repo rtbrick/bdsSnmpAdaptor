@@ -44,35 +44,35 @@ class FfwdDefaultInterfaceLogical(object):
 
     @classmethod
     async def setOids(cls, bdsJsonResponseDict, targetOidDb):
-        oidSegment = "1.3.6.1.2.1.2.2.1."
+        oidSegment = '1.3.6.1.2.1.2.2.1.'
         targetOidDb.setLock()
 
         # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
-        for bdsJsonObject in bdsJsonResponseDict["objects"]:
-            ifName = bdsJsonObject["attribute"]["interface_name"]
+        for bdsJsonObject in bdsJsonResponseDict['objects']:
+            ifName = bdsJsonObject['attribute']['interface_name']
             index = BdsMappingFunctions.ifIndexFromIfName(ifName)
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
                     bdsMappingFunc=__name__,
-                    oid=oidSegment + "1." + str(index),
-                    name="ifIndex",
+                    oid=oidSegment + '1.' + str(index),
+                    name='ifIndex',
                     pysnmpBaseType=Integer32,
                     value=int(index)))
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
                     bdsMappingFunc=__name__,
-                    oid=oidSegment + "2." + str(index),
-                    name="ifDescr",
+                    oid=oidSegment + '2.' + str(index),
+                    name='ifDescr',
                     pysnmpBaseType=OctetString,
-                    value=bdsJsonObject["attribute"]["interface_name"]))
+                    value=bdsJsonObject['attribute']['interface_name']))
 
             targetOidDb.insertOid(
                 newOidItem=OidDbItem(
                     bdsMappingFunc=__name__,
-                    oid=oidSegment + "3." + str(index),
-                    name="ifType",
+                    oid=oidSegment + '3.' + str(index),
+                    name='ifType',
                     pysnmpBaseType=Integer32,
                     value=6))
 

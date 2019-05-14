@@ -18,11 +18,11 @@ class OidDb(object):
 
     def __init__(self, cliArgsDict):
         configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict["config"], "oidDb")
+            cliArgsDict['config'], 'oidDb')
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
-        self.moduleLogger.debug("configDict:{}".format(configDict))
+        self.moduleLogger.debug('configDict:{}'.format(configDict))
 
         self.firstItem = None  # root of the DB chain
         self.oidDict = {}  # this dict holds all OID items in this # DB
@@ -30,11 +30,11 @@ class OidDb(object):
 
     def insertOid(self, newOidItem):
         if newOidItem.oid in self.oidDict:
-            self.moduleLogger.debug(f"updating {newOidItem.oid} {newOidItem.value}")
+            self.moduleLogger.debug(f'updating {newOidItem.oid} {newOidItem.value}')
             self.oidDict[newOidItem.oid].value = newOidItem.value
 
         else:  # new oid to sorted data structure will be added
-            self.moduleLogger.debug(f"creating {newOidItem.oid} {newOidItem.value}")
+            self.moduleLogger.debug(f'creating {newOidItem.oid} {newOidItem.value}')
             self.oidDict[newOidItem.oid] = newOidItem
 
             if self.firstItem is None:
@@ -80,7 +80,7 @@ class OidDb(object):
                 if iterItem.oid.startswith(oidPrefix):
                     self.firstItem = iterItem.nextOidObj
                     nextItem = iterItem.nextOidObj
-                    self.moduleLogger.debug(f"deleting {iterItem.oid}")
+                    self.moduleLogger.debug(f'deleting {iterItem.oid}')
                     self.oidDict.pop(iterItem.oid, None)
 
                     del iterItem
@@ -97,7 +97,7 @@ class OidDb(object):
 
                         deleteItem = iterItem.nextOidObj
                         iterItem.nextOidObj = iterItem.nextOidObj.nextOidObj
-                        self.moduleLogger.debug(f"deleting {deleteItem.oid}")
+                        self.moduleLogger.debug(f'deleting {deleteItem.oid}')
                         self.oidDict.pop(deleteItem.oid, None)
                         del deleteItem
 
@@ -115,7 +115,7 @@ class OidDb(object):
                 if iterItem.bdsMappingFunc == bdsMappingFunc:
                     self.firstItem = iterItem.nextOidObj
                     nextItem = iterItem.nextOidObj
-                    self.moduleLogger.debug(f"deleting {iterItem.oid}")
+                    self.moduleLogger.debug(f'deleting {iterItem.oid}')
                     self.oidDict.pop(iterItem.oid, None)
                     del iterItem
                     iterItem = nextItem
@@ -130,7 +130,7 @@ class OidDb(object):
                         deleteItem = iterItem.nextOidObj
                         iterItem.nextOidObj = iterItem.nextOidObj.nextOidObj
 
-                        self.moduleLogger.debug(f"deleting {deleteItem.oid}")
+                        self.moduleLogger.debug(f'deleting {deleteItem.oid}')
                         self.oidDict.pop(deleteItem.oid, None)
 
                         del deleteItem
@@ -147,12 +147,12 @@ class OidDb(object):
     def getObjFromOid(self, oid):
         if oid in self.oidDict:
             self.moduleLogger.debug(
-                f"getObjFromOid found in oidDict")
+                f'getObjFromOid found in oidDict')
             return self.oidDict[oid]
 
         else:
             self.moduleLogger.warning(
-                f"getObjFromOid did NOT found in oidDict")
+                f'getObjFromOid did NOT found in oidDict')
             return
 
     def getNextOid(self, searchOid):
@@ -213,11 +213,11 @@ class OidDb(object):
         return self.lock
 
     def __str__(self):
-        returnStr = ""
+        returnStr = ''
         iterItem = self.firstItem
 
         while iterItem is not None:
-            returnStr += iterItem.oid + "\n"
+            returnStr += iterItem.oid + '\n'
             iterItem = iterItem.nextOidObj
 
         return returnStr
@@ -257,7 +257,7 @@ class OidDbItem(object):
         """
         self.bdsMappingFunc = bdsMappingFunc
         self.oid = oid
-        self.oidAsList = [int(x) for x in self.oid.split(".")]  # for compare
+        self.oidAsList = [int(x) for x in self.oid.split('.')]  # for compare
         self.name = name
         self.pysnmpBaseType = pysnmpBaseType
         self.pysnmpRepresentation = pysnmpRepresentation
@@ -287,7 +287,7 @@ class OidDbItem(object):
 
     def __lt__(self, oid2):
         if isinstance(oid2, str):
-            oid2AsList = [int(x) for x in oid2.split(".")]
+            oid2AsList = [int(x) for x in oid2.split('.')]
 
         elif isinstance(oid2, OidDbItem):
             oid2AsList = oid2.oidAsList
@@ -319,7 +319,7 @@ class OidDbItem(object):
 
     def __gt__(self, oid2):
         if isinstance(oid2, str):
-            oid2AsList = [int(x) for x in oid2.split(".")]
+            oid2AsList = [int(x) for x in oid2.split('.')]
 
         elif isinstance(oid2, OidDbItem):
             oid2AsList = oid2.oidAsList
@@ -350,23 +350,23 @@ class OidDbItem(object):
         return True
 
     def __str__(self):
-        returnStr = "#" * 60 + "\n"
-        returnStr += "oid           :{}\n".format(self.oid)
-        returnStr += "name          :{}\n".format(self.name)
-        returnStr += "pysnmp type   :{}\n".format(self.pysnmpBaseType)
+        returnStr = '#' * 60 + '\n'
+        returnStr += 'oid           :{}\n'.format(self.oid)
+        returnStr += 'name          :{}\n'.format(self.name)
+        returnStr += 'pysnmp type   :{}\n'.format(self.pysnmpBaseType)
 
         if self.value is not None:
-            returnStr += "value         :{}\n".format(self.value)
+            returnStr += 'value         :{}\n'.format(self.value)
 
         if self.pysnmpRepresentation:
-            returnStr += "pysnmp fmt    :{}\n".format(self.pysnmpRepresentation)
+            returnStr += 'pysnmp fmt    :{}\n'.format(self.pysnmpRepresentation)
 
         if self.bdsRequest:
-            returnStr += "bdsRequest    :{}\n".format(self.bdsRequest)
+            returnStr += 'bdsRequest    :{}\n'.format(self.bdsRequest)
 
         if self.nextOidObj:
-            returnStr += "nextOid       :{}\n".format(self.nextOidObj.oid)
+            returnStr += 'nextOid       :{}\n'.format(self.nextOidObj.oid)
 
-        returnStr += "#" * 60 + "\n"
+        returnStr += '#' * 60 + '\n'
 
         return returnStr

@@ -27,12 +27,12 @@ from bdssnmpadaptor import snmp_config
 from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
 from bdssnmpadaptor.log import set_logging
 
-RTBRICKSYSLOGTRAP = "1.3.6.1.4.1.50058.103.1.1"
-SYSLOGMSG = "1.3.6.1.4.1.50058.104.2.1.0"
-SYSLOGMSGNUMBER = "1.3.6.1.4.1.50058.104.2.1.1.0"
-SYSLOGMSGFACILITY = "1.3.6.1.4.1.50058.104.2.1.2.0"
-SYSLOGMSGSEVERITY = "1.3.6.1.4.1.50058.104.2.1.3.0"
-SYSLOGMSGTEXT = "1.3.6.1.4.1.50058.104.2.1.4.0"
+RTBRICKSYSLOGTRAP = '1.3.6.1.4.1.50058.103.1.1'
+SYSLOGMSG = '1.3.6.1.4.1.50058.104.2.1.0'
+SYSLOGMSGNUMBER = '1.3.6.1.4.1.50058.104.2.1.1.0'
+SYSLOGMSGFACILITY = '1.3.6.1.4.1.50058.104.2.1.2.0'
+SYSLOGMSGSEVERITY = '1.3.6.1.4.1.50058.104.2.1.3.0'
+SYSLOGMSGTEXT = '1.3.6.1.4.1.50058.104.2.1.4.0'
 
 
 class SnmpTrapGenerator(object):
@@ -41,17 +41,17 @@ class SnmpTrapGenerator(object):
 
     def __init__(self, cliArgsDict, restHttpServerObj):
         configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict["config"], "notificator")
+            cliArgsDict['config'], 'notificator')
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
         self.moduleLogger.info(f'original configDict: {configDict}')
 
         # temp lines for graylog client end #
-        # configDict["usmUserDataMatrix"] = [ usmUserTuple.strip().split(",")
-        # for usmUserTuple in configDict["usmUserTuples"].split(';') if len(usmUserTuple) > 0 ]
-        # self.moduleLogger.debug("configDict['usmUserDataMatrix']: {}".format(configDict["usmUserDataMatrix"]))
-        # configDict["usmUsers"] = []
+        # configDict['usmUserDataMatrix'] = [ usmUserTuple.strip().split(',')
+        # for usmUserTuple in configDict['usmUserTuples'].split(';') if len(usmUserTuple) > 0 ]
+        # self.moduleLogger.debug('configDict['usmUserDataMatrix']: {}'.format(configDict['usmUserDataMatrix']))
+        # configDict['usmUsers'] = []
         self.moduleLogger.info(f'modified configDict: {configDict}')
 
         self.snmpEngine = snmp_config.getSnmpEngine(
@@ -67,7 +67,7 @@ class SnmpTrapGenerator(object):
         authEntries = {}
 
         for snmpVersion, snmpConfigEntries in configDict.get(
-                "versions", {}).items():
+                'versions', {}).items():
 
             snmpVersion = str(snmpVersion)
 
@@ -75,7 +75,7 @@ class SnmpTrapGenerator(object):
 
                 for security, snmpConfig in snmpConfigEntries.items():
 
-                    community = snmpConfig["community"]
+                    community = snmpConfig['community']
 
                     authLevel = snmp_config.setCommunity(
                         self.snmpEngine, security, community, version=snmpVersion, tag=self.TARGETS_TAG)
@@ -143,7 +143,7 @@ class SnmpTrapGenerator(object):
         self.trapCounter += 1
 
         try:
-            syslogMsgFacility = bdsLogDict["host"]
+            syslogMsgFacility = bdsLogDict['host']
 
         except KeyError:
             self.moduleLogger.error(
@@ -151,7 +151,7 @@ class SnmpTrapGenerator(object):
             syslogMsgFacility = 'error'
 
         try:
-            syslogMsgSeverity = bdsLogDict["level"]
+            syslogMsgSeverity = bdsLogDict['level']
 
         except KeyError:
             self.moduleLogger.error(
@@ -159,7 +159,7 @@ class SnmpTrapGenerator(object):
             syslogMsgSeverity = 0
 
         try:
-            syslogMsgText = bdsLogDict["short_message"]
+            syslogMsgText = bdsLogDict['short_message']
 
         except KeyError:
             self.moduleLogger.error(
@@ -235,12 +235,12 @@ class AsyncioRestServer(object):
 
         self.moduleFileNameWithoutPy, _ = os.path.splitext(os.path.basename(__file__))
 
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict["config"], "notificator")
+        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict['config'], 'notificator')
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
-        self.listeningIP = configDict["listeningIP"]
-        self.listeningPort = configDict["listeningPort"]
+        self.listeningIP = configDict['listeningIP']
+        self.listeningPort = configDict['listeningPort']
 
         self.requestCounter = 0
 
@@ -282,7 +282,7 @@ class AsyncioRestServer(object):
     async def backgroundLogging(self):
         while True:
             #self.moduleLogger.debug(
-            #    "restServer Running - process list length: {}".format(
+            #    'restServer Running - process list length: {}'.format(
             #        len(self.bdsLogsToBeProcessedList)))
             await asyncio.sleep(0.1)
 
@@ -311,14 +311,14 @@ def main():
         epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument(
-        "-f", "--config", default="bdsSnmpTrapAdaptor.yml", type=str,
-        help="config file")
+        '-f', '--config', default='bdsSnmpTrapAdaptor.yml', type=str,
+        help='config file')
     parser.add_argument(
         '--daemonize', action='store_true',
-        help="Fork and run as a background process")
+        help='Fork and run as a background process')
     parser.add_argument(
         '--pidfile', type=str,
-        help="Path to a PID file the process would create")
+        help='Path to a PID file the process would create')
 
     cliargs = parser.parse_args()
 
@@ -347,5 +347,5 @@ def main():
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())
