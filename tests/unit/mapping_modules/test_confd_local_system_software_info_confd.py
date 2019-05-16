@@ -24,7 +24,7 @@ class ConfdLocalSystemSoftwareInfoConfdTestCase(unittest.TestCase):
         JSON_RESPONSE = json.load(fl)
 
     def setUp(self):
-        with mock.patch.object(oidDb, 'loadBdsSnmpAdapterConfigFile', autospec=True):
+        with mock.patch.object(oidDb, 'loadConfig', autospec=True):
             with mock.patch.object(oidDb, 'set_logging', autospec=True):
                 self.oidDb = oidDb.OidDb({'config': {}})
 

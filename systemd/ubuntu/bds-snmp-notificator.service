@@ -3,7 +3,7 @@ Description=RtBrick SNMP Notification Originator
 After=network.target auditd.service
 
 [Service]
-ExecStart=/usr/local/bin/bds-snmp-notificator --config /etc/bdssnmpadaptor/notificator.yml
+ExecStart=/usr/local/bin/bds-snmp-notificator --config /etc/bdssnmpadaptor/bds-snmp-adaptor.yml
 ExecStop=/usr/bin/killall bds-snmp-notificator
 KillMode=process
 Restart=on-failure

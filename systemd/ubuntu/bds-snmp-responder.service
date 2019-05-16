@@ -3,7 +3,7 @@ Description=RtBrick SNMP Command Responder
 After=network.target auditd.service
 
 [Service]
-ExecStart=/usr/local/bin/bds-snmp-responder --config /etc/bdssnmpadaptor/responder.yml
+ExecStart=/usr/local/bin/bds-snmp-responder --config /etc/bdssnmpadaptor/bds-snmp-adaptor.yml
 ExecStop=/usr/bin/killall bds-snmp-responder
 KillMode=process
 Restart=on-failure

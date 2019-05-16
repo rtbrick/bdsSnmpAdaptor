@@ -20,16 +20,19 @@ class SnmpCommandResponderTestCase(unittest.TestCase):
 bdsSnmpAdapter:
   loggingLevel: debug
   stateDir: /var/run/bds-snmp-responder
-  responder:
-    listeningIP: 0.0.0.0  # SNMP command responder listens on this address
-    listeningPort: 11161  # SNMP command responder listens on this port
+  snmp:
+    # SNMP engine ID uniquely identifies SNMP engine within an administrative
+    # domain. For SNMPv3 crypto feature to work, the same SNMP engine ID value
+    # should be configured at the TRAP receiver.
     engineId: 80:00:C3:8A:04:73:79:73:4e:61:6d:65:31:32:33
+    # User-based Security Model (USM) for version 3 configurations:
+    # http://snmplabs.com/pysnmp/docs/api-reference.html#security-parameters
     versions:  # SNMP versions map, choices=['1', '2c', '3']
       1:  # map of configuration maps
-        manager-A:  # SNMP security name
+        manager-A:  # descriptive SNMP security name
           community: public
       2c:  # map of configuration maps
-        manager-B:  # SNMP security name
+        manager-B:  # descriptive SNMP security name
           community: public
       3:
         usmUsers:  # map of USM users and their configuration
@@ -42,7 +45,10 @@ bdsSnmpAdapter:
             authKey: authkey123
             authProtocol: md5  # md5, sha224, sha256, sha384, sha512, none
             privKey: privkey123
-            privProtocol: des  # des, 3des, aes128, aes192, aes192blmt, aes256, aes256blmt, none
+            privProtocol: des  # des, 3des, aes128, aes192, aes192blmt, aes256, aes256blmt, none  
+  responder:
+    listeningIP: 0.0.0.0  # SNMP command responder listens on this address
+    listeningPort: 11161  # SNMP command responder listens on this port
 """
 
     @mock.patch('bdssnmpadaptor.commands.responder.snmp_config', autospec=True)

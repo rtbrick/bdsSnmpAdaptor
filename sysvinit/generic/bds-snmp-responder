@@ -6,7 +6,7 @@ PIDFILE=/run/bds-snmp-responder.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
 DAEMON=$NAME
-DAEMONOPTS="--config /etc/bds-snmp-adaptor/responder.yml --pidfile $PIDFILE --daemonize"
+DAEMONOPTS="--config /etc/bds-snmp-adaptor/bds-snmp-adaptor.yml --pidfile $PIDFILE --daemonize"
 
 
 case "$1" in

@@ -24,7 +24,7 @@ from pysnmp.proto.rfc1902 import Unsigned32
 from bdssnmpadaptor import daemon
 from bdssnmpadaptor import error
 from bdssnmpadaptor import snmp_config
-from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
+from bdssnmpadaptor.config import loadConfig
 from bdssnmpadaptor.log import set_logging
 
 RTBRICKSYSLOGTRAP = '1.3.6.1.4.1.50058.103.1.1'
@@ -40,8 +40,7 @@ class SnmpTrapGenerator(object):
     TARGETS_TAG = 'mgrs'
 
     def __init__(self, cliArgsDict, restHttpServerObj):
-        configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict['config'], 'notificator')
+        configDict = loadConfig(cliArgsDict['config'])
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
@@ -55,7 +54,7 @@ class SnmpTrapGenerator(object):
         self.moduleLogger.info(f'modified configDict: {configDict}')
 
         self.snmpEngine = snmp_config.getSnmpEngine(
-            engineId=configDict.get('engineId'))
+            engineId=configDict['snmp'].get('engineId'))
 
         engineBoots = snmp_config.setSnmpEngineBoots(
             self.snmpEngine, configDict.get('stateDir', '.'))
@@ -66,7 +65,7 @@ class SnmpTrapGenerator(object):
 
         authEntries = {}
 
-        for snmpVersion, snmpConfigEntries in configDict.get(
+        for snmpVersion, snmpConfigEntries in configDict['snmp'].get(
                 'versions', {}).items():
 
             snmpVersion = str(snmpVersion)
@@ -109,7 +108,8 @@ class SnmpTrapGenerator(object):
 
             self.birthday = time.time()
 
-        for targetName, targetConfig in configDict.get('snmpTrapTargets', {}).items():
+        for targetName, targetConfig in configDict['notificator'].get(
+                'snmpTrapTargets', {}).items():
 
             address, port = targetConfig['address'], int(targetConfig.get('port', 162))
             security = targetConfig['security-name']
@@ -233,12 +233,12 @@ class AsyncioRestServer(object):
 
         self.moduleFileNameWithoutPy, _ = os.path.splitext(os.path.basename(__file__))
 
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict['config'], 'notificator')
+        configDict = loadConfig(cliArgsDict['config'])
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
-        self.listeningIP = configDict['listeningIP']
-        self.listeningPort = configDict['listeningPort']
+        self.listeningIP = configDict['notificator']['listeningIP']
+        self.listeningPort = configDict['notificator']['listeningPort']
 
         self.requestCounter = 0
 

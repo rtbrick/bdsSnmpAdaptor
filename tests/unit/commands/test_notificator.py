@@ -22,10 +22,7 @@ class SnmpTrapGeneratorTestCase(unittest.TestCase):
 bdsSnmpAdapter:
   loggingLevel: debug
   stateDir: /var/run/bds-snmp-responder
-  notificator:
-    # temp config lines to test incomming graylog message end #
-    listeningIP: 0.0.0.0  # our REST API listens on this address
-    listeningPort: 5000 # our REST API listens on this port
+  snmp:
     # SNMP engine ID uniquely identifies SNMP engine within an administrative
     # domain. For SNMPv3 crypto feature to work, the same SNMP engine ID value
     # should be configured at the TRAP receiver.
@@ -50,7 +47,11 @@ bdsSnmpAdapter:
             authKey: authkey123
             authProtocol: md5  # md5, sha224, sha256, sha384, sha512, none
             privKey: privkey123
-            privProtocol: des  # des, 3des, aes128, aes192, aes192blmt, aes256, aes256blmt, none
+            privProtocol: des  # des, 3des, aes128, aes192, aes192blmt, aes256, aes256blmt, none  
+  notificator:
+    # temp config lines to test incomming graylog message end #
+    listeningIP: 0.0.0.0  # our REST API listens on this address
+    listeningPort: 5000 # our REST API listens on this port
     # A single REST API call will cause SNMP notifications to all the listed targets
     snmpTrapTargets:  # array of SNMP trap targets
       target-I:  # descriptive name of this notification target
