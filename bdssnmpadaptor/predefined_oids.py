@@ -47,7 +47,7 @@ class StaticAndPredefinedOids(object):
                 bdsMappingFunc='StaticAndPredefinedOids',
                 oid='1.3.6.1.2.1.1.3.0',
                 name='sysUptime', pysnmpBaseType=TimeTicks,
-                value=''))
+                value=0))
 
         targetOidDb.insertOid(
             newOidItem=OidDbItem(
@@ -120,7 +120,7 @@ class StaticAndPredefinedOids(object):
                 bdsMappingFunc='StaticAndPredefinedOids',
                 oid='1.3.6.1.2.1.25.1.1.0',
                 name='hrSystemUptime', pysnmpBaseType=TimeTicks,
-                value=''))
+                value=0))
 
         #
         #  Entity definitions test

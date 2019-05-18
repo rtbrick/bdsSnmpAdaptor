@@ -24,6 +24,9 @@ class BdsAccessTestCase(unittest.TestCase):
 bdsSnmpAdapter:
   loggingLevel: debug
   stateDir: /var/run/bds-snmp-responder
+  snmp:
+    mibs:
+        - /usr/share/snmp/mibs
   access:
     rtbrickHost: 10.0.3.10
     rtbrickPorts:

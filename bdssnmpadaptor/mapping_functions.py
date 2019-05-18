@@ -56,8 +56,6 @@ class BdsMappingFunctions(object):
             ifIndex = (int(ifIndexList[0]) + 8) * 4096 * 128 * 128 * 8 + int(ifIndexList[1]) * 4096 * 128 + int(
                 ifIndexList[2]) * 4096
             return ifIndex
-        else:
-            return None
 
     @classmethod
     def stripIfPrefixFromIfName(cls, ifNameString):
