@@ -54,22 +54,16 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
             return _oidDbItem.oid, v2c.NoSuchObject()
 
         if _oidDbItem.name in ['sysUptime', 'hrSystemUptime']:  # FIXME: add a function for realitime OIDs
-            _oidDbItem.value = int((time.time() - BIRTHDAY) * 100)
+            _oidDbItem.value = _oidDbItem.value.clone(int((time.time() - BIRTHDAY) * 100))
 
         if _oidDbItem.name in ['snmpEngineTime']:  # FIXME: add a function for realitime OIDs
-            _oidDbItem.value = int((time.time() - BIRTHDAY))
-
-        representation = (_oidDbItem.pysnmpRepresentation
-                          if _oidDbItem.pysnmpRepresentation else 'value')
-
-        returnValue = _oidDbItem.pysnmpBaseType(
-            **{representation: _oidDbItem.value})
+            _oidDbItem.value = _oidDbItem.value.clone(int((time.time() - BIRTHDAY)))
 
         self.moduleLogger.debug(
             f'createVarbindFromOidDbItem returning oid '
             f'{_oidDbItem.oid} with value {_oidDbItem.value}')
 
-        return _oidDbItem.oid, returnValue
+        return _oidDbItem.oid, _oidDbItem.value
 
     def setOidDbAndLogger(self, _oidDb, cliArgsDict):
         self._oidDb = _oidDb
@@ -79,10 +73,6 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         configDict = loadConfig(cliArgsDict['config'])
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
-
-        self.moduleLogger.debug(
-            f'MibInstrumController set _oidDB: firstItem '
-            f'{self._oidDb.firstItem}')
 
         return self
 

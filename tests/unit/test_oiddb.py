@@ -9,6 +9,8 @@ import sys
 import unittest
 from unittest import mock
 
+from pysnmp.proto import rfc1902
+
 from bdssnmpadaptor import oidDb
 
 
@@ -19,17 +21,16 @@ class OidDbItemTestCase(unittest.TestCase):
             bdsMappingFunc='interface_container',
             oid='1.3.6.7.8',
             name='ifIndex',
-            pysnmpBaseType=object,
+            pysnmpBaseType=rfc1902.OctetString,
             pysnmpRepresentation='hexValue',
-            value='0x123456789',
+            value='123456789',
         )
 
         self.assertEqual('interface_container', oid.bdsMappingFunc)
-        self.assertEqual('1.3.6.7.8', oid.oid)
+        self.assertEqual(rfc1902.ObjectIdentifier('1.3.6.7.8'), oid.oid)
         self.assertEqual('ifIndex', oid.name)
-        self.assertEqual(object, oid.pysnmpBaseType)
-        self.assertEqual('hexValue', oid.pysnmpRepresentation)
-        self.assertEqual('0x123456789', oid.value)
+        self.assertEqual(rfc1902.OctetString, oid.pysnmpBaseType)
+        self.assertEqual(b'\x124Vx\x90', oid.value)
 
     def test___lt__(self):
         oid1 = oidDb.OidDbItem(oid='1.3.6.7.8')
@@ -50,8 +51,7 @@ class OidDbItemTestCase(unittest.TestCase):
             bdsMappingFunc='interface_container',
             oid='1.3.6.7.8',
             name='ifIndex',
-            pysnmpBaseType=object,
-            pysnmpRepresentation='hexValue',
+            pysnmpBaseType=rfc1902.OctetString,
             value='0x123456789',
         )
 
@@ -61,11 +61,16 @@ class OidDbItemTestCase(unittest.TestCase):
 
 class OidDbTestCase(unittest.TestCase):
 
+    MIB_OBJECTS = [
+        (('SNMPv2-MIB', 'sysDescr', 0), 'my system'),
+        (('SNMPv2-MIB', 'snmpOutNoSuchNames', 0), 123),
+        (('SNMPv2-MIB', 'snmpEnableAuthenTraps', 0), 1)
+    ]
+
     OIDS = [
-        '1.3.6.1.2.3.0',
-        '1.3.6.1.20.3.0',
-        '1.3.6.11.29.32.3',
-        '1.3.6.999.1.33222.4443'
+        rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0'),
+        rfc1902.ObjectIdentifier('1.3.6.1.2.1.11.21.0'),
+        rfc1902.ObjectIdentifier('1.3.6.1.2.1.11.30.0'),
     ]
 
     def setUp(self):
@@ -73,16 +78,10 @@ class OidDbTestCase(unittest.TestCase):
             with mock.patch.object(oidDb, 'set_logging', autospec=True):
                 self.oidDb = oidDb.OidDb({'config': {}})
 
-                oidDbItems = [oidDb.OidDbItem(bdsMappingFunc=self.__class__, oid=oid)
-                              for oid in self.OIDS]
-
-                for oidDbItem in reversed(oidDbItems):
-                    self.oidDb.insertOid(oidDbItem)
+                for ident, value in reversed(self.MIB_OBJECTS):
+                    self.oidDb.add(*ident, value=value, bdsMappingFunc=__class__)
 
         super(OidDbTestCase, self).setUp()
-
-    def test_getFirstItem(self):
-        self.assertEqual(self.OIDS[0], self.oidDb.getFirstItem().oid)
 
     def test_getNextOid(self):
         for idx, oid in enumerate(self.OIDS[:-1]):
@@ -98,14 +97,14 @@ class OidDbTestCase(unittest.TestCase):
         self.assertIsNone(nextOid)
 
     def test_deleteOidsWithPrefix_one(self):
-        self.oidDb.deleteOidsWithPrefix(self.OIDS[2])
+        self.oidDb.deleteOidsWithPrefix(self.OIDS[1])
 
-        nextOid = self.oidDb.getNextOid(self.OIDS[1])
+        nextOid = self.oidDb.getNextOid(self.OIDS[0])
 
-        self.assertEqual(self.OIDS[3], nextOid)
+        self.assertEqual(self.OIDS[2], nextOid)
 
     def test_deleteOidsWithPrefix_none(self):
-        self.oidDb.deleteOidsWithPrefix(self.OIDS[0] + '.123')
+        self.oidDb.deleteOidsWithPrefix(self.OIDS[0] + (123,))
 
         nextOid = self.oidDb.getNextOid(self.OIDS[0])
 
@@ -131,7 +130,7 @@ class OidDbTestCase(unittest.TestCase):
         self.assertEqual(self.OIDS[1], oidItem.oid)
 
     def test_getObjFromOid_not_exists(self):
-        oidItem = self.oidDb.getObjFromOid(self.OIDS[1] + '.1')
+        oidItem = self.oidDb.getObjFromOid(self.OIDS[1] + (1,))
 
         self.assertIsNone(oidItem)
 

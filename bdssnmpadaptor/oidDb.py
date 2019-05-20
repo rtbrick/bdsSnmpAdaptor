@@ -9,6 +9,13 @@
 from bisect import bisect
 from collections import OrderedDict
 
+from pysnmp.proto.rfc1902 import ObjectIdentifier
+from pysnmp.smi import builder
+from pysnmp.smi import compiler
+from pysnmp.smi import rfc1902
+from pysnmp.smi import view
+
+from bdssnmpadaptor import error
 from bdssnmpadaptor.config import loadConfig
 from bdssnmpadaptor.log import set_logging
 
@@ -41,10 +48,60 @@ class OidDb(object):
 
         self.moduleLogger.debug('configDict:{}'.format(configDict))
 
-        self.firstItem = None  # root of the DB chain
+        mibBuilder = builder.MibBuilder()
+        self.mibViewController = view.MibViewController(mibBuilder)
+
+        compiler.addMibCompiler(
+            mibBuilder, sources=configDict['snmp'].get('mibs', ()))
+
         self.oidDict = OrderedDict()  # this dict holds all OID items in this # DB
+
         self.dirty = True  # DB needs sorting
         self.lock = False  # not implemented yet, locker for insertOid
+
+    def add(self, mibName, mibSymbol, *indices, value=None,
+            valueFormat=None, bdsMappingFunc=None):
+        """ Database Item, which pysnmp attributes required for get and getnext.
+
+        Args:
+            mibName (str): MIB name e.g. SNMPv2-MIB. This MIB must be in MIB search path.
+            mibSymbol (str): MIB symbol name
+            indices (vararg): one or more objects representing indices. Should be `0` for scalars.
+            value: put this value into MIB managed object. This is what SNMP manager will get in response.
+            valueFormat (string): 'hexValue' to indiciate hex `value` initializer
+            bdsMappingFunc(string): used to mark, which mapping function owns this oid. (used for delete)
+
+        Examples:
+          add('SNMPv2-MIB', 'sysDescr', 0,
+              value='hello world',
+              bdsMappingFunc="confd_global_interface_container")
+
+        """
+        obj = rfc1902.ObjectType(
+            rfc1902.ObjectIdentity(mibName, mibSymbol, *indices), value)
+
+        objectIdentity, objectSyntax = obj.resolveWithMib(self.mibViewController)
+
+        representation = {valueFormat if valueFormat else 'value': value}
+        objectSyntax = objectSyntax.clone(**representation)
+
+        try:
+            objectSyntax = objectSyntax.clone(**representation)
+
+            oidDbItem = OidDbItem(
+                bdsMappingFunc=bdsMappingFunc,
+                oid=objectIdentity.getOid(),
+                name=objectIdentity.getMibSymbol()[1],
+                value=objectSyntax
+            )
+
+        except Exception as exc:
+            raise error.BdsError(
+                'Error setting managed object %s (%s) of type %s to value '
+                '"%s"' % ('::'.join(objectIdentity.getMibSymbol()),
+                          objectIdentity.getOid(), objectSyntax, value))
+
+        self.insertOid(oidDbItem)
 
     def insertOid(self, newOidItem):
         self.moduleLogger.debug(
@@ -54,8 +111,10 @@ class OidDb(object):
         self.dirty = True
 
     def deleteOidsWithPrefix(self, oidPrefix):
+        oidPrefix = ObjectIdentifier(oidPrefix)
+
         for oid in tuple(self.oidDict):
-            if oid.startswith(oidPrefix):
+            if oidPrefix.isPrefixOf(oid):
                 self.moduleLogger.debug(
                     f'deleting {oid} by prefix {oidPrefix}')
                 del self.oidDict[oid]
@@ -68,14 +127,6 @@ class OidDb(object):
                     f'deleting {oid} by func {bdsMappingFunc}')
                 del self.oidDict[oid]
                 self.dirty = True
-
-    @lazilySorted
-    def getFirstItem(self):
-        if self.oidDict:
-            first = tuple(self.oidDict)[0]
-            return self.oidDict[first]
-
-        self.moduleLogger.warning(f'OID DB is empty')
 
     def getObjFromOid(self, oid):
         try:
@@ -128,8 +179,7 @@ class OidDbItem(object):
     """
 
     def __init__(self, bdsMappingFunc=None, oid=None, name=None,
-                 pysnmpBaseType=None, pysnmpRepresentation=None, value=None,
-                 bdsRequest=None):
+                 pysnmpBaseType=None, value=None, pysnmpRepresentation=None):
         """ Database Item, which pysnmp attributes required for get and getnext.
 
         Args:
@@ -137,9 +187,7 @@ class OidDbItem(object):
             oid(string): oid as string, separated by dots.
             name(string): name of the oid, should map with MIB identifier name, altough this is not enforced
             pysnmpBaseType(class): used for conversion of value, options are defined in pysnmp.proto.rfc1902
-            pysnmpRepresentation(string): used to siganal hexValue representation for stringsself.
             value: object that holds the value of the oid. Type is flexible, subject to oidself
-            bdsRequest: obsolete ###FIXME deprecate
 
         Examples:
           OidDbItem(
@@ -155,41 +203,22 @@ class OidDbItem(object):
             * Verify value type, by cross-checking with pysnmpBaseType
         """
         self.bdsMappingFunc = bdsMappingFunc
-        self.oid = oid
-        self.oidAsList = [int(x) for x in self.oid.split('.')]  # for compare
+        self.oid = ObjectIdentifier(oid)
         self.name = name
+
+        # For backward compatibility
+        if pysnmpBaseType is not None:
+            representation = {pysnmpRepresentation if pysnmpRepresentation else 'value': value}
+            value = pysnmpBaseType(**representation)
+
         self.pysnmpBaseType = pysnmpBaseType
-        self.pysnmpRepresentation = pysnmpRepresentation
         self.value = value
-        self.bdsRequest = bdsRequest
 
-    def _encodeValue(self):
+    def __lt__(self, oidItem):
+        return self.oid < oidItem.oid
 
-        representation = (self.pysnmpRepresentation
-                          if self.pysnmpRepresentation else 'value')
-
-        try:
-            self.encodedValue = self.pysnmpBaseType(**{representation: self.value})
-
-        except Exception as ex:
-            self.encodedValue = None
-            raise Exception(f'cannot encode value for {self.name}, representation '
-                            f'{representation}: {ex}')
-
-    def _getOidAsList(self, oid2):
-        if isinstance(oid2, str):
-            return [int(x) for x in oid2.split('.')]
-
-        elif isinstance(oid2, OidDbItem):
-            return oid2.oidAsList
-
-        raise ValueError(f'Unsupported type {type(oid2)} in comparison')
-
-    def __lt__(self, oid2):
-        return self.oidAsList < self._getOidAsList(oid2)
-
-    def __eq__(self, oid2):
-        return self.oidAsList == self._getOidAsList(oid2)
+    def __eq__(self, oidItem):
+        return self.oid == oidItem.oid
 
     def __str__(self):
         returnStr = f"""\
@@ -202,16 +231,6 @@ SNMP type:   {self.pysnmpBaseType}
         if self.value is not None:
             returnStr += f"""\
 Value:       {self.value}
-"""
-
-        if self.pysnmpRepresentation is not None:
-            returnStr += f"""\
-SNMP format: {self.pysnmpRepresentation}
-"""
-
-        if self.bdsRequest:
-            returnStr += f"""\
-BDS request: {self.bdsRequest}
 """
 
         returnStr += f"""\

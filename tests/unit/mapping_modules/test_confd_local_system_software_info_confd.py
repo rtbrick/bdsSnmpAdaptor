@@ -50,7 +50,7 @@ class ConfdLocalSystemSoftwareInfoConfdTestCase(unittest.TestCase):
             '1.3.6.1.2.1.1.1.0'
         ]
 
-        self.assertEqual(expected, oids_in_db)
+        self.assertEqual(expected, [str(o) for o in oids_in_db])
 
 
 suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])
