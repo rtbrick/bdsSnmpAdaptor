@@ -47,7 +47,7 @@ class ConfdLocalSystemSoftwareInfoConfdTestCase(unittest.TestCase):
                 oids_in_db.append(oid)
 
         expected = [
-            '1.3.6.1.2.1.1.1.0'
+            '1.3.6.1.2.1.2.2.1.2.1'
         ]
 
         self.assertEqual(expected, [str(o) for o in oids_in_db])
