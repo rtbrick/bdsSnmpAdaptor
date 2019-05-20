@@ -85,7 +85,6 @@ class OidDb(object):
         objectIdentity, objectSyntax = obj.resolveWithMib(self.mibViewController)
 
         representation = {valueFormat if valueFormat else 'value': value}
-        objectSyntax = objectSyntax.clone(**representation)
 
         try:
             objectSyntax = objectSyntax.clone(**representation)
