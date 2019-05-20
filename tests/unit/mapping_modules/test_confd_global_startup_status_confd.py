@@ -19,14 +19,27 @@ from bdssnmpadaptor.mapping_modules import confd_global_startup_status_confd
 @mock.patch('tempfile.NamedTemporaryFile', new=mock.MagicMock)
 class ConfdGlobalStartupStatusConfdTestCase(unittest.TestCase):
 
+    CONFIG = {
+        'config': {
+            'snmp': {
+                'mibs': [
+                    'mibs',
+                    '/usr/share/snmp/mibs'
+                ]
+            }
+        }
+    }
+
     with open(os.path.join(os.path.dirname(__file__), '..', 'samples',
                            'confd-global-startup-status.json')) as fl:
         JSON_RESPONSE = json.load(fl)
 
     def setUp(self):
-        with mock.patch.object(oidDb, 'loadConfig', autospec=True):
+        with mock.patch.object(oidDb, 'loadConfig', autospec=True) as config_mock:
+            config_mock.return_value = self.CONFIG['config']
+
             with mock.patch.object(oidDb, 'set_logging', autospec=True):
-                self.oidDb = oidDb.OidDb({'config': {}})
+                self.oidDb = oidDb.OidDb(self.CONFIG)
 
         self.container = confd_global_startup_status_confd.ConfdGlobalStartupStatusConfd()
 
@@ -47,10 +60,9 @@ class ConfdGlobalStartupStatusConfdTestCase(unittest.TestCase):
                 oids_in_db.append(oid)
 
         expected = [
-            '1.3.6.1.2.1.25.4.1.0',
-            '1.3.6.1.2.1.25.4.2.1.1.1',
-            '1.3.6.1.2.1.25.4.2.1.1.2',
-            '1.3.6.1.2.1.25.4.2.1.1.3',
+            '1.3.6.1.2.1.25.4.1.1',
+            '1.3.6.1.2.1.25.4.1.2',
+            '1.3.6.1.2.1.25.4.1.3',
             '1.3.6.1.2.1.25.4.2.1.2.1',
             '1.3.6.1.2.1.25.4.2.1.2.2',
             '1.3.6.1.2.1.25.4.2.1.2.3',
@@ -69,7 +81,7 @@ class ConfdGlobalStartupStatusConfdTestCase(unittest.TestCase):
             '1.3.6.1.2.1.25.4.2.1.7.1',
             '1.3.6.1.2.1.25.4.2.1.7.2',
             '1.3.6.1.2.1.25.4.2.1.7.3'
-        ]
+         ]
 
         self.assertEqual(expected, [str(o) for o in oids_in_db])
 
