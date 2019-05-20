@@ -11,7 +11,7 @@ import time
 
 import aiohttp
 
-from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
+from bdssnmpadaptor.config import loadConfig
 from bdssnmpadaptor.log import set_logging
 from bdssnmpadaptor.mapping_modules import confd_global_interface_physical
 from bdssnmpadaptor.mapping_modules import confd_global_startup_status_confd
@@ -60,28 +60,27 @@ class BdsAccess(object):
 
     def __init__(self, cliArgsDict):
 
-        configDict = loadBdsSnmpAdapterConfigFile(cliArgsDict['config'], 'access')
+        configDict = loadConfig(cliArgsDict['config'])
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
         self.moduleLogger.debug(f'configDict:{configDict}')
-        self.rtbrickHost = configDict['rtbrickHost']
-        self.rtbrickPorts = (configDict['rtbrickPorts'])
-        # self.rtbrickCtrldPort = configDict['rtbrickCtrldPort']
-        # self.rtbrickContainerName = configDict['rtbrickContainerName']
+        self.rtbrickHost = configDict['access']['rtbrickHost']
+        self.rtbrickPorts = (configDict['access']['rtbrickPorts'])
+        # self.rtbrickCtrldPort = configDict['access']['rtbrickCtrldPort']
+        # self.rtbrickContainerName = configDict['access']['rtbrickContainerName']
         self.staticOidDict = {}
 
-        d = loadBdsSnmpAdapterConfigFile(cliArgsDict['config'], 'responder')
-        if 'staticOidContent' in d:
+        if 'staticOidContent' in configDict['responder']:
             for oidName in ['sysDesc', 'sysContact', 'sysName', 'sysLocation']:
-                if oidName in d['staticOidContent']:
-                    self.staticOidDict[oidName] = d['staticOidContent'][oidName]
+                if oidName in configDict['responder']['staticOidContent']:
+                    self.staticOidDict[oidName] = configDict['responder']['staticOidContent'][oidName]
                 else:
                     self.staticOidDict[oidName] = 'to be defined'
 
             for oidName in ['engineId']:
-                if oidName in d['staticOidContent']:
-                    self.staticOidDict[oidName] = d['staticOidContent'][oidName]
+                if oidName in configDict['responder']['staticOidContent']:
+                    self.staticOidDict[oidName] = configDict['responder']['staticOidContent'][oidName]
 
                 else:
                     self.staticOidDict[oidName] = 'to be defined'

@@ -19,7 +19,7 @@ DAEMON=/usr/local/bin/bds-snmp-notificator
 PIDFILE=/run/bds-snmp-notificator.pid
 
 BDSSNMPRSP=bds-snmp-notificator
-BDSSNMPRSP_OPTIONS="--config /etc/bds-snmp-adaptor/notificator.yml --pidfile $PIDFILE"
+BDSSNMPRSP_OPTIONS="--config /etc/bds-snmp-adaptor/bds-snmp-adaptor.yml --pidfile $PIDFILE"
 
 SCRIPTNAME=/etc/init.d/$NAME
 

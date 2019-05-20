@@ -20,7 +20,7 @@ from bdssnmpadaptor import daemon
 from bdssnmpadaptor import error
 from bdssnmpadaptor import snmp_config
 from bdssnmpadaptor.access import BdsAccess
-from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
+from bdssnmpadaptor.config import loadConfig
 from bdssnmpadaptor.log import set_logging
 
 # class Uptime:
@@ -76,8 +76,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
 
         self.moduleFileNameWithoutPy, _ = os.path.splitext(os.path.basename(__file__))
 
-        configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict['config'], self.moduleFileNameWithoutPy)
+        configDict = loadConfig(cliArgsDict['config'])
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
@@ -160,21 +159,20 @@ class SnmpCommandResponder(object):
     """
 
     def __init__(self, cliArgsDict):
-        configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict['config'], 'responder')
+        configDict = loadConfig(cliArgsDict['config'])
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
         self.moduleLogger.debug(f'configDict:{configDict}')
 
         self.snmpEngine = snmp_config.getSnmpEngine(
-            engineId=configDict.get('engineId'))
+            engineId=configDict['snmp'].get('engineId'))
 
         engineBoots = snmp_config.setSnmpEngineBoots(
             self.snmpEngine, configDict.get('stateDir', '.'))
 
-        self.listeningAddress = configDict['listeningIP']
-        self.listeningPort = configDict['listeningPort']
+        self.listeningAddress = configDict['responder']['listeningIP']
+        self.listeningPort = configDict['responder']['listeningPort']
         self.birthday = time.time()
 
         self.moduleLogger.info(
@@ -200,7 +198,7 @@ class SnmpCommandResponder(object):
             f'SnmpEngine UDPv4 listening on {self.listeningAddress} '
             f'{self.listeningPort}')
 
-        for snmpVersion, snmpConfigEntries in configDict.get(
+        for snmpVersion, snmpConfigEntries in configDict['snmp'].get(
                 'versions', {}).items():
 
             snmpVersion = str(snmpVersion)

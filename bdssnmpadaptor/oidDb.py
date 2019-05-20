@@ -9,7 +9,7 @@
 from bisect import bisect
 from collections import OrderedDict
 
-from bdssnmpadaptor.config import loadBdsSnmpAdapterConfigFile
+from bdssnmpadaptor.config import loadConfig
 from bdssnmpadaptor.log import set_logging
 
 
@@ -35,8 +35,7 @@ class OidDb(object):
     """
 
     def __init__(self, cliArgsDict):
-        configDict = loadBdsSnmpAdapterConfigFile(
-            cliArgsDict['config'], 'oidDb')
+        configDict = loadConfig(cliArgsDict['config'])
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 

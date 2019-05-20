@@ -9,26 +9,14 @@ import sys
 import yaml
 
 
-def loadBdsSnmpAdapterConfigFile(config, moduleName):
+def loadConfig(filename):
 
     try:
-        with open(config, 'r') as stream:
-            data = yaml.load(stream)
+        with open(filename) as stream:
+            config = yaml.load(stream)
+            return config['bdsSnmpAdapter']
 
     except Exception as e:
         print('Failed to open configuration file')
         print(e)
         sys.exit(-1)
-
-    else:
-        configDict = {}
-
-        for key in data['bdsSnmpAdapter']:
-            if type(data['bdsSnmpAdapter'][key]) != dict:
-                configDict[key] = data['bdsSnmpAdapter'][key]
-
-        if moduleName in data['bdsSnmpAdapter']:
-            for key in data['bdsSnmpAdapter'][moduleName]:
-                configDict[key] = data['bdsSnmpAdapter'][moduleName][key]
-
-        return configDict

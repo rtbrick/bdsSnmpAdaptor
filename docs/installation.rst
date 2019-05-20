@@ -30,20 +30,17 @@ Thee BDS system requires configuration, logs and state directories:
    $ sudo mkdir /var/log/bds-snmp-adaptor
    $ sudo mkdir /var/run/bds-snmp-adaptor
 
-The BDS tools are driven by configuration files expressed in the YAML
-mark up. First, one need to copy the prototype configuration files
-to their final location:
+The BDS tools are driven by a single configuration file expressed in the
+YAML mark up. First, one need to copy the prototype configuration file
+to its final location:
 
 .. code-block:: bash
 
    $ tar zxvf bdsSnmpAdaptor-*.tar.gz bdsSnmpAdaptor-*/conf
    bdsSnmpAdaptor-0.0.1/conf/
-   bdsSnmpAdaptor-0.0.1/conf/responder.yml
-   bdsSnmpAdaptor-0.0.1/conf/notificator.yml
-   bdsSnmpAdaptor-0.0.1/conf/notificator_v3.yml
+   bdsSnmpAdaptor-0.0.1/conf/bds-snmp-adaptor.yml
    $
-   $ sudo cp bdsSnmpAdaptor*/conf/responder.yml /etc/bds-snmp-adaptor
-   $ sudo cp bdsSnmpAdaptor*/conf/notificator.yml /etc/bds-snmp-adaptor
+   $ sudo cp bdsSnmpAdaptor*/conf/bds-snmp-adaptor.yml /etc/bds-snmp-adaptor
 
 For the SNMP command responder tool, the following configuration changes
 might be required:
@@ -59,27 +56,35 @@ might be required:
         rtbrickPorts:
          - confd: 2002  # Define the rest port on which confd listens"
          - fwdd-hald: 5002  # Define the rest port on which fwwd listens"
-      responder:
-        listeningIP: 0.0.0.0  # SNMP get/getNext listening IP address
-        listeningPort: 161  # SNMP get/getNext listening port
+      snmp:
+        # SNMP engine ID uniquely identifies SNMP engine within an administrative
+        # domain. For SNMPv3 crypto feature to work, the same SNMP engine ID value
+        # should be configured at the TRAP receiver.
         engineId: 80:00:C3:8A:04:73:79:73:4e:61:6d:65:31:32:33
-        versions:  # specify snmp version type=str, choices=['1', '2c', '3']
-          1:
-            - public:
+        # User-based Security Model (USM) configuration:
+        # http://snmplabs.com/pysnmp/docs/api-reference.html#security-parameters
+        versions:  # SNMP versions map, choices=['1', '2c', '3']
+          1:  # map of configuration maps
+            manager-A:  # SNMP security name
               community: public
-          2c:
-            - public:
+          2c:  # map of configuration maps
+            manager-B:  # SNMP security name
               community: public
           3:
-            usmUsers:
-              testUser1:
+            usmUsers:  # map of USM users and their configuration
+              user1:  # descriptive SNMP security name
+                user: testUser1  # USM user name
                 authKey: authkey123
                 authProtocol: md5  # md5, sha224, sha256, sha384, sha512, none
-              testUser2:
+              user2:  # descriptive SNMP security name
+                user: testUser2  # USM user name
                 authKey: authkey123
                 authProtocol: md5  # md5, sha224, sha256, sha384, sha512, none
                 privKey: privkey123
                 privProtocol: des  # des, 3des, aes128, aes192, aes192blmt, aes256, aes256blmt, none
+      responder:
+        listeningIP: 0.0.0.0  # SNMP get/getNext listening IP address
+        listeningPort: 161  # SNMP get/getNext listening port
         staticOidContent:
           sysDesc: l2.pod2.nbg2.rtbrick.net
           sysContact: stefan@rtbrick.com

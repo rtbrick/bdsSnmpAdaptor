@@ -24,10 +24,10 @@ bdsSnmpAdapter:
     CONFIG = io.StringIO(CONFIG)
 
     @mock.patch('bdssnmpadaptor.config.open')
-    def test_loadBdsSnmpAdapterConfigFile(self, mock_open):
+    def test_loadConfig(self, mock_open):
         mock_open.return_value.__enter__.return_value = self.CONFIG
 
-        cfg = config.loadBdsSnmpAdapterConfigFile('/configfile', 'TestModule')
+        cfg = config.loadConfig('/configfile')
 
         self.assertTrue(cfg)
 
