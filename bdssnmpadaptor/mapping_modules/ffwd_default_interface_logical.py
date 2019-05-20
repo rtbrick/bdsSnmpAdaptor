@@ -5,11 +5,8 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
-from pysnmp.proto.rfc1902 import Integer32
-from pysnmp.proto.rfc1902 import OctetString
 
 from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
-from bdssnmpadaptor.oidDb import OidDbItem
 
 
 class FfwdDefaultInterfaceLogical(object):
@@ -44,36 +41,21 @@ class FfwdDefaultInterfaceLogical(object):
 
     @classmethod
     async def setOids(cls, bdsJsonResponseDict, targetOidDb):
-        oidSegment = '1.3.6.1.2.1.2.2.1.'
+
         targetOidDb.setLock()
 
-        # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
-        for bdsJsonObject in bdsJsonResponseDict['objects']:
-            ifName = bdsJsonObject['attribute']['interface_name']
-            index = BdsMappingFunctions.ifIndexFromIfName(ifName)
+        with targetOidDb.module(__name__) as add:
+            # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
 
-            targetOidDb.insertOid(
-                newOidItem=OidDbItem(
-                    bdsMappingFunc=__name__,
-                    oid=oidSegment + '1.' + str(index),
-                    name='ifIndex',
-                    pysnmpBaseType=Integer32,
-                    value=int(index)))
+            for bdsJsonObject in bdsJsonResponseDict['objects']:
+                ifName = bdsJsonObject['attribute']['interface_name']
+                index = BdsMappingFunctions.ifIndexFromIfName(ifName)
 
-            targetOidDb.insertOid(
-                newOidItem=OidDbItem(
-                    bdsMappingFunc=__name__,
-                    oid=oidSegment + '2.' + str(index),
-                    name='ifDescr',
-                    pysnmpBaseType=OctetString,
-                    value=bdsJsonObject['attribute']['interface_name']))
+                add('IF-MIB', 'ifIndex', index, value=index)
 
-            targetOidDb.insertOid(
-                newOidItem=OidDbItem(
-                    bdsMappingFunc=__name__,
-                    oid=oidSegment + '3.' + str(index),
-                    name='ifType',
-                    pysnmpBaseType=Integer32,
-                    value=6))
+                add('IF-MIB', 'ifDescr', index,
+                    value=bdsJsonObject['attribute']['interface_name'])
+
+                add('IF-MIB', 'ifType', index, value=6)
 
         targetOidDb.releaseLock()
