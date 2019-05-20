@@ -134,6 +134,16 @@ class OidDbTestCase(unittest.TestCase):
 
         self.assertIsNone(oidItem)
 
+    def test_contextManager(self):
+        with self.oidDb.module('interfaces') as add:
+            add('SNMPv2-MIB', 'sysLocation', 0, value='DC')
+
+        oid = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.6.0')
+
+        self.assertIn(oid, self.oidDb.oidDict)
+        self.assertEqual(b'DC', self.oidDb.oidDict[oid].value)
+        self.assertEqual('interfaces', self.oidDb.oidDict[oid].bdsMappingFunc)
+
     def test_locks(self):
         self.assertFalse(self.oidDb.isLocked())
         self.oidDb.setLock()

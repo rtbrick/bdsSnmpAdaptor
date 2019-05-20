@@ -6,6 +6,8 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
+import contextlib
+import functools
 from bisect import bisect
 from collections import OrderedDict
 
@@ -171,6 +173,10 @@ class OidDb(object):
     @lazilySorted
     def __str__(self):
         return '\n'.join(self.oidDict)
+
+    @contextlib.contextmanager
+    def module(self, bdsMappingFunc):
+        yield functools.partial(self.add, bdsMappingFunc=bdsMappingFunc)
 
 
 class OidDbItem(object):
