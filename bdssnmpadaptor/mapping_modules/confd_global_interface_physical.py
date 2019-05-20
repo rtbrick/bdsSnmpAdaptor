@@ -9,17 +9,12 @@ import binascii
 import struct
 import time
 
-from pysnmp.proto.rfc1902 import Gauge32
-from pysnmp.proto.rfc1902 import Integer32
-from pysnmp.proto.rfc1902 import OctetString
-from pysnmp.proto.rfc1902 import TimeTicks
-
 from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
-from bdssnmpadaptor.oidDb import OidDbItem
 
 IFTYPEMAP = {
     1: 6  # ethernet-csmacd(6)
 }
+
 IFOPERSTATUSMAP = {
     0: 2,  # down(2)
     1: 1,  # up(1),       -- ready to pass packets
@@ -125,154 +120,78 @@ class ConfdGlobalInterfacePhysical(object):
     @classmethod
     async def setOids(cls, bdsJsonResponseDict, targetOidDb,
                       lastSequenceNumberList, birthday):
-        newSequenceNumberList = []
 
-        for i, bdsJsonObject in enumerate(bdsJsonResponseDict['objects']):
-            newSequenceNumberList.append(bdsJsonObject['sequence'])
+        newSequenceNumberList = [
+            obj['sequence'] for obj in bdsJsonResponseDict['objects']]
 
         if str(newSequenceNumberList) == str(lastSequenceNumberList):
-            pass  # add logger statement
+            return
 
-        else:
-            currentSysTime = int((time.time() - birthday) * 100)
+        currentSysTime = int((time.time() - birthday) * 100)
 
-            targetOidDb.insertOid(newOidItem=OidDbItem(
-                bdsMappingFunc=__name__,
-                oid='1.3.6.1.2.1.2.1.0',
-                name='ifNumber',
-                pysnmpBaseType=Integer32,
-                value=len(bdsJsonResponseDict['objects'])))
+        targetOidDb.setLock()
 
-            targetOidDb.setLock()
+        with targetOidDb.module(__name__) as add:
+
+            add('IF-MIB', 'ifNumber', 0,
+                value=len(bdsJsonResponseDict['objects']))
 
             # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
             for i, bdsJsonObject in enumerate(bdsJsonResponseDict['objects']):
-                oidSegment = '1.3.6.1.2.1.2.2.1.'
+
                 thisSequenceNumber = bdsJsonObject['sequence']
+
                 ifName = bdsJsonObject['attribute']['interface_name']
+
                 index = BdsMappingFunctions.ifIndexFromIfName(ifName)
-                # index =  i + 1
+
                 #ifPhysicalLocation = BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
 
                 if ifName.startswith('if'):     #fix for lo0 in table
-                    targetOidDb.insertOid(
-                        newOidItem=OidDbItem(
-                            bdsMappingFunc=__name__,
-                            oid=oidSegment + '1.' + str(index),
-                            name='ifIndex',
-                            pysnmpBaseType=Integer32,
-                            value=int(index)))
 
-                    targetOidDb.insertOid(
-                        newOidItem=OidDbItem(
-                            bdsMappingFunc=__name__,
-                            oid=oidSegment + '2.' + str(index),
-                            name='ifDescr',
-                            pysnmpBaseType=OctetString,
-                            value=ifName))
+                    add('IF-MIB', 'ifIndex', index, value=index)
+
+                    add('IF-MIB', 'ifDescr', index, value=ifName)
 
                     if 'interface_type' in bdsJsonObject['attribute']:
-                        targetOidDb.insertOid(
-                            newOidItem=OidDbItem(
-                                bdsMappingFunc=__name__,
-                                oid=oidSegment + '3.' + str(index),
-                                name='ifType',
-                                pysnmpBaseType=Integer32,
-                                value=IFTYPEMAP[int(bdsJsonObject['attribute']['interface_type'])]))
+                        add('IF-MIB', 'ifType', index,
+                            value=IFTYPEMAP[int(bdsJsonObject['attribute']['interface_type'])])
 
                     if 'layer2_mtu' in bdsJsonObject['attribute']:
-                        targetOidDb.insertOid(
-                            newOidItem=OidDbItem(
-                                bdsMappingFunc=__name__,
-                                oid=oidSegment + '4.' + str(index),
-                                name='ifMtu',
-                                pysnmpBaseType=Integer32,
-                                value=IFMTU_LAMBDA(bdsJsonObject['attribute']['layer2_mtu'])))
+                        add('IF-MIB', 'ifMtu', index,
+                            value=IFMTU_LAMBDA(bdsJsonObject['attribute']['layer2_mtu']))
 
                     if 'mac_address' in bdsJsonObject['attribute']:
-                        targetOidDb.insertOid(
-                            newOidItem=OidDbItem(
-                                bdsMappingFunc=__name__,
-                                oid=oidSegment + '6.' + str(index),
-                                name='ifPhysAddress',
-                                pysnmpBaseType=OctetString,
-                                pysnmpRepresentation='hexValue',
-                                value=bdsJsonObject['attribute']['mac_address'].replace(':', '')))
+                        add('IF-MIB', 'ifPhysAddress', index,
+                            valueFormat='hexValue',
+                            value=bdsJsonObject['attribute']['mac_address'].replace(':', ''))
 
                     if 'admin_status' in bdsJsonObject['attribute']:
-                        targetOidDb.insertOid(
-                            newOidItem=OidDbItem(
-                                bdsMappingFunc=__name__,
-                                oid=oidSegment + '7.' + str(index),
-                                name='ifAdminStatus',
-                                pysnmpBaseType=Integer32,
-                                value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['admin_status'])]))
+                        add('IF-MIB', 'ifAdminStatus', index,
+                            value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['admin_status'])])
 
                     if 'link_status' in bdsJsonObject['attribute']:
-                        targetOidDb.insertOid(
-                            newOidItem=OidDbItem(
-                                bdsMappingFunc=__name__,
-                                oid=oidSegment + '8.' + str(index),
-                                name='ifOperStatus',
-                                pysnmpBaseType=Integer32,
-                                value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['link_status'])]))
+                        add('IF-MIB', 'ifOperStatus', index,
+                            value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['link_status'])])
 
                     if len(lastSequenceNumberList) == 0:  # first run
-                        targetOidDb.insertOid(
-                            newOidItem=OidDbItem(
-                                bdsMappingFunc=__name__,
-                                oid=oidSegment + '9.' + str(index),
-                                name='ifLastChange',
-                                pysnmpBaseType=TimeTicks,
-                                value=0))
+                        add('IF-MIB', 'ifLastChange', index, value=0)
 
                     elif thisSequenceNumber != lastSequenceNumberList[i]:
-                        targetOidDb.insertOid(
-                            newOidItem=OidDbItem(
-                                bdsMappingFunc=__name__,
-                                oid=oidSegment + '9.' + str(index),
-                                name='ifTableLastChange',
-                                pysnmpBaseType=TimeTicks,
-                                value=currentSysTime))
+                        add('IF-MIB', 'ifLastChange', index, value=currentSysTime)
 
                     if len(lastSequenceNumberList) == 0:  # first run
-                        targetOidDb.insertOid(
-                            newOidItem=OidDbItem(
-                                bdsMappingFunc=__name__,
-                                oid='1.3.6.1.2.1.31.1.5.0',
-                                name='ifTableLastChange',
-                                pysnmpBaseType=TimeTicks,
-                                value=0))
+                        add('IF-MIB', 'ifStackLastChange', index, value=0)
 
-                        targetOidDb.insertOid(
-                            newOidItem=OidDbItem(
-                                bdsMappingFunc=__name__,
-                                oid='1.3.6.1.2.1.31.1.6.0',
-                                name='ifTableLastChange',
-                                pysnmpBaseType=TimeTicks,
-                                value=0))  # Fixme - do we have to observe logicsl interfaces?
+                        # Fixme - do we have to observe logical interfaces?
+                        add('IF-MIB', 'ifTableLastChange', index, value=0)
 
                     else:
-                        targetOidDb.insertOid(
-                            newOidItem=OidDbItem(
-                                bdsMappingFunc=__name__,
-                                oid='1.3.6.1.2.1.31.1.5.0',
-                                name='ifTableLastChange',
-                                pysnmpBaseType=TimeTicks,
-                                value=currentSysTime))
-
-                    #
-                    # Change to ífXTable
-                    #
-                    oidSegment = '1.3.6.1.2.1.31.1.1.1.'
+                        add('IF-MIB', 'ifTableLastChange', index,
+                            value=currentSysTime)
 
                     if 'bandwidth' in bdsJsonObject['attribute']:
-                        targetOidDb.insertOid(
-                            newOidItem=OidDbItem(
-                                bdsMappingFunc='confd_global_interface_container',
-                                oid=oidSegment + '15.' + str(index),
-                                name='ifSpeed',
-                                pysnmpBaseType=Gauge32,
-                                value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth'])))
+                        add('IF-MIB', 'ifSpeed', index,
+                            value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth']))
 
-            targetOidDb.releaseLock()
+        targetOidDb.releaseLock()
