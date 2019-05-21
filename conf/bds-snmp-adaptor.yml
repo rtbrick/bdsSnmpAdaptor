@@ -15,7 +15,6 @@ bdsSnmpAdapter:
     # Paths to ASN.1 MIB files in form of directories or URI, in
     # desired search order
     mibs:
-      - mibs
       - /usr/share/snmp/mibs
       - http://mibs.snmplabs.com/asn1
     # SNMP engine ID uniquely identifies SNMP engine within an administrative
