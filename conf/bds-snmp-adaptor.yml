@@ -15,9 +15,8 @@ bdsSnmpAdapter:
     # Paths to ASN.1 MIB files in form of directories or URI, in
     # desired search order
     mibs:
-      - mibs
+      - /etc/bds-snmp-adaptor/mibs
       - /usr/share/snmp/mibs
-      - http://mibs.snmplabs.com/asn1
     # SNMP engine ID uniquely identifies SNMP engine within an administrative
     # domain. For SNMPv3 crypto feature to work, the same SNMP engine ID value
     # should be configured at the TRAP receiver.
@@ -52,6 +51,10 @@ bdsSnmpAdapter:
       sysContact: stefan@rtbrick.com
       sysName: l2.pod2.nbg2.rtbrick.net
       sysLocation: nbg2.rtbrick.net
+      # FIXME get from BDS entity table
+      sysObjectID: '1.3.6.1.4.1.50058.102.1'
+      sysUptime: 0
+      sysServices: 72
   # SNMP notification originator configuration
   notificator:
     # temp config lines to test incomming graylog message end #

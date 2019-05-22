@@ -26,7 +26,7 @@ Thee BDS system requires configuration, logs and state directories:
 
 .. code-block:: bash
 
-   $ sudo mkdir /etc/bds-snmp-adaptor
+   $ sudo mkdir -p /etc/bds-snmp-adaptor/mibs
    $ sudo mkdir /var/log/bds-snmp-adaptor
    $ sudo mkdir /var/run/bds-snmp-adaptor
 
@@ -40,7 +40,9 @@ to its final location:
    bdsSnmpAdaptor-0.0.1/conf/
    bdsSnmpAdaptor-0.0.1/conf/bds-snmp-adaptor.yml
    $
-   $ sudo cp bdsSnmpAdaptor*/conf/bds-snmp-adaptor.yml /etc/bds-snmp-adaptor
+   $ cd bdsSnmpAdaptor
+   $ sudo cp conf/bds-snmp-adaptor.yml /etc/bds-snmp-adaptor
+   $ sudo cp mibs/* /etc/bds-snmp-adaptor/mibs
 
 For the SNMP command responder tool, the following configuration changes
 might be required:
@@ -57,6 +59,11 @@ might be required:
          - confd: 2002  # Define the rest port on which confd listens"
          - fwdd-hald: 5002  # Define the rest port on which fwwd listens"
       snmp:
+        # Paths to ASN.1 MIB files in form of directories or URI, in
+        # desired search order
+        mibs:
+          - /etc/bds-snmp-adaptor/mibs
+          - /usr/share/snmp/mibs
         # SNMP engine ID uniquely identifies SNMP engine within an administrative
         # domain. For SNMPv3 crypto feature to work, the same SNMP engine ID value
         # should be configured at the TRAP receiver.

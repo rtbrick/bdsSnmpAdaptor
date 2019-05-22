@@ -53,7 +53,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         if _oidDbItem.value is None:
             return _oidDbItem.oid, v2c.NoSuchObject()
 
-        if _oidDbItem.name in ['sysUptime', 'hrSystemUptime']:  # FIXME: add a function for realitime OIDs
+        if _oidDbItem.name in ['sysUpTime', 'hrSystemUptime']:  # FIXME: add a function for realitime OIDs
             _oidDbItem.value = _oidDbItem.value.clone(int((time.time() - BIRTHDAY) * 100))
 
         if _oidDbItem.name in ['snmpEngineTime']:  # FIXME: add a function for realitime OIDs

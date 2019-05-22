@@ -59,6 +59,11 @@ bdsSnmpAdapter:
   # Common SNMP engine configuration, used by both command responder and
   # notification originator
   snmp:
+    # Paths to ASN.1 MIB files in form of directories or URI, in
+    # desired search order
+    mibs:
+      - /etc/bds-snmp-adaptor/mibs
+      - /usr/share/snmp/mibs
     # SNMP engine ID uniquely identifies SNMP engine within an administrative
     # domain. For SNMPv3 crypto feature to work, the same SNMP engine ID value
     # should be configured at the TRAP receiver.

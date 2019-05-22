@@ -71,19 +71,7 @@ class BdsAccess(object):
         # self.rtbrickContainerName = configDict['access']['rtbrickContainerName']
         self.staticOidDict = {}
 
-        if 'staticOidContent' in configDict['responder']:
-            for oidName in ['sysDesc', 'sysContact', 'sysName', 'sysLocation']:
-                if oidName in configDict['responder']['staticOidContent']:
-                    self.staticOidDict[oidName] = configDict['responder']['staticOidContent'][oidName]
-                else:
-                    self.staticOidDict[oidName] = 'to be defined'
-
-            for oidName in ['engineId']:
-                if oidName in configDict['responder']['staticOidContent']:
-                    self.staticOidDict[oidName] = configDict['responder']['staticOidContent'][oidName]
-
-                else:
-                    self.staticOidDict[oidName] = 'to be defined'
+        self.staticOidDict = configDict['responder']['staticOidContent']
 
         self.expirytimer = 50  ### FIXME
         self.responseJsonDicts = {}
