@@ -23,7 +23,8 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
 
         with targetOidDb.module(__name__) as add:
 
-            add('IF-MIB', 'ifDescr', 1, value=swString)
+            #add('IF-MIB', 'ifDescr', 1, value=swString)
+            add('SNMPv2-MIB', 'sysDescr', 1, value=swString)
 
             # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
 
