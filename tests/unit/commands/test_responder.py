@@ -107,7 +107,7 @@ class MibControllerTestCase(unittest.TestCase):
          - fwdd-hald: 5002  # fwwd REST API listens on this port"
       responder:
         staticOidContent:
-          sysDesc: l2.pod2.nbg2.rtbrick.net
+          sysDescr: l2.pod2.nbg2.rtbrick.net
           sysContact: stefan@rtbrick.com
           sysName: l2.pod2.nbg2.rtbrick.net
           sysLocation: nbg2.rtbrick.net

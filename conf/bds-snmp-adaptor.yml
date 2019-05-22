@@ -47,13 +47,13 @@ bdsSnmpAdapter:
     listeningIP: 0.0.0.0  # SNMP command responder listens on this address
     listeningPort: 161  # SNMP command responder listens on this port
     staticOidContent:
-      sysDesc: l2.pod2.nbg2.rtbrick.net
+      sysDescr: l2.pod2.nbg2.rtbrick.net
       sysContact: stefan@rtbrick.com
       sysName: l2.pod2.nbg2.rtbrick.net
       sysLocation: nbg2.rtbrick.net
       # FIXME get from BDS entity table
       sysObjectID: '1.3.6.1.4.1.50058.102.1'
-      sysUptime: 0
+      sysUpTime: 0
       sysServices: 72
   # SNMP notification originator configuration
   notificator:

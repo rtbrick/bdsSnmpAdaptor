@@ -13,7 +13,7 @@ class StaticAndPredefinedOids(object):
     SYSTEM_TABLE_COLUMNS = [
         'sysDescr',
         'sysObjectID',
-        'sysUptime',
+        'sysUpTime',
         'sysContact',
         'sysName',
         'sysLocation',
@@ -59,7 +59,7 @@ class StaticAndPredefinedOids(object):
             '5916-54XK-O-AC-F',
             '',
             2,
-            '',
+            '2019-5-26,13:30:15.0,-4:0',
             ''
         ],
         [
@@ -79,7 +79,7 @@ class StaticAndPredefinedOids(object):
             'AS5916-54XK',
             '',
             1,
-            '',
+            '2019-5-26,13:30:15.0,-4:0',
             ''
         ],
         [
@@ -99,7 +99,7 @@ class StaticAndPredefinedOids(object):
             '',
             '',
             1,
-            '',
+            '2019-5-26,13:30:15.0,-4:0',
             ''
         ],
         [
@@ -119,7 +119,7 @@ class StaticAndPredefinedOids(object):
             '',
             '',
             1,
-            '',
+            '2019-5-26,13:30:15.0,-4:0',
             ''
         ],
         [
@@ -139,7 +139,7 @@ class StaticAndPredefinedOids(object):
             '',
             '',
             1,
-            '',
+            '2019-5-26,13:30:15.0,-4:0',
             ''
         ],
         [
@@ -159,7 +159,7 @@ class StaticAndPredefinedOids(object):
             '',
             '',
             1,
-            '',
+            '2019-5-26,13:30:15.0,-4:0',
             ''
         ]
     ]
@@ -174,7 +174,7 @@ class StaticAndPredefinedOids(object):
             for column in cls.SYSTEM_TABLE_COLUMNS:
                 add('SNMPv2-MIB', column, 0, value=staticOidDict[column])
 
-            add('HOST-RESOURCES-MIB', 'hrSystemUpTime', 0, value=0)
+            add('HOST-RESOURCES-MIB', 'hrSystemUptime', 0, value=0)
 
         for i, phyValueList in enumerate(cls.ENT_PHYSICAL_TABLE):
 

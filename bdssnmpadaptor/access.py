@@ -17,7 +17,7 @@ from bdssnmpadaptor.mapping_modules import confd_global_interface_physical
 from bdssnmpadaptor.mapping_modules import confd_global_startup_status_confd
 from bdssnmpadaptor.mapping_modules import confd_local_system_software_info_confd
 from bdssnmpadaptor.oidDb import OidDb
-from bdssnmpadaptor.predefined_oids import StaticAndPredefinedOids
+from bdssnmpadaptor.mapping_modules.predefined_oids import StaticAndPredefinedOids
 
 BIRTHDAY = time.time()
 
