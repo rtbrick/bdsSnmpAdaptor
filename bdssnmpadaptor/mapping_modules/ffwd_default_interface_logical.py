@@ -40,7 +40,8 @@ class FfwdDefaultInterfaceLogical(object):
     """
 
     @classmethod
-    async def setOids(cls, bdsJsonResponseDict, targetOidDb):
+    async def setOids(cls, bdsJsonResponseDict, targetOidDb,
+                      tableSequenceList, birthday):
 
         targetOidDb.setLock()
 

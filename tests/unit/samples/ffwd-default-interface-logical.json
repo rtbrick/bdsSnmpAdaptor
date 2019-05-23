@@ -1,0 +1,20 @@
+{
+  "objects": [
+    {
+      "attribute": {
+        "link_status": "01",
+        "admin_status": "01",
+        "ipv4_status": "01000000",
+        "ipv4_mtu": "ee05",
+        "tagged": "00",
+        "container_interface_name": "ifc-0/0/1/1",
+        "interface_name": "ifl-0/0/1/1/0"
+      },
+      "update": true,
+      "sequence": 1
+    }
+  ],
+  "table": {
+    "table_name": "default.interface.logical"
+  }
+}
