@@ -1,0 +1,58 @@
+{
+    "objects": [
+        {
+            "attribute": {
+                "supported_breakout_modes": [
+                    "4x1G"
+                ],
+                "configured_layer2_mtu": "dc05",
+                "supported_max_layer2_mtu": "f205",
+                "supported_min_layer2_mtu": "4000",
+                "supported_auto_negotiation": "01",
+                "configured_bandwidth": "4e9502f9",
+                "default_bandwidth": "4e9502f9",
+                "supported_bandwidths": [
+                    "10.000 Gbps",
+                    "1.000 Gbps"
+                ],
+                "interface_name": "ifp-0/0/1",
+                "interface_description": "Physical interface #1 from node 0, chip 0",
+                "interface_type": "01",
+                "bandwidth": "4e9502f9",
+                "layer2_mtu": "f205",
+                "mac_address": "b86a97a59201",
+                "admin_status": "01",
+                "link_status": "01"
+            },
+            "update": true,
+            "sequence": 200197
+        },
+        {
+            "attribute": {
+                "supported_breakout_modes": [
+                    "4x1G"
+                ],
+                "configured_layer2_mtu": "dc05",
+                "supported_max_layer2_mtu": "f205",
+                "supported_min_layer2_mtu": "4000",
+                "supported_auto_negotiation": "01",
+                "configured_bandwidth": "4e9502f9",
+                "default_bandwidth": "4e9502f9",
+                "supported_bandwidths": [
+                    "10.000 Gbps",
+                    "1.000 Gbps"
+                ],
+                "interface_name": "ifp-0/0/2",
+                "interface_description": "Physical interface #2 from node 0, chip 0",
+                "interface_type": "01",
+                "bandwidth": "4e9502f9",
+                "layer2_mtu": "f205",
+                "mac_address": "b86a97a59202",
+                "admin_status": "01",
+                "link_status": "01"
+            },
+            "update": true,
+            "sequence": 200198
+        }
+    ]
+}
