@@ -162,7 +162,7 @@ class BdsAccess(object):
 
             try:
                 await StaticAndPredefinedOids.setOids(
-                    self.oidDb, self.staticOidDict)
+                    self.staticOidDict, self.oidDb, [], 0)
 
             except Exception as exc:
                 self.moduleLogger.error(

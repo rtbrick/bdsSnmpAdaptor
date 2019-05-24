@@ -92,7 +92,7 @@ bdsSnmpAdapter:
                 pass
 
         mock_predefined_oids.setOids.assert_called_once_with(
-            mock.ANY, mock.ANY)
+            mock.ANY, mock.ANY, [], 0)
 
         mock_phy = access.REQUEST_MAPPING_DICTS[
             'confd_global_interface_physical']['mappingFunc']

@@ -14,7 +14,8 @@ suite = unittest.TestLoader().loadTestsFromNames(
      'test_confd_local_system_software_info_confd',
      'test_ffwd_default_interface_logical',
      'test_fwdd_global_interface_physical_statistics',
-     'test_lldpd_global_lldp_intf_status']
+     'test_lldpd_global_lldp_intf_status',
+     'test_predefined_oids']
 )
 
 

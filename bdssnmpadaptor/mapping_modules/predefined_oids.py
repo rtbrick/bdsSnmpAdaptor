@@ -165,7 +165,8 @@ class StaticAndPredefinedOids(object):
     ]
 
     @classmethod
-    async def setOids(cls, targetOidDb, staticOidDict):
+    async def setOids(cls, staticOidDict, targetOidDb,
+                      lastSequenceNumberList, birthday):
 
         targetOidDb.setLock()
 
