@@ -131,8 +131,6 @@ class ConfdGlobalInterfaceContainer(object):
         newSequenceNumberList = [
             obj['sequence'] for obj in bdsJsonResponseDict['objects']]
 
-        targetOidDb.setLock()
-
         with targetOidDb.module(__name__) as add:
 
             if str(newSequenceNumberList) != str(lastSequenceNumberList):
@@ -198,5 +196,3 @@ class ConfdGlobalInterfaceContainer(object):
 
                     add('IF-MIB', 'ifSpeed', index,
                         value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth']))
-
-            targetOidDb.releaseLock()

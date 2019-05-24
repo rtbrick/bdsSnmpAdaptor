@@ -39,8 +39,6 @@ class ConfdGlobalStartupStatusConfd(object):
     async def setOids(cls, bdsJsonResponseDict, targetOidDb,
                       tableSequenceList, birthday):
 
-        targetOidDb.setLock()
-
         with targetOidDb.module(__name__) as add:
 
             for index0, bdsJsonObject in enumerate(bdsJsonResponseDict['objects']):
@@ -62,5 +60,3 @@ class ConfdGlobalStartupStatusConfd(object):
 
                 add('HOST-RESOURCES-MIB', 'hrSWRunStatus', index,
                     value=HRSWRUNSTATUSMAP[int(bdsJsonObject['attribute']['startup_status'])])
-
-        targetOidDb.releaseLock()

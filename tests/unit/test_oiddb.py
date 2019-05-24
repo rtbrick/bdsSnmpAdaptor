@@ -144,11 +144,6 @@ class OidDbTestCase(unittest.TestCase):
         self.assertEqual(b'DC', self.oidDb.oidDict[oid].value)
         self.assertEqual('interfaces', self.oidDb.oidDict[oid].bdsMappingFunc)
 
-    def test_locks(self):
-        self.assertFalse(self.oidDb.isLocked())
-        self.oidDb.setLock()
-        self.assertTrue(self.oidDb.isLocked())
-
 
 suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])
 

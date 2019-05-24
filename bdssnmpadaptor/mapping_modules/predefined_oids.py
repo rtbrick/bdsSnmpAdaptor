@@ -168,8 +168,6 @@ class StaticAndPredefinedOids(object):
     async def setOids(cls, staticOidDict, targetOidDb,
                       lastSequenceNumberList, birthday):
 
-        targetOidDb.setLock()
-
         with targetOidDb.module(__name__) as add:
 
             for column in cls.SYSTEM_TABLE_COLUMNS:

@@ -129,8 +129,6 @@ class ConfdGlobalInterfacePhysical(object):
 
         currentSysTime = int((time.time() - birthday) * 100)
 
-        targetOidDb.setLock()
-
         with targetOidDb.module(__name__) as add:
 
             add('IF-MIB', 'ifNumber', 0,
@@ -193,5 +191,3 @@ class ConfdGlobalInterfacePhysical(object):
                     if 'bandwidth' in bdsJsonObject['attribute']:
                         add('IF-MIB', 'ifSpeed', index,
                             value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth']))
-
-        targetOidDb.releaseLock()
