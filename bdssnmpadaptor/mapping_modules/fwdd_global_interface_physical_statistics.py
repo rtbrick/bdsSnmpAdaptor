@@ -129,8 +129,8 @@ class FwddGlobalInterfacePhysicalStatistics(object):
     }
     """
     @classmethod
-    async def setOids(cls, bdsJsonResponseDict, targetOidDb):
-
+    async def setOids(cls, bdsJsonResponseDict, targetOidDb,
+                      lastSequenceNumberList, birthday):
         targetOidDb.setLock()
 
         with targetOidDb.module(__name__) as add:

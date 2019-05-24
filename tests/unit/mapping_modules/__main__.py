@@ -12,7 +12,8 @@ suite = unittest.TestLoader().loadTestsFromNames(
      'test_confd_global_interface_container',
      'test_confd_global_startup_status_confd',
      'test_confd_local_system_software_info_confd',
-     'test_ffwd_default_interface_logical']
+     'test_ffwd_default_interface_logical',
+     'test_fwdd_global_interface_physical_statistics']
 )
 
 
