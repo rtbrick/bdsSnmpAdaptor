@@ -207,4 +207,4 @@ class BdsAccess(object):
 
                 await self.setTableSequenceDict(bdsRequestDictKey, responseJsonDict)
 
-                self.moduleLogger.debug(f'successfully refreshed OID DB')
+            self.moduleLogger.debug(f'done refreshing OID DB')

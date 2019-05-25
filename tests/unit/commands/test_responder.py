@@ -52,19 +52,15 @@ bdsSnmpAdapter:
 """
 
     @mock.patch('bdssnmpadaptor.commands.responder.snmp_config', autospec=True)
-    @mock.patch('bdssnmpadaptor.commands.responder.BdsAccess', autospec=True)
-    def test___init__(self, mock_access, mock_snmp_config):
+    def test___init__(self, mock_snmp_config):
 
         with mock.patch(
                 'bdssnmpadaptor.config.open',
                 side_effect=[io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG)]):
-            responder.SnmpCommandResponder({'config': '/file'})
-
-        mock_access.assert_called_once_with(mock.ANY)
-        mock_oiddb = mock_access.return_value.getOidDb
-        mock_oiddb.assert_called_once_with()
+            mock_oiddb = mock.MagicMock()
+            responder.SnmpCommandResponder({'config': '/file'}, mock_oiddb)
 
         mock_snmpEngine = mock_snmp_config.getSnmpEngine.return_value
 

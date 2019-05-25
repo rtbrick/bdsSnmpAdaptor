@@ -148,7 +148,7 @@ class SnmpCommandResponder(object):
 
     """
 
-    def __init__(self, cliArgsDict):
+    def __init__(self, cliArgsDict, oidDb):
         configDict = loadConfig(cliArgsDict['config'])
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
@@ -171,9 +171,7 @@ class SnmpCommandResponder(object):
 
         cliArgsDict['snmpEngineIdValue'] = self.snmpEngine.snmpEngineID.asOctets()
 
-        self.bdsAccess = BdsAccess(cliArgsDict)  # Instantiation of the BDS Access Service
-
-        self.oidDb = self.bdsAccess.getOidDb()
+        self.oidDb = oidDb
 
         # UDP over IPv4
         try:
@@ -236,11 +234,6 @@ class SnmpCommandResponder(object):
 
         self.snmpEngine.transportDispatcher.jobStarted(1)
 
-    async def run_forever(self):
-        await asyncio.gather(
-            self.bdsAccess.run_forever()
-        )
-
 
 def main():
     epilogTXT = """
@@ -273,12 +266,14 @@ def main():
     if cliargs.pidfile:
         daemon.pidfile(cliargs.pidfile)
 
-    mySnmpFrontEnd = SnmpCommandResponder(cliArgsDict)
+    bdsAccess = BdsAccess(cliArgsDict)
+
+    SnmpCommandResponder(cliArgsDict, bdsAccess.getOidDb())
 
     loop = asyncio.get_event_loop()
 
     try:
-        loop.run_until_complete(mySnmpFrontEnd.run_forever())
+        loop.run_until_complete(bdsAccess.run_forever())
 
     except KeyboardInterrupt:
         pass
