@@ -147,7 +147,7 @@ class BdsAccess(object):
 
         return True, responseJsonDict
 
-    async def setTableSequenceDict(self, bdsRequestDictKey, responseJsonDict):
+    def setTableSequenceDict(self, bdsRequestDictKey, responseJsonDict):
         sequenceNumberList = []
 
         for i, bdsJsonObject in enumerate(responseJsonDict['objects']):
@@ -161,7 +161,7 @@ class BdsAccess(object):
             await asyncio.sleep(5)
 
             try:
-                await StaticAndPredefinedOids.setOids(
+                StaticAndPredefinedOids.setOids(
                     self.staticOidDict, self.oidDb, [], 0)
 
             except Exception as exc:
@@ -197,7 +197,7 @@ class BdsAccess(object):
                     tableSequenceList = []  # required for the first run
 
                 try:
-                    await mappingfunc.setOids(
+                    mappingfunc.setOids(
                         responseJsonDict, self.oidDb, tableSequenceList, BIRTHDAY)
 
                 except Exception as exc:
@@ -205,6 +205,6 @@ class BdsAccess(object):
                         f'failed at populating OID DB from BDS response: {exc}')
                     continue
 
-                await self.setTableSequenceDict(bdsRequestDictKey, responseJsonDict)
+                self.setTableSequenceDict(bdsRequestDictKey, responseJsonDict)
 
             self.moduleLogger.debug(f'done refreshing OID DB')

@@ -50,8 +50,7 @@ class StaticAndPredefinedOidsTestCase(unittest.TestCase):
         super(StaticAndPredefinedOidsTestCase, self).setUp()
 
     def test_setOids(self):
-        self.my_loop.run_until_complete(
-            self.container.setOids(self.STATIC_CONFIG, self.oidDb, [], 0))
+        self.container.setOids(self.STATIC_CONFIG, self.oidDb, [], 0)
 
         oids_in_db = []
         oid = '1.3.6'

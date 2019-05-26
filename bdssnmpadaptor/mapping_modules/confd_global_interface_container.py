@@ -125,8 +125,8 @@ class ConfdGlobalInterfaceContainer(object):
     """
 
     @classmethod
-    async def setOids(cls, bdsJsonResponseDict, targetOidDb,
-                      lastSequenceNumberList, birthday):
+    def setOids(cls, bdsJsonResponseDict, targetOidDb,
+                lastSequenceNumberList, birthday):
 
         newSequenceNumberList = [
             obj['sequence'] for obj in bdsJsonResponseDict['objects']]
