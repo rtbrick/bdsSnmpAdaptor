@@ -230,7 +230,7 @@ class SnmpCommandResponder(object):
 
         cmdrsp.GetCommandResponder(self.snmpEngine, snmpContext)
         cmdrsp.NextCommandResponder(self.snmpEngine, snmpContext)
-        # cmdrsp.BulkCommandResponder(snmpEngine, snmpContext)  ## TODO
+        cmdrsp.BulkCommandResponder(self.snmpEngine, snmpContext)
 
         self.snmpEngine.transportDispatcher.jobStarted(1)
 
