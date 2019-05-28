@@ -13,7 +13,7 @@ import sys
 
 from bdssnmpadaptor import daemon
 from bdssnmpadaptor.access import BdsAccess
-from bdssnmpadaptor.cmd_responder import SnmpCommandResponder
+from bdssnmpadaptor.snmp_responder import SnmpCommandResponder
 from bdssnmpadaptor.mib_controller import MibInstrumController
 
 
