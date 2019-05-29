@@ -1,0 +1,58 @@
+{
+  "table": {
+    "table_name": "global.interface.container"
+  },
+  "objects": [
+    {
+      "sequence": 200197,
+      "update": true,
+      "attribute": {
+        "interface_name": "ifc-0/0/0/1",
+        "interface_description": "Container interface for ifp-0/0/1",
+        "encapsulation_type": "01",
+        "bandwidth": "4e9502f9",
+        "layer2_mtu": "f205",
+        "admin_status": "01",
+        "link_status": "01",
+        "mac_address": "b86a97a59201",
+        "physical_interfaces": [
+          "ifp-0/0/1"
+        ]
+      }
+    },
+    {
+      "sequence": 200198,
+      "update": true,
+      "attribute": {
+        "interface_name": "ifc-0/0/0/2",
+        "interface_description": "Container interface for ifp-0/0/2",
+        "encapsulation_type": "01",
+        "bandwidth": "4e9502f9",
+        "layer2_mtu": "f205",
+        "admin_status": "01",
+        "link_status": "01",
+        "mac_address": "b86a97a59202",
+        "physical_interfaces": [
+          "ifp-0/0/2"
+        ]
+      }
+    },
+    {
+      "sequence": 200061,
+      "update": true,
+      "attribute": {
+        "interface_name": "ifc-0/0/0/3",
+        "interface_description": "Container interface for ifp-0/0/3",
+        "encapsulation_type": "01",
+        "bandwidth": "4e9502f9",
+        "layer2_mtu": "f205",
+        "admin_status": "01",
+        "link_status": "01",
+        "mac_address": "b86a97a59203",
+        "physical_interfaces": [
+          "ifp-0/0/3"
+        ]
+      }
+    }
+  ]
+}

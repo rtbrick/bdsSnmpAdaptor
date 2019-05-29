@@ -13,14 +13,14 @@ import unittest
 from unittest import mock
 
 from bdssnmpadaptor import oidDb
-from bdssnmpadaptor.mapping_modules import confd_global_interface_physical
+from bdssnmpadaptor.mapping_modules import confd_global_interface_container
 
 
 @mock.patch('tempfile.NamedTemporaryFile', new=mock.MagicMock)
-class ConfdGlobalInterfacePhysicalTestCase(unittest.TestCase):
+class ConfdGlobalInterfaceContainerTestCase(unittest.TestCase):
 
     with open(os.path.join(os.path.dirname(__file__), '..', 'samples',
-                           'confd-global-interface-physical.json')) as fl:
+                           'confd-global-interface-container.json')) as fl:
         JSON_RESPONSE = json.load(fl)
 
     def setUp(self):
@@ -28,12 +28,12 @@ class ConfdGlobalInterfacePhysicalTestCase(unittest.TestCase):
             with mock.patch.object(oidDb, 'set_logging', autospec=True):
                 self.oidDb = oidDb.OidDb({'config': {}})
 
-        self.container = confd_global_interface_physical.ConfdGlobalInterfacePhysical()
+        self.container = confd_global_interface_container.ConfdGlobalInterfaceContainer()
 
         self.my_loop = asyncio.new_event_loop()
         self.addCleanup(self.my_loop.close)
 
-        super(ConfdGlobalInterfacePhysicalTestCase, self).setUp()
+        super(ConfdGlobalInterfaceContainerTestCase, self).setUp()
 
     def test_setOids(self):
         self.my_loop.run_until_complete(
@@ -49,16 +49,38 @@ class ConfdGlobalInterfacePhysicalTestCase(unittest.TestCase):
         expected = [
             '1.3.6.1.2.1.2.1.0',
             '1.3.6.1.2.1.2.2.1.1.4096',
+            '1.3.6.1.2.1.2.2.1.1.8192',
+            '1.3.6.1.2.1.2.2.1.1.12288',
             '1.3.6.1.2.1.2.2.1.2.4096',
+            '1.3.6.1.2.1.2.2.1.2.8192',
+            '1.3.6.1.2.1.2.2.1.2.12288',
             '1.3.6.1.2.1.2.2.1.3.4096',
+            '1.3.6.1.2.1.2.2.1.3.8192',
+            '1.3.6.1.2.1.2.2.1.3.12288',
             '1.3.6.1.2.1.2.2.1.4.4096',
+            '1.3.6.1.2.1.2.2.1.4.8192',
+            '1.3.6.1.2.1.2.2.1.4.12288',
             '1.3.6.1.2.1.2.2.1.5.4096',
+            '1.3.6.1.2.1.2.2.1.5.8192',
+            '1.3.6.1.2.1.2.2.1.5.12288',
             '1.3.6.1.2.1.2.2.1.6.4096',
+            '1.3.6.1.2.1.2.2.1.6.8192',
+            '1.3.6.1.2.1.2.2.1.6.12288',
             '1.3.6.1.2.1.2.2.1.7.4096',
+            '1.3.6.1.2.1.2.2.1.7.8192',
+            '1.3.6.1.2.1.2.2.1.7.12288',
             '1.3.6.1.2.1.2.2.1.8.4096',
+            '1.3.6.1.2.1.2.2.1.8.8192',
+            '1.3.6.1.2.1.2.2.1.8.12288',
             '1.3.6.1.2.1.2.2.1.9.4096',
+            '1.3.6.1.2.1.2.2.1.9.8192',
+            '1.3.6.1.2.1.2.2.1.9.12288',
             '1.3.6.1.2.1.31.1.5.4096',
-            '1.3.6.1.2.1.31.1.6.4096'
+            '1.3.6.1.2.1.31.1.5.8192',
+            '1.3.6.1.2.1.31.1.5.12288',
+            '1.3.6.1.2.1.31.1.6.4096',
+            '1.3.6.1.2.1.31.1.6.8192',
+            '1.3.6.1.2.1.31.1.6.12288'
         ]
 
         self.assertEqual(expected, [str(o) for o in oids_in_db])

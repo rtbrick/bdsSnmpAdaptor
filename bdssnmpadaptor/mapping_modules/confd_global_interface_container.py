@@ -171,7 +171,7 @@ class ConfdGlobalInterfaceContainer(object):
 
                     add('IF-MIB', 'ifPhysAddress', index,
                         value=bdsJsonObject['attribute']['mac_address'].replace(':', ''),
-                        valueType='hexValue')
+                        valueFormat='hexValue')
 
                     add('IF-MIB', 'ifAdminStatus', index,
                         value=bdsJsonObject['attribute']['admin_status'])
