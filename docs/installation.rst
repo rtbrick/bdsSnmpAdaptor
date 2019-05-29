@@ -93,7 +93,7 @@ might be required:
         listeningIP: 0.0.0.0  # SNMP get/getNext listening IP address
         listeningPort: 161  # SNMP get/getNext listening port
         staticOidContent:
-          sysDesc: l2.pod2.nbg2.rtbrick.net
+          sysDescr: l2.pod2.nbg2.rtbrick.net
           sysContact: stefan@rtbrick.com
           sysName: l2.pod2.nbg2.rtbrick.net
           sysLocation: nbg2.rtbrick.net

@@ -94,7 +94,7 @@ bdsSnmpAdapter:
     listeningIP: 0.0.0.0  # SNMP command responder listens on this address
     listeningPort: 161  # SNMP command responder listens on this port
     staticOidContent:
-      sysDesc: l2.pod2.nbg2.rtbrick.net
+      sysDescr: l2.pod2.nbg2.rtbrick.net
       sysContact: stefan@rtbrick.com
       sysName: l2.pod2.nbg2.rtbrick.net
       sysLocation: nbg2.rtbrick.net

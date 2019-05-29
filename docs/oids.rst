@@ -133,7 +133,7 @@ MIB Info: http://www.circitor.fr/Mibs/Html/S/SNMPv2-MIB.php
     :header: "#", "name", "pysnmp type", "BDS attr", "mapping"
     :widths: 4, 19, 16, 25, 39
 
-    1, "sysDesc", "OctetString", "system_hostname",
+    1, "sysDescr", "OctetString", "system_hostname",
 
 1.3.6.1.4.1.50058.101.3
 -----------------------
