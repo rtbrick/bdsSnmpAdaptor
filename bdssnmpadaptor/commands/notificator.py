@@ -217,9 +217,6 @@ class SnmpTrapGenerator(object):
             except Exception as exc:
                 self.moduleLogger.error(f'TRAP not sent: {exc}')
 
-    async def closeSnmpEngine(self):
-        self.snmpEngine.transportDispatcher.closeDispatcher()
-
 
 class AsyncioRestServer(object):
 

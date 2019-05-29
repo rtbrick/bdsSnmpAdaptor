@@ -40,8 +40,8 @@ class FfwdDefaultInterfaceLogical(object):
     """
 
     @classmethod
-    async def setOids(cls, bdsJsonResponseDict, targetOidDb,
-                      tableSequenceList, birthday):
+    def setOids(cls, bdsJsonResponseDict, targetOidDb,
+                tableSequenceList, birthday):
 
         with targetOidDb.module(__name__) as add:
             # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids

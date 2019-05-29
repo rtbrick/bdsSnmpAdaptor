@@ -14,8 +14,8 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
     """
 
     @classmethod
-    async def setOids(cls, bdsJsonResponseDict, targetOidDb,
-                      tableSequenceList, birthday):
+    def setOids(cls, bdsJsonResponseDict, targetOidDb,
+                tableSequenceList, birthday):
 
         swString = BdsMappingFunctions.stringFromSoftwareInfo(bdsJsonResponseDict)
 
