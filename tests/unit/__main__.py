@@ -14,6 +14,8 @@ suite = unittest.TestLoader().loadTestsFromNames(
      'tests.unit.test_mapping_functions.suite',
      'tests.unit.test_access.suite',
      'tests.unit.test_config.suite',
+     'tests.unit.test_mib_controller.suite',
+     'tests.unit.test_cmd_responder.suite',
      'mapping_modules',
      'commands']
 )

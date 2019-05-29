@@ -5,6 +5,7 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
+import io
 import sys
 import unittest
 from unittest import mock
@@ -49,31 +50,43 @@ bdsSnmpAdapter:
     listeningPort: 11161  # SNMP command responder listens on this port
 """
 
-    @mock.patch('bdssnmpadaptor.commands.responder.asyncio', autospec=True)
-    @mock.patch('bdssnmpadaptor.commands.responder.BdsAccess', autospec=True)
-    @mock.patch('bdssnmpadaptor.commands.responder.MibInstrumController', autospec=True)
-    @mock.patch('bdssnmpadaptor.commands.responder.SnmpCommandResponder', autospec=True)
-    def test_main(self, mock_cmdrsp, mock_mibctrl, mock_access, mock_asyncio):
+    @mock.patch('bdssnmpadaptor.cmd_responder.snmp_config', autospec=True)
+    def test___init__(self, mock_snmp_config):
 
-        responder.main()
+        with mock.patch(
+                'bdssnmpadaptor.config.open',
+                side_effect=[io.StringIO(self.CONFIG),
+                             io.StringIO(self.CONFIG),
+                             io.StringIO(self.CONFIG)]):
+            mock_oiddb = mock.MagicMock()
+            responder.SnmpCommandResponder({'config': '/file'}, mock_oiddb)
 
-        mock_access.assert_called_once_with(mock.ANY)
+        mock_snmpEngine = mock_snmp_config.getSnmpEngine.return_value
 
-        mock_access_instance = mock_access.return_value
+        mock_snmp_config.getSnmpEngine.assert_called_once_with(
+            engineId=mock.ANY)
+        mock_snmp_config.setSnmpTransport.assert_called_once_with(
+            mock_snmpEngine, ('0.0.0.0', 11161))
 
-        mock_access_instance.getOidDb.assert_called_once_with()
-        mock_access_instance.run_forever.assert_called_once_with()
+        mock_setCommunity_calls = [
+            mock.call(mock_snmpEngine, 'manager-A', 'public', version='1'),
+            mock.call(mock_snmpEngine, 'manager-B', 'public', version='2c')
+        ]
+        mock_snmp_config.setCommunity.assert_has_calls(
+            mock_setCommunity_calls)
 
-        mock_mibctrl.assert_called_once_with()
+        mock_setUsmUser_calls = [
+            mock.call(mock_snmpEngine, 'user1', 'testUser1',
+                      'authkey123', 'md5', None, None),
+            mock.call(mock_snmpEngine, 'user2', 'testUser2',
+                      'authkey123', 'md5', 'privkey123', 'des'),
 
-        mock_cmdrsp.assert_called_once_with(
-            mock.ANY, mock_mibctrl.return_value)
+        ]
+        mock_snmp_config.setUsmUser.assert_has_calls(
+            mock_setUsmUser_calls)
 
-        mock_asyncio.get_event_loop.assert_called_once_with()
-        mock_asyncio_loop = mock_asyncio.get_event_loop.return_value
-
-        mock_asyncio_loop.run_until_complete.assert_called_once_with(mock.ANY)
-        mock_asyncio_loop.close.assert_called_once_with()
+        mock_snmp_config.setMibController.assert_called_once_with(
+            mock_snmpEngine, mock.ANY)
 
 
 suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])
