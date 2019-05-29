@@ -19,8 +19,6 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
 
         swString = BdsMappingFunctions.stringFromSoftwareInfo(bdsJsonResponseDict)
 
-        targetOidDb.setLock()
-
         with targetOidDb.module(__name__) as add:
 
             #add('IF-MIB', 'ifDescr', 1, value=swString)
@@ -58,5 +56,3 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
 
             # # in addition the SW Info Flag is set by
             # # creating an abbreviated string over all modules
-
-        targetOidDb.releaseLock()

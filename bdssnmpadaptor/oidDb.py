@@ -160,15 +160,6 @@ class OidDb(object):
 
         return nextItem.oid
 
-    def setLock(self):
-        self.lock = True
-
-    def releaseLock(self):
-        self.lock = False
-
-    def isLocked(self):
-        return self.lock
-
     @lazilySorted
     def __str__(self):
         return '\n'.join(self.oidDict)

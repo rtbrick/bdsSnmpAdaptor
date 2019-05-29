@@ -39,12 +39,14 @@ class SnmpTrapGenerator(object):
 
     TARGETS_TAG = 'mgrs'
 
-    def __init__(self, cliArgsDict, restHttpServerObj):
+    def __init__(self, cliArgsDict, queue):
         configDict = loadConfig(cliArgsDict['config'])
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
         self.moduleLogger.info(f'original configDict: {configDict}')
+
+        self.queue = queue
 
         # temp lines for graylog client end #
         # configDict['usmUserDataMatrix'] = [ usmUserTuple.strip().split(',')
@@ -130,8 +132,6 @@ class SnmpTrapGenerator(object):
 
         self.trapCounter = 0
 
-        self.restHttpServerObj = restHttpServerObj
-
         self.moduleLogger.info(
             f'Running SNMP engine ID {self.snmpEngine}, boots {engineBoots}')
 
@@ -207,13 +207,7 @@ class SnmpTrapGenerator(object):
     async def run_forever(self):
 
         while True:
-            await asyncio.sleep(0.001)
-
-            try:
-                bdsLogToBeProcessed = self.restHttpServerObj.bdsLogsToBeProcessedList.pop(0)
-
-            except IndexError:
-                continue
+            bdsLogToBeProcessed = await self.queue.get()
 
             self.moduleLogger.info(f'new log record: {bdsLogToBeProcessed}')
 
@@ -229,7 +223,7 @@ class SnmpTrapGenerator(object):
 
 class AsyncioRestServer(object):
 
-    def __init__(self, cliArgsDict):
+    def __init__(self, cliArgsDict, queue):
 
         self.moduleFileNameWithoutPy, _ = os.path.splitext(os.path.basename(__file__))
 
@@ -242,8 +236,7 @@ class AsyncioRestServer(object):
 
         self.requestCounter = 0
 
-        self.bdsLogsToBeProcessedList = []
-        self.snmpTrapGenerator = SnmpTrapGenerator(cliArgsDict, self)
+        self.queue = queue
 
     async def handler(self, request):
         """Handle HTTP request
@@ -273,15 +266,11 @@ class AsyncioRestServer(object):
                 f'cannot convert JSON to dict {jsonTxt}: {exc}')
 
         else:
-            self.bdsLogsToBeProcessedList.append(bdsLogDict)
+            self.queue.put_nowait(bdsLogDict)
 
         return web.json_response(data)
 
-    async def backgroundLogging(self):
-        while True:
-            await asyncio.sleep(0.1)
-
-    async def run_forever(self):
+    async def initialize(self):
         server = web.Server(self.handler)
         runner = web.ServerRunner(server)
 
@@ -290,11 +279,6 @@ class AsyncioRestServer(object):
         site = web.TCPSite(runner, self.listeningIP, self.listeningPort)
 
         await site.start()
-
-        await asyncio.gather(
-            self.snmpTrapGenerator.run_forever(),
-            self.backgroundLogging()
-        )
 
 
 def main():
@@ -327,12 +311,18 @@ def main():
 
     cliArgsDict = vars(cliargs)
 
-    myRestHttpServer = AsyncioRestServer(cliArgsDict)
+    queue = asyncio.Queue()
+
+    snmpNtfOrg = SnmpTrapGenerator(cliArgsDict, queue)
+
+    httpServer = AsyncioRestServer(cliArgsDict, queue)
 
     loop = asyncio.get_event_loop()
 
     try:
-        loop.run_until_complete(myRestHttpServer.run_forever())
+        loop.run_until_complete(
+            asyncio.gather(snmpNtfOrg.run_forever(), httpServer.initialize())
+        )
 
     except KeyboardInterrupt:
         pass

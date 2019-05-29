@@ -131,7 +131,6 @@ class FwddGlobalInterfacePhysicalStatistics(object):
     @classmethod
     async def setOids(cls, bdsJsonResponseDict, targetOidDb,
                       lastSequenceNumberList, birthday):
-        targetOidDb.setLock()
 
         with targetOidDb.module(__name__) as add:
 
@@ -178,5 +177,3 @@ class FwddGlobalInterfacePhysicalStatistics(object):
 
                 add('IF-MIB', 'ifOutQLen', index,
                     value=LELL_LAMBDA(attribute['port_stat_if_out_qlen']))
-
-        targetOidDb.releaseLock()

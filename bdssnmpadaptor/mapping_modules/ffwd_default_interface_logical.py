@@ -43,8 +43,6 @@ class FfwdDefaultInterfaceLogical(object):
     async def setOids(cls, bdsJsonResponseDict, targetOidDb,
                       tableSequenceList, birthday):
 
-        targetOidDb.setLock()
-
         with targetOidDb.module(__name__) as add:
             # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
 
@@ -58,5 +56,3 @@ class FfwdDefaultInterfaceLogical(object):
                     value=bdsJsonObject['attribute']['interface_name'])
 
                 add('IF-MIB', 'ifType', index, value=6)
-
-        targetOidDb.releaseLock()

@@ -134,8 +134,6 @@ class LldpdGlobalLldpIntfStatus(object):
 
         currentSysTime = int((time.time() - birthday) * 100)
 
-        targetOidDb.setLock()
-
         with targetOidDb.module(__name__) as add:
 
             targetOidDb.insertOid(
@@ -195,5 +193,3 @@ class LldpdGlobalLldpIntfStatus(object):
                 else:
                     add('IF-MIB', 'ifTableLastChange', index,
                         value=currentSysTime)
-
-            targetOidDb.releaseLock()
