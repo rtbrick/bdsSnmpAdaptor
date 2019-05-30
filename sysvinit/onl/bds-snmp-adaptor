@@ -1,24 +1,24 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          bds-snmp-responder
+# Provides:          bds-snmp-adaptor
 # Required-Start:    $remote_fs $time
 # Required-Stop:     umountnfs $time
 # X-Stop-After:      sendsigs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: BDS SNMP Command Responder
-# Description:       BDS SNMP Command Responder
+# Short-Description: RtBrick SNMP Adaptor
+# Description:       RtBrick SNMP Adaptor
 ### END INIT INFO
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="BDS SNMP Command Responder"
-NAME=bds-snmp-responder
+DESC="BDS SNMP Notification Originator"
+NAME=bds-snmp-adaptor
 
-DAEMON=/usr/local/bin/bds-snmp-responder
-PIDFILE=/run/bds-snmp-responder.pid
+DAEMON=/usr/local/bin/bds-snmp-adaptor
+PIDFILE=/run/bds-snmp-adaptor.pid
 
-BDSSNMPRSP=bds-snmp-responder
+BDSSNMPRSP=bds-snmp-adaptor
 BDSSNMPRSP_OPTIONS="--config /etc/bds-snmp-adaptor/bds-snmp-adaptor.yml --pidfile $PIDFILE"
 
 SCRIPTNAME=/etc/init.d/$NAME
@@ -51,7 +51,7 @@ do_stop()
 }
 
 #
-# Tell bds-snmp-responder to close all open files
+# Tell bds-snmp-adaptor to close all open files
 #
 do_rotate() {
 	start-stop-daemon --stop --signal HUP --quiet --pidfile $PIDFILE --exec $DAEMON
@@ -60,7 +60,7 @@ do_rotate() {
 sendsigs_omit() {
 	OMITDIR=/run/sendsigs.omit.d
 	mkdir -p $OMITDIR
-	ln -sf $PIDFILE $OMITDIR/bds-snmp-responder
+	ln -sf $PIDFILE $OMITDIR/bds-snmp-adaptor
 }
 
 case "$1" in

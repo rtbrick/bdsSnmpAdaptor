@@ -10,7 +10,7 @@ import sys
 import unittest
 from unittest import mock
 
-from bdssnmpadaptor.commands import responder
+from bdssnmpadaptor import mib_controller
 
 
 class MibControllerTestCase(unittest.TestCase):
@@ -40,7 +40,7 @@ class MibControllerTestCase(unittest.TestCase):
                 side_effect=[io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG)]):
-            self.mc = responder.MibInstrumController().setOidDbAndLogger(
+            self.mc = mib_controller.MibInstrumController().setOidDbAndLogger(
                 self.mock_oidDb, {'config': '/file'})
 
         super(MibControllerTestCase, self).setUp()

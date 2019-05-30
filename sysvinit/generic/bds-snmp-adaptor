@@ -1,8 +1,8 @@
 #!/bin/bash
 
-NAME=bds-snmp-responder
-DESC="BDS SNMP Command Responder"
-PIDFILE=/run/bds-snmp-responder.pid
+NAME=bds-snmp-adaptor
+DESC="RtBrick SNMP Adaptor"
+PIDFILE=/run/bds-snmp-adaptor.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
 DAEMON=$NAME

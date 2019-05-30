@@ -19,7 +19,7 @@ class ConfigTestCase(unittest.TestCase):
 bdsSnmpAdapter:
   loggingLevel: debug
   rotatingLogFile: /tmp   #FIXME store this at permanent location
-  stateDir: /var/run/bds-snmp-notificator    
+  stateDir: /var/run/bds-snmp-adaptor    
 """
     CONFIG = io.StringIO(CONFIG)
 
@@ -34,7 +34,7 @@ bdsSnmpAdapter:
         expected = {
             'loggingLevel': 'debug',
             'rotatingLogFile': '/tmp',
-            'stateDir': '/var/run/bds-snmp-notificator'
+            'stateDir': '/var/run/bds-snmp-adaptor'
         }
         self.assertDictEqual(expected, cfg)
 
