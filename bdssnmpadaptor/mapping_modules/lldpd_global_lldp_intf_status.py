@@ -11,7 +11,7 @@ import time
 
 from pysnmp.proto.rfc1902 import Integer32
 
-from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
+from bdssnmpadaptor import mapping_functions
 from bdssnmpadaptor.oidDb import OidDbItem
 
 IFTYPEMAP = {
@@ -152,9 +152,9 @@ class LldpdGlobalLldpIntfStatus(object):
                 attribute = bdsJsonObject['attribute']
 
                 ifName = attribute['interface_name']
-                index = BdsMappingFunctions.ifIndexFromIfName(ifName)
+                index = mapping_functions.ifIndexFromIfName(ifName)
 
-                ifPhysicalLocation = BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
+                ifPhysicalLocation = mapping_functions.stripIfPrefixFromIfName(ifName)
 
                 add('IF-MIB', 'ifIndex', index, value=index)
 

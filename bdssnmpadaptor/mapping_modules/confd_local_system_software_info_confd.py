@@ -6,7 +6,7 @@
 # License: BSD License 2.0
 #
 
-from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
+from bdssnmpadaptor import mapping_functions
 
 
 class ConfdLocalSystemSoftwareInfoConfd(object):
@@ -17,7 +17,7 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
     def setOids(cls, bdsJsonResponseDict, targetOidDb,
                 tableSequenceList, birthday):
 
-        swString = BdsMappingFunctions.stringFromSoftwareInfo(bdsJsonResponseDict)
+        swString = mapping_functions.stringFromSoftwareInfo(bdsJsonResponseDict)
 
         with targetOidDb.module(__name__) as add:
 

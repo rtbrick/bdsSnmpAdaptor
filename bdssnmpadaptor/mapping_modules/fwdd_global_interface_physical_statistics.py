@@ -8,7 +8,7 @@
 import binascii
 import struct
 
-from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
+from bdssnmpadaptor import mapping_functions
 
 HEX_STRING_LAMBDA = lambda x: int(x, 16)
 
@@ -140,7 +140,7 @@ class FwddGlobalInterfacePhysicalStatistics(object):
                 attribute = bdsJsonObject['attribute']
 
                 ifName = attribute['interface_name']
-                index = BdsMappingFunctions.ifIndexFromIfName(ifName)
+                index = mapping_functions.ifIndexFromIfName(ifName)
 
                 add('IF-MIB', 'ifInOctets', index,
                     value=LELL_LAMBDA(attribute['port_stat_if_in_octets']))

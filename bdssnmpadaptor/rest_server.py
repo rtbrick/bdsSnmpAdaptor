@@ -15,7 +15,12 @@ from bdssnmpadaptor.log import set_logging
 
 
 class AsyncioRestServer(object):
+    """REST API server for receiving notifications
 
+    Implements HTTP server running within asyncio loop and receiving
+    notification through REST API. Places received notifications
+    into a queue for consumers to read from.
+    """
     def __init__(self, cliArgsDict, queue):
 
         self.moduleFileNameWithoutPy, _ = os.path.splitext(os.path.basename(__file__))

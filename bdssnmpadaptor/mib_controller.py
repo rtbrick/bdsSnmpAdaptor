@@ -18,6 +18,11 @@ BIRTHDAY = time.time()
 
 
 class MibInstrumController(instrum.AbstractMibInstrumController):
+    """MIB instrumentation controller.
+
+    Implements SNMP agent interface to OID DB in form of MIB
+    instrumentation controller complying to pysnmp API.
+    """
     # TODO: we probably need explicit SNMP type spec in YAML map
     SNMP_TYPE_MAP = {
         int: v2c.Integer32,

@@ -21,15 +21,32 @@ from bdssnmpadaptor.snmp_notificator import SnmpNotificationOriginator
 
 def main():
     epilogTXT = """
+BDS SNMP adaptor tool implements SNMP interface to RtBrick bare metal
+switch platform.
 
-    ... to be added """
+Conceptually, this tool contains four parts working together to implement
+SNMP<->REST adaptation layer. These parts are:
+
+* BDS REST API client pulling data from RtBrick system and populating SNMP
+  managed objects (MIBs) it serves
+* SNMP command responder supporting SNMP GET/GETNEXT/GETBULK commands
+* REST API server listening for events coming from RtBrick system
+* SNMP notification originator emitting SNMP TRAP messages in response
+  to RtBrick system events
+  
+All these parts are driven by .yaml configuration file. Conceptually,
+each of the above mentioned components have its own branch in the
+configuration.
+ 
+See https://www.rtbrick.com for RtBrick product information.
+"""
 
     parser = argparse.ArgumentParser(
         epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument(
         '-f', '--config',
-        default='bdsSnmpRetrieveAdaptor.yml', type=str,
+        default='/etc/bds-snmp-adaptor/bds-snmp-adaptor.yml', type=str,
         help='Path to config file')
     parser.add_argument(
         '--daemonize', action='store_true',

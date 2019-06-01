@@ -6,7 +6,7 @@
 # License: BSD License 2.0
 #
 
-from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
+from bdssnmpadaptor import mapping_functions
 
 
 class FfwdDefaultInterfaceLogical(object):
@@ -48,7 +48,7 @@ class FfwdDefaultInterfaceLogical(object):
 
             for bdsJsonObject in bdsJsonResponseDict['objects']:
                 ifName = bdsJsonObject['attribute']['interface_name']
-                index = BdsMappingFunctions.ifIndexFromIfName(ifName)
+                index = mapping_functions.ifIndexFromIfName(ifName)
 
                 add('IF-MIB', 'ifIndex', index, value=index)
 

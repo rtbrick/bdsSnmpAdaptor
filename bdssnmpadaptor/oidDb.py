@@ -38,11 +38,14 @@ def lazilySorted(func):
 
 
 class OidDb(object):
-    """ Database for chained oidDbItems
-        Use insertOid and deleteOidsWithPrefix to set or del oidItems
-        in self.oidDict in order to maintain the chain structure.
-    """
+    """SNMP managed objects database
 
+     Implements in-memory store for MIB managed objects keyed by
+     object identifier (OID).
+
+     Managed objects population is based on SNMP MIB information,
+     retrieval is based on OID look up.
+     """
     def __init__(self, cliArgsDict):
         configDict = loadConfig(cliArgsDict['config'])
 
@@ -170,10 +173,11 @@ class OidDb(object):
 
 
 class OidDbItem(object):
-    """ Database Item, which pysnmp attributes required for get and getnext.
+    """Represents managed object in the database.
 
+    Implements managed objects comparison what is used for ordering
+    objects by OID.
     """
-
     def __init__(self, bdsMappingFunc=None, oid=None, name=None,
                  pysnmpBaseType=None, value=None, pysnmpRepresentation=None):
         """ Database Item, which pysnmp attributes required for get and getnext.

@@ -9,7 +9,7 @@ import binascii
 import struct
 import time
 
-from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
+from bdssnmpadaptor import mapping_functions
 
 IFTYPEMAP = {
     1: 6  # ethernet-csmacd(6)
@@ -144,18 +144,18 @@ class ConfdGlobalInterfaceContainer(object):
 
                     ifName = bdsJsonObject['attribute']['interface_name']
 
-                    index = BdsMappingFunctions.ifIndexFromIfName(ifName)
+                    index = mapping_functions.ifIndexFromIfName(ifName)
 
                     ifSpeed = IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth'])
 
                     if ifSpeed == 100000000:
-                        ifGigEtherName = 'hundredGe-' + BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
+                        ifGigEtherName = 'hundredGe-' + mapping_functions.stripIfPrefixFromIfName(ifName)
 
                     elif ifSpeed == 10000000:
-                        ifGigEtherName = 'tenGe-' + BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
+                        ifGigEtherName = 'tenGe-' + mapping_functions.stripIfPrefixFromIfName(ifName)
 
                     else:
-                        ifGigEtherName = 'ge-' + BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
+                        ifGigEtherName = 'ge-' + mapping_functions.stripIfPrefixFromIfName(ifName)
 
                     add('IF-MIB', 'ifIndex', index, value=index)
 
