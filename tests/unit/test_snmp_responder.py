@@ -10,7 +10,7 @@ import sys
 import unittest
 from unittest import mock
 
-from bdssnmpadaptor.commands import responder
+from bdssnmpadaptor import snmp_responder
 
 
 class SnmpCommandResponderTestCase(unittest.TestCase):
@@ -50,7 +50,7 @@ bdsSnmpAdapter:
     listeningPort: 11161  # SNMP command responder listens on this port
 """
 
-    @mock.patch('bdssnmpadaptor.cmd_responder.snmp_config', autospec=True)
+    @mock.patch('bdssnmpadaptor.snmp_responder.snmp_config', autospec=True)
     def test___init__(self, mock_snmp_config):
 
         with mock.patch(
@@ -59,7 +59,7 @@ bdsSnmpAdapter:
                              io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG)]):
             mock_oiddb = mock.MagicMock()
-            responder.SnmpCommandResponder({'config': '/file'}, mock_oiddb)
+            snmp_responder.SnmpCommandResponder({'config': '/file'}, mock_oiddb)
 
         mock_snmpEngine = mock_snmp_config.getSnmpEngine.return_value
 

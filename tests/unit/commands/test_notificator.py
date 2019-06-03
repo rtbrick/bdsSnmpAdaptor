@@ -5,8 +5,6 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
-import asyncio
-import io
 import sys
 import unittest
 from unittest import mock
@@ -14,9 +12,7 @@ from unittest import mock
 from bdssnmpadaptor.commands import notificator
 
 
-@mock.patch('bdssnmpadaptor.commands.notificator.snmp_config', autospec=True)
-@mock.patch('bdssnmpadaptor.commands.notificator.ntforg', autospec=True)
-class SnmpTrapGeneratorTestCase(unittest.TestCase):
+class SnmpNotificationOriginatorTestCase(unittest.TestCase):
 
     CONFIG = """
 bdsSnmpAdapter:
@@ -48,111 +44,30 @@ bdsSnmpAdapter:
             authProtocol: md5  # md5, sha224, sha256, sha384, sha512, none
             privKey: privkey123
             privProtocol: des  # des, 3des, aes128, aes192, aes192blmt, aes256, aes256blmt, none  
-  notificator:
-    # temp config lines to test incomming graylog message end #
-    listeningIP: 0.0.0.0  # our REST API listens on this address
-    listeningPort: 5000 # our REST API listens on this port
-    # A single REST API call will cause SNMP notifications to all the listed targets
-    snmpTrapTargets:  # array of SNMP trap targets
-      target-I:  # descriptive name of this notification target
-        address: 127.0.0.1  # send SNMP trap to this address
-        port: 162  # send SNMP trap to this port
-        security-name: manager-B  # use this SNMP security name
-      target-II:  # descriptive name of this notification target
-        address: 127.0.0.2  # send SNMP trap to this address
-        port: 162  # send SNMP trap to this port
-        security-name: user1  # use this SNMP security name
+  responder:
+    listeningIP: 0.0.0.0  # SNMP command responder listens on this address
+    listeningPort: 11161  # SNMP command responder listens on this port
 """
 
-    def setUp(self):
-        self.my_loop = asyncio.new_event_loop()
-        self.addCleanup(self.my_loop.close)
+    @mock.patch('bdssnmpadaptor.commands.notificator.asyncio', autospec=True)
+    @mock.patch('bdssnmpadaptor.commands.notificator.AsyncioRestServer', autospec=True)
+    @mock.patch('bdssnmpadaptor.commands.notificator.SnmpNotificationOriginator', autospec=True)
+    def test_main(self, mock_ntforg, mock_restapi, mock_asyncio):
 
-        super(SnmpTrapGeneratorTestCase, self).setUp()
+        notificator.main()
 
-    def test___init__(self, mock_ntforg, mock_snmp_config):
+        mock_asyncio.Queue.assert_called_once_with()
+        mock_queue = mock_asyncio.Queue.return_value
 
-        self.mock_httpd = mock.MagicMock
+        mock_ntforg.assert_called_once_with(mock.ANY, mock_queue)
 
-        with mock.patch(
-                'bdssnmpadaptor.config.open',
-                side_effect=[io.StringIO(self.CONFIG),
-                             io.StringIO(self.CONFIG),
-                             io.StringIO(self.CONFIG)]):
-            notificator.SnmpTrapGenerator(
-                {'config': '/file'}, self.mock_httpd)
+        mock_restapi.assert_called_once_with(mock.ANY, mock_queue)
 
-        mock_snmpEngine = mock_snmp_config.getSnmpEngine.return_value
+        mock_asyncio.get_event_loop.assert_called_once_with()
+        mock_asyncio_loop = mock_asyncio.get_event_loop.return_value
 
-        mock_snmp_config.getSnmpEngine.assert_called_once_with(
-            engineId=mock.ANY)
-        mock_snmp_config.setSnmpEngineBoots.assert_called_once_with(
-            mock_snmpEngine, '/var/run/bds-snmp-responder')
-        mock_snmp_config.setSnmpTransport.assert_called_once_with(
-            mock_snmpEngine)
-        mock_snmp_config.setTrapTypeForTag.assert_called_once_with(
-            mock_snmpEngine, 'mgrs')
-
-        mock_setCommunity_calls = [
-            mock.call(mock_snmpEngine, 'manager-A', 'public',
-                      tag='mgrs', version='1'),
-            mock.call(mock_snmpEngine, 'manager-B', 'public',
-                      tag='mgrs', version='2c'),
-        ]
-        mock_snmp_config.setCommunity.assert_has_calls(
-            mock_setCommunity_calls)
-
-        mock_setUsmUser_calls = [
-            mock.call(mock_snmpEngine, 'user1', 'testUser1',
-                      'authkey123', 'md5', None, None),
-            mock.call(mock_snmpEngine, 'user2', 'testUser2',
-                      'authkey123', 'md5', 'privkey123', 'des'),
-
-        ]
-        mock_snmp_config.setUsmUser.assert_has_calls(
-            mock_setUsmUser_calls)
-
-        mock_setTrapTargetAddress_calls = [
-            mock.call(mock_snmpEngine, 'manager-B', ('127.0.0.1', 162), 'mgrs'),
-            mock.call(mock_snmpEngine, 'user1', ('127.0.0.2', 162), 'mgrs')
-        ]
-        mock_snmp_config.setTrapTargetAddress.assert_has_calls(
-            mock_setTrapTargetAddress_calls)
-
-        mock_setTrapVersion_calls = [
-            mock.call(mock_snmpEngine, 'manager-B', mock.ANY, '2c'),
-            mock.call(mock_snmpEngine, 'user1', mock.ANY, '3')
-        ]
-        mock_snmp_config.setTrapVersion.assert_has_calls(
-            mock_setTrapVersion_calls)
-
-    def test_sendTrap(self, mock_ntforg, mock_snmp_config):
-
-        self.mock_httpd = mock.MagicMock
-
-        with mock.patch(
-                'bdssnmpadaptor.config.open',
-                side_effect=[io.StringIO(self.CONFIG),
-                             io.StringIO(self.CONFIG),
-                             io.StringIO(self.CONFIG)]):
-            ntf = notificator.SnmpTrapGenerator(
-                {'config': '/file'}, self.mock_httpd)
-
-        self.my_loop.run_until_complete(ntf.sendTrap({}))
-
-        mock_snmpEngine = mock_snmp_config.getSnmpEngine.return_value
-
-        expectedVarBinds = [
-            ('1.3.6.1.2.1.1.3.0', 2),
-            ('1.3.6.1.6.3.1.1.4.1.0', '1.3.6.1.4.1.50058.103.1.1'),
-            ('1.3.6.1.4.1.50058.104.2.1.1.0', 1),
-            ('1.3.6.1.4.1.50058.104.2.1.2.0', 'error'),
-            ('1.3.6.1.4.1.50058.104.2.1.3.0', 0),
-            ('1.3.6.1.4.1.50058.104.2.1.4.0', 'error'),
-        ]
-
-        ntf.ntfOrg.sendVarBinds(
-            mock_snmpEngine, mock.ANY, None, '', expectedVarBinds)
+        mock_asyncio_loop.run_until_complete.assert_called_once_with(mock.ANY)
+        mock_asyncio_loop.close.assert_called_once_with()
 
 
 suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])
