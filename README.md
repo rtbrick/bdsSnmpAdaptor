@@ -10,7 +10,7 @@ License: BSD License 2.0
 
 *Version 0.4 - under development*
 
-This tool implements SNMP interface to REST-based
+The BDS SNMP adaptor tool implements SNMP interface to otherwise REST-based
 [RtBrick](https://www.rtbrick.com) bare metal switch platform.
 
 # Installation
@@ -34,8 +34,9 @@ sudo cp mibs/RT* /usr/share/snmp/mibs
 
 Modify config parameters in config file (dev. status)
 
-The `bds-snmp-adaptor.yml` file contains configuration information for both SNMP Command
-Responder and Notification Originator:
+The `bds-snmp-adaptor.yml` file contains configuration information for all
+conceptual parts of the BDS adaptor - SNMP command responder, SNMP notification
+originator, BDS REST API client and REST API server.
 
 .. note::
 
@@ -48,7 +49,6 @@ vim bds-snmp-adaptor.yml
 bdsSnmpAdapter:
   loggingLevel: debug
   # Log to stdout unless log file is set here
-#  rotatingLogFile: /tmp   #FIXME store this at permanent location
   stateDir: /var/run/bds-snmp-adaptor
   # BDS REST API endpoints
   access:
@@ -98,6 +98,10 @@ bdsSnmpAdapter:
       sysContact: stefan@rtbrick.com
       sysName: l2.pod2.nbg2.rtbrick.net
       sysLocation: nbg2.rtbrick.net
+      # FIXME get from BDS entity table
+      sysObjectID: '1.3.6.1.4.1.50058.102.1'
+      sysUpTime: 0
+      sysServices: 72
   # SNMP notification originator configuration
   notificator:
     # temp config lines to test incomming graylog message end #

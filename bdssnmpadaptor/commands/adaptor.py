@@ -12,6 +12,9 @@ import os
 import sys
 
 from bdssnmpadaptor import daemon
+from bdssnmpadaptor.access import BdsAccess
+from bdssnmpadaptor.snmp_responder import SnmpCommandResponder
+from bdssnmpadaptor.mib_controller import MibInstrumController
 from bdssnmpadaptor.rest_server import AsyncioRestServer
 from bdssnmpadaptor.snmp_notificator import SnmpNotificationOriginator
 
@@ -25,8 +28,9 @@ def main():
         epilog=epilogTXT, formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument(
-        '-f', '--config', default='bdsSnmpTrapAdaptor.yml', type=str,
-        help='config file')
+        '-f', '--config',
+        default='bdsSnmpRetrieveAdaptor.yml', type=str,
+        help='Path to config file')
     parser.add_argument(
         '--daemonize', action='store_true',
         help='Fork and run as a background process')
@@ -36,6 +40,8 @@ def main():
 
     cliargs = parser.parse_args()
 
+    cliArgsDict = vars(cliargs)
+
     cliargs.config = os.path.abspath(cliargs.config)
 
     if cliargs.daemonize:
@@ -44,7 +50,12 @@ def main():
     if cliargs.pidfile:
         daemon.pidfile(cliargs.pidfile)
 
-    cliArgsDict = vars(cliargs)
+    bdsAccess = BdsAccess(cliArgsDict)
+
+    mibController = MibInstrumController()
+    mibController.setOidDbAndLogger(bdsAccess.getOidDb(), cliArgsDict)
+
+    SnmpCommandResponder(cliArgsDict, mibController)
 
     queue = asyncio.Queue()
 
@@ -56,7 +67,8 @@ def main():
 
     try:
         loop.run_until_complete(
-            asyncio.gather(snmpNtfOrg.run_forever(), httpServer.initialize())
+            asyncio.gather(bdsAccess.run_forever(),
+                           snmpNtfOrg.run_forever(), httpServer.initialize())
         )
 
     except KeyboardInterrupt:

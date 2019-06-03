@@ -16,8 +16,8 @@ against the tarball package:
 
    # pip3 install bdsSnmpAdaptor-*.tar.gz
 
-The command-line utilities `bds-snmp-notificator` and `bds-snmp-responder`
-will be installed into the system binaries directory.
+The command-line utility `bds-snmp-adaptor` will be installed into
+the system binaries directory.
 
 System configuration
 --------------------
@@ -30,7 +30,7 @@ Thee BDS system requires configuration, logs and state directories:
    $ sudo mkdir /var/log/bds-snmp-adaptor
    $ sudo mkdir /var/run/bds-snmp-adaptor
 
-The BDS tools are driven by a single configuration file expressed in the
+The BDS tool is driven by a single configuration file expressed in the
 YAML mark up. First, one need to copy the prototype configuration file
 to its final location:
 
@@ -44,20 +44,23 @@ to its final location:
    $ sudo cp conf/bds-snmp-adaptor.yml /etc/bds-snmp-adaptor
    $ sudo cp mibs/* /etc/bds-snmp-adaptor/mibs
 
-For the SNMP command responder tool, the following configuration changes
-might be required:
+Here is the example of BDS configuration file driving all conceptual parts
+of the BDS adaptor - SNMP command responder, SNMP notification originator,
+BDS REST API client and REST API server.
 
 .. code-block:: yaml
 
     bdsSnmpAdapter:
-      loggingLevel: info
-      rotatingLogFile: /var/log/bds-snmp-responder
-      stateDir: /var/run/bds-snmp-responder
+      loggingLevel: debug
+      stateDir: /var/run/bds-snmp-adaptor
+      # BDS REST API endpoints
       access:
         rtbrickHost: 10.0.3.10
         rtbrickPorts:
-         - confd: 2002  # Define the rest port on which confd listens"
-         - fwdd-hald: 5002  # Define the rest port on which fwwd listens"
+         - confd: 2002  # confd REST API listens on this port"
+         - fwdd-hald: 5002  # fwwd REST API listens on this port"
+      # Common SNMP engine configuration, used by both command responder and
+      # notification originator
       snmp:
         # Paths to ASN.1 MIB files in form of directories or URI, in
         # desired search order
@@ -89,14 +92,34 @@ might be required:
                 authProtocol: md5  # md5, sha224, sha256, sha384, sha512, none
                 privKey: privkey123
                 privProtocol: des  # des, 3des, aes128, aes192, aes192blmt, aes256, aes256blmt, none
+      # SNMP command responder configuration
       responder:
-        listeningIP: 0.0.0.0  # SNMP get/getNext listening IP address
-        listeningPort: 161  # SNMP get/getNext listening port
+        listeningIP: 0.0.0.0  # SNMP command responder listens on this address
+        listeningPort: 161  # SNMP command responder listens on this port
         staticOidContent:
           sysDescr: l2.pod2.nbg2.rtbrick.net
           sysContact: stefan@rtbrick.com
           sysName: l2.pod2.nbg2.rtbrick.net
           sysLocation: nbg2.rtbrick.net
+          # FIXME get from BDS entity table
+          sysObjectID: '1.3.6.1.4.1.50058.102.1'
+          sysUpTime: 0
+          sysServices: 72
+      # SNMP notification originator configuration
+      notificator:
+        # temp config lines to test incomming graylog message end #
+        listeningIP: 0.0.0.0  # our REST API listens on this address
+        listeningPort: 5000 # our REST API listens on this port
+        # A single REST API call will cause SNMP notifications to all the listed targets
+        snmpTrapTargets:  # array of SNMP trap targets
+          target-I:  # descriptive name of this notification target
+            address: 127.0.0.1  # send SNMP trap to this address
+            port: 162  # send SNMP trap to this port
+            security-name: manager-B  # use this SNMP security name
+          target-II:  # descriptive name of this notification target
+            address: 127.0.0.2  # send SNMP trap to this address
+            port: 162  # send SNMP trap to this port
+            security-name: user1  # use this SNMP security name
 
 System start up configuration
 -----------------------------
@@ -111,9 +134,9 @@ For `systemd` unit files the installation procedure would be:
 
     $ sudo cp bdsSnmpAdaptor/systemd/ubuntu/*service /etc/systemd/system/
     $ sudo systemctl daemon-reload
-    $ sudo systemctl start bds-snmp-responder bds-snmp-notificator
-    $ sudo systemctl enable bds-snmp-responder bds-snmp-notificator
-    $ sudo systemctl status bds-snmp-responder bds-snmp-notificator
+    $ sudo systemctl start bds-snmp-adaptor
+    $ sudo systemctl enable bds-snmp-adaptor
+    $ sudo systemctl status bds-snmp-adaptor
 
 For `SYSV` init scripts:
 
@@ -122,22 +145,19 @@ For `SYSV` init scripts:
     $ tar zxvf bdsSnmpAdaptor-*.tar.gz bdsSnmpAdaptor-*/sysvinit
     $ sudo cp bdsSnmpAdaptor-0.0.1/sysvinit/onl/* /etc/init.d
     $ for x in 2 3 4 5
-        sudo ln -s /etc/init.d/bds-snmp-responder /etc/rc.$xd/S02bds-snmp-responder
-        sudo ln -s /etc/init.d/bds-snmp-notificator /etc/rc.$xd/S02bds-snmp-notificator
+        sudo ln -s /etc/init.d/bds-snmp-adaptor /etc/rc.$xd/S02bds-snmp-adaptor
     done
-    $ sudo /etc/init.d/bds-snmp-responder start
-    $ sudo /etc/init.d/bds-snmp-notificator start
+    $ sudo /etc/init.d/bds-snmp-adaptor start
 
 Verification and troubleshooting
 --------------------------------
 
-Once everything is installed, one can check out the BDS daemon processes:
+Once everything is installed, one can check out the BDS daemon process:
 
 .. code-block:: bash
 
     # ps -ef | grep bds-snmp
-    root     14405     1  0 Mar24 ?        00:08:47 /usr/bin/python3 /usr/local/bin/bds-snmp-responder
-    root     14405     1  0 Mar24 ?        00:08:47 /usr/bin/python3 /usr/local/bin/bds-snmp-notificator
+    root     14405     1  0 May24 ?        00:08:47 /usr/bin/python3 /usr/local/bin/bds-snmp-adaptor
 
 Their logs in the `/var/log/bds-snmp-adaptor` directory and test SNMP command
 responder by running SNMP queries against it:
