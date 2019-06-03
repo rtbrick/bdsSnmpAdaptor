@@ -9,10 +9,7 @@ import binascii
 import struct
 import time
 
-from pysnmp.proto.rfc1902 import Integer32
-
 from bdssnmpadaptor import mapping_functions
-from bdssnmpadaptor.oidDb import OidDbItem
 
 IFTYPEMAP = {
     1: 6  # ethernet-csmacd(6)
@@ -136,13 +133,8 @@ class LldpdGlobalLldpIntfStatus(object):
 
         with targetOidDb.module(__name__) as add:
 
-            targetOidDb.insertOid(
-                newOidItem=OidDbItem(
-                    bdsMappingFunc=__name__,
-                    oid='1.3.6.1.2.1.2.1.0',
-                    name='ifIndex',
-                    pysnmpBaseType=Integer32,
-                    value=len(bdsJsonResponseDict['objects'])))
+            add('IF-MIB', 'ifNumber', 0,
+                value=len(bdsJsonResponseDict['objects']))
 
             # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
 

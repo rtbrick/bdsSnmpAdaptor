@@ -62,7 +62,6 @@ class OidDb(object):
         self.oidDict = OrderedDict()  # this dict holds all OID items in this # DB
 
         self.dirty = True  # DB needs sorting
-        self.lock = False  # not implemented yet, locker for insertOid
 
     def add(self, mibName, mibSymbol, *indices, value=None,
             valueFormat=None, bdsMappingFunc=None):
@@ -105,13 +104,12 @@ class OidDb(object):
                 '"%s"' % ('::'.join(objectIdentity.getMibSymbol()),
                           objectIdentity.getOid(), objectSyntax, value))
 
-        self.insertOid(oidDbItem)
-
-    def insertOid(self, newOidItem):
         self.moduleLogger.debug(
-            f'{"updating" if newOidItem.oid in self.oidDict else "adding"} '
-            f'{newOidItem.oid} {newOidItem.value}')
-        self.oidDict[newOidItem.oid] = newOidItem
+            f'{"updating" if oidDbItem.oid in self.oidDict else "adding"} '
+            f'{oidDbItem.oid} {oidDbItem.value}')
+
+        self.oidDict[oidDbItem.oid] = oidDbItem
+
         self.dirty = True
 
     def deleteOidsWithPrefix(self, oidPrefix):
@@ -178,40 +176,25 @@ class OidDbItem(object):
     Implements managed objects comparison what is used for ordering
     objects by OID.
     """
-    def __init__(self, bdsMappingFunc=None, oid=None, name=None,
-                 pysnmpBaseType=None, value=None, pysnmpRepresentation=None):
-        """ Database Item, which pysnmp attributes required for get and getnext.
+    def __init__(self, bdsMappingFunc=None, oid=None, name=None, value=None):
+        """Database Item, which pysnmp attributes required for get and getnext.
 
         Args:
             bdsMappingFunc(string): used to mark, which mapping function owns this oid. (used for delete)
             oid(string): oid as string, separated by dots.
-            name(string): name of the oid, should map with MIB identifier name, altough this is not enforced
-            pysnmpBaseType(class): used for conversion of value, options are defined in pysnmp.proto.rfc1902
-            value: object that holds the value of the oid. Type is flexible, subject to oidself
+            name(string): name of the oid, should map with MIB identifier name, although this is not enforced
+            value: object that holds the value of the OID. Type is flexible, subject to OID type
 
         Examples:
           OidDbItem(
-            bdsMappingFunc = "confd_global_interface_container",
-            oid = oidSegment+"1."+str(index),
+            bdsMappingFunc="confd_global_interface_container",
+            oid=oidSegment + "1." + str(index),
             name="ifIndex",
-            pysnmpBaseType="Integer32",
-            value=int(index)))
-
-        raise:
-
-        Todo:
-            * Verify value type, by cross-checking with pysnmpBaseType
+            value=rfc1902.Integer32(index)))
         """
         self.bdsMappingFunc = bdsMappingFunc
         self.oid = ObjectIdentifier(oid)
         self.name = name
-
-        # For backward compatibility
-        if pysnmpBaseType is not None:
-            representation = {pysnmpRepresentation if pysnmpRepresentation else 'value': value}
-            value = pysnmpBaseType(**representation)
-
-        self.pysnmpBaseType = pysnmpBaseType
         self.value = value
 
     def __lt__(self, oidItem):
@@ -221,20 +204,4 @@ class OidDbItem(object):
         return self.oid == oidItem.oid
 
     def __str__(self):
-        returnStr = f"""\
-############################################################
-OID:         {self.oid}            
-Name:        {self.name}
-SNMP type:   {self.pysnmpBaseType}
-"""
-
-        if self.value is not None:
-            returnStr += f"""\
-Value:       {self.value}
-"""
-
-        returnStr += f"""\
-############################################################
-"""
-
-        return returnStr
+        return "{self.name}({self.value}):{self.value}"
