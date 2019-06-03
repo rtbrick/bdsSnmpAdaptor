@@ -9,7 +9,7 @@ import binascii
 import struct
 import time
 
-from bdssnmpadaptor.mapping_functions import BdsMappingFunctions
+from bdssnmpadaptor import mapping_functions
 
 IFTYPEMAP = {
     1: 6  # ethernet-csmacd(6)
@@ -141,9 +141,9 @@ class ConfdGlobalInterfacePhysical(object):
 
                 ifName = bdsJsonObject['attribute']['interface_name']
 
-                index = BdsMappingFunctions.ifIndexFromIfName(ifName)
+                index = mapping_functions.ifIndexFromIfName(ifName)
 
-                #ifPhysicalLocation = BdsMappingFunctions.stripIfPrefixFromIfName(ifName)
+                #ifPhysicalLocation = mapping_functions.stripIfPrefixFromIfName(ifName)
 
                 if ifName.startswith('if'):     #fix for lo0 in table
 

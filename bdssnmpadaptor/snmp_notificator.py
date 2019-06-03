@@ -28,6 +28,11 @@ SYSLOGMSGTEXT = '1.3.6.1.4.1.50058.104.2.1.4.0'
 
 
 class SnmpNotificationOriginator(object):
+    """Send SNMP TRAP messages.
+
+    Runs within asyncio loop, fetches messages from a queue and sends
+    them in SNMP TRAP notifications to preconfigured target(s).
+    """
 
     TARGETS_TAG = 'mgrs'
 

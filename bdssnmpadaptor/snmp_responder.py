@@ -16,9 +16,11 @@ from bdssnmpadaptor.log import set_logging
 
 
 class SnmpCommandResponder(object):
-    """SNMP Command Responder (AKA SNMP Agent) implementation.
+    """SNMP Command Responder.
 
-
+    Listens for incoming SNMP commands within asyncio loop,
+    calls MIB instrumentation controller to retrieve requested
+    management information and responds back to SNMP manager.
     """
 
     def __init__(self, cliArgsDict, mibController):

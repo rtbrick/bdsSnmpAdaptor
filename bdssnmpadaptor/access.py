@@ -57,6 +57,12 @@ REQUEST_MAPPING_DICTS = {
 
 
 class BdsAccess(object):
+    """Populate SNMP managed objects database from BDS.
+
+    Within asyncio loop, perform BDS REST API call, pull configured
+    documents, turn them into SNMP managed objects and cache them
+    in the in-memory OID DB.
+    """
 
     def __init__(self, cliArgsDict):
 

@@ -10,7 +10,6 @@ import yaml
 
 
 def loadConfig(filename):
-
     try:
         with open(filename) as stream:
             config = yaml.load(stream)

@@ -85,7 +85,7 @@ MIB Info: http://www.circitor.fr/Mibs/Html/I/IF-MIB.php
     :widths: 4, 19, 16, 25, 39
 
     1, "ifIndex", "Integer32", "interface_name",\
-                                "BdsMappingFunctions.ifIndexFromIfName"
+                                "mapping_functions.ifIndexFromIfName"
     2, "ifDescr", "DisplayString", "interface_name",
     3, "ifType", "Integer32",6 ,static (hard coded)
     4, "ifMtu", "Integer32", ,
