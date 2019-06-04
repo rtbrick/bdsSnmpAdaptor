@@ -165,10 +165,9 @@ class StaticAndPredefinedOids(object):
     ]
 
     @classmethod
-    def setOids(cls, staticOidDict, targetOidDb,
-                lastSequenceNumberList, birthday):
+    def setOids(cls, oidDb, staticOidDict, bdsIds, birthday):
 
-        with targetOidDb.module(__name__) as add:
+        with oidDb.module(__name__) as add:
 
             for column in cls.SYSTEM_TABLE_COLUMNS:
                 add('SNMPv2-MIB', column, 0, value=staticOidDict[column])
