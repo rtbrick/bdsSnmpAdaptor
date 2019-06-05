@@ -10,11 +10,55 @@ from bdssnmpadaptor import mapping_functions
 
 
 class ConfdLocalSystemSoftwareInfoConfd(object):
-    """Local system software information
+    """Implement SNMP SNMPv2-MIB for BDS system.
+
+    Populates SNMP managed objects of SNMP `SNMPv2-MIB` module from
+    `local.system.software.info.confd` BDS table.
+
+    Notes
+    -----
+
+    Expected input:
+
+    .. code-block:: json
+
+    {
+      "objects": [
+        {
+          "sequence": 3,
+          "update": true,
+          "timestamp": "Tue Apr 09 11:44:57 GMT +0000 2019",
+          "attribute": {
+            "library": "bd",
+            "commit_id": "8d5cc5a8ca9324154568470b1e8be20df57bedb3",
+            "commit_date": "Fri Mar 22 12:47:37 2019 +0530",
+            "package_date": "Mon, 08 Apr 2019 23:31:43 +0000",
+            "vc_checkout": "git checkout 8d5cc5a8ca9324154568470b1e8be20df57bedb3",
+            "branch": "master",
+            "version": "19.04-29",
+            "source_path": "/var/lib/jenkins2/workspace/build--librtbrickinfra/DEBUG/source/bd"
+          }
+        }
+      ]
+    }
     """
 
     @classmethod
     def setOids(cls, oidDb, bdsData, bdsIds, birthday):
+        """Populates OID DB with BDS information.
+
+        Takes known objects from JSON document, puts them into
+        the OID DB as specific MIB managed objects.
+
+        Args:
+            oidDb (OidDb): OID DB instance to work on
+            bdsData (dict): BDS information to put into OID DB
+            bdsIds (list): list of last known BDS record sequence IDs
+            birthday (float): timestamp of system initialization
+
+        Raises:
+            BdsError: on OID DB population error
+        """
 
         swString = mapping_functions.stringFromSoftwareInfo(bdsData)
 

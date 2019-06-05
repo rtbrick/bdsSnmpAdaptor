@@ -12,19 +12,22 @@ from bdssnmpadaptor import mapping_functions
 
 HEX_STRING_LAMBDA = lambda x: int(x, 16)
 
-littleEndianLongLongStruct = struct.Struct('<q')
-
 LELL_LAMBDA = lambda x: int(
-    littleEndianLongLongStruct.unpack(binascii.unhexlify(x))[0])
+    struct.Struct('<q').unpack(binascii.unhexlify(x))[0])
 
 
 class FwddGlobalInterfacePhysicalStatistics(object):
-    """Physical interface statistics
+    """Implement SNMP IF-MIB for physical BDS interfaces.
 
-    curl -X POST -H "Content-Type: application/json" -H "Accept: */*" -H "connection: close"\
-        -H "Accept-Encoding: application/json"\
-        -d '{"table": {"table_name": "global.interface.physical.statistics"}}'\
-        "http://10.0.3.10:5002/bds/table/walk?format=raw" | jq '.'
+    Populates SNMP managed objects of SNMP `IF-MIB` module from
+    `global.interface.physical.statistics` BDS table.
+
+    Notes
+    -----
+
+    Expected input:
+
+    .. code-block:: json
 
     {
       "objects": [
@@ -122,14 +125,25 @@ class FwddGlobalInterfacePhysicalStatistics(object):
           "update": true,
           "sequence": 1
         }
-      ],
-      "table": {
-        "table_name": "global.interface.physical.statistics"
-      }
+      ]
     }
     """
     @classmethod
     def setOids(cls, oidDb, bdsData, bdsIds, birthday):
+        """Populates OID DB with BDS information.
+
+        Takes known objects from JSON document, puts them into
+        the OID DB as specific MIB managed objects.
+
+        Args:
+            oidDb (OidDb): OID DB instance to work on
+            bdsData (dict): BDS information to put into OID DB
+            bdsIds (list): list of last known BDS record sequence IDs
+            birthday (float): timestamp of system initialization
+
+        Raises:
+            BdsError: on OID DB population error
+        """
 
         with oidDb.module(__name__) as add:
 

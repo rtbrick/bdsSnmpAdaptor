@@ -9,6 +9,11 @@
 
 
 class StaticAndPredefinedOids(object):
+    """Implement multiple SNMP MIBs based on static configuration.
+
+    Populates some of SNMP managed objects of SNMP `HOST-RESOURCES-MIB`,
+    `SNMPv2-MIB` and `ENTITY-MIB` modules based on statically configured data.
+    """
 
     SYSTEM_TABLE_COLUMNS = [
         'sysDescr',
@@ -166,6 +171,20 @@ class StaticAndPredefinedOids(object):
 
     @classmethod
     def setOids(cls, oidDb, staticOidDict, bdsIds, birthday):
+        """Populates OID DB with BDS information.
+
+        Takes known objects from JSON document, puts them into
+        the OID DB as specific MIB managed objects.
+
+        Args:
+            oidDb (OidDb): OID DB instance to work on
+            bdsData (dict): BDS information to put into OID DB
+            bdsIds (list): list of last known BDS record sequence IDs
+            birthday (float): timestamp of system initialization
+
+        Raises:
+            BdsError: on OID DB population error
+        """
 
         with oidDb.module(__name__) as add:
 

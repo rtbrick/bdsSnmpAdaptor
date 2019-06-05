@@ -18,25 +18,50 @@ HRSWRUNSTATUSMAP = {
 
 
 class ConfdGlobalStartupStatusConfd(object):
-    """Startup status
+    """Implement SNMP HOST-RESOURCES-MIB for BDS system.
 
-    curl -X POST -H "Content-Type: application/json" -H "Accept: */*" -v -H "connection: close"
-         -H "Accept-Encoding: application/json"
-         -d '{"table": {"table_name": "global.startup.status.confd"}}' "http://10.0.3.50:2002/bds/table/walk?format=raw"
+    Populates SNMP managed objects of SNMP `HOST-RESOURCES-MIB` module from
+    `global.startup.status.confd` BDS table.
 
-    { "table": { "table_name": "global.startup.status.confd" },
+    Notes
+    -----
+
+    Expected input:
+
+    .. code-block:: json
+
+    {
       "objects": [
-         { "sequence": 5, "update": true, "attribute":
-           { "module_name": "bd", "startup_status": "02", "up_time": "a03d475c642e696e", "bd_name": "confd" } },
-         { "sequence": 6, "update": true, "attribute":
-           { "module_name": "bds", "startup_status": "02", "up_time": "a03d475c2e696e63", "bd_name": "confd" } },
-         { "sequence": 3, "update": true, "attribute":
-           { "module_name": "lwip", "startup_status": "02", "up_time": "a03d475c6c6f672e", "bd_name": "confd" } } ] }
-
+        {
+          "sequence": 5,
+          "update": true,
+          "attribute": {
+            "module_name": "bd",
+            "startup_status": "02",
+            "up_time": "a03d475c642e696e",
+            "bd_name": "confd"
+          }
+        }
+      ]
+    }
     """
 
     @classmethod
     def setOids(cls, oidDb, bdsData, bdsIds, birthday):
+        """Populates OID DB with BDS information.
+
+        Takes known objects from JSON document, puts them into
+        the OID DB as specific MIB managed objects.
+
+        Args:
+            oidDb (OidDb): OID DB instance to work on
+            bdsData (dict): BDS information to put into OID DB
+            bdsIds (list): list of last known BDS record sequence IDs
+            birthday (float): timestamp of system initialization
+
+        Raises:
+            BdsError: on OID DB population error
+        """
 
         with oidDb.module(__name__) as add:
 
