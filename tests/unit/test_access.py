@@ -58,7 +58,7 @@ bdsSnmpAdapter:
         super(BdsAccessTestCase, self).setUp()
 
     def test_getOidDb(self):
-        self.assertIsInstance(self.access.getOidDb(), oidDb.OidDb)
+        self.assertIsInstance(self.access.oidDb, oidDb.OidDb)
 
     @asynctest.patch(
         'bdssnmpadaptor.access.aiohttp.ClientSession', autospec=True)
