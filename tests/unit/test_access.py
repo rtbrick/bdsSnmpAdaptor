@@ -14,7 +14,7 @@ from unittest import mock
 import asynctest
 
 from bdssnmpadaptor import access
-from bdssnmpadaptor import oidDb
+from bdssnmpadaptor import oid_db
 
 
 @mock.patch('tempfile.NamedTemporaryFile', new=mock.MagicMock)
@@ -58,7 +58,7 @@ bdsSnmpAdapter:
         super(BdsAccessTestCase, self).setUp()
 
     def test_getOidDb(self):
-        self.assertIsInstance(self.access.oidDb, oidDb.OidDb)
+        self.assertIsInstance(self.access.oidDb, oid_db.OidDb)
 
     @asynctest.patch(
         'bdssnmpadaptor.access.aiohttp.ClientSession', autospec=True)

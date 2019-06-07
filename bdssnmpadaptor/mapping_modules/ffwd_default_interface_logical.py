@@ -59,7 +59,6 @@ class FfwdDefaultInterfaceLogical(object):
         """
 
         with oidDb.module(__name__) as add:
-            # oidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
 
             for bdsJsonObject in bdsData['objects']:
                 ifName = bdsJsonObject['attribute']['interface_name']

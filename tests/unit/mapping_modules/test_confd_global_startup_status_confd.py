@@ -12,7 +12,7 @@ import sys
 import unittest
 from unittest import mock
 
-from bdssnmpadaptor import oidDb
+from bdssnmpadaptor import oid_db
 from bdssnmpadaptor.mapping_modules import confd_global_startup_status_confd
 
 
@@ -35,11 +35,11 @@ class ConfdGlobalStartupStatusConfdTestCase(unittest.TestCase):
         JSON_RESPONSE = json.load(fl)
 
     def setUp(self):
-        with mock.patch.object(oidDb, 'loadConfig', autospec=True) as config_mock:
+        with mock.patch.object(oid_db, 'loadConfig', autospec=True) as config_mock:
             config_mock.return_value = self.CONFIG['config']
 
-            with mock.patch.object(oidDb, 'set_logging', autospec=True):
-                self.oidDb = oidDb.OidDb(self.CONFIG)
+            with mock.patch.object(oid_db, 'set_logging', autospec=True):
+                self.oidDb = oid_db.OidDb(self.CONFIG)
 
         self.container = confd_global_startup_status_confd.ConfdGlobalStartupStatusConfd()
 

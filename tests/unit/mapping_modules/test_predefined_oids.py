@@ -11,7 +11,7 @@ import sys
 import unittest
 from unittest import mock
 
-from bdssnmpadaptor import oidDb
+from bdssnmpadaptor import oid_db
 from bdssnmpadaptor.mapping_modules import predefined_oids
 
 
@@ -37,10 +37,10 @@ class StaticAndPredefinedOidsTestCase(unittest.TestCase):
     }
 
     def setUp(self):
-        with mock.patch.object(oidDb, 'loadConfig', autospec=True) as config_mock:
-            with mock.patch.object(oidDb, 'set_logging', autospec=True):
+        with mock.patch.object(oid_db, 'loadConfig', autospec=True) as config_mock:
+            with mock.patch.object(oid_db, 'set_logging', autospec=True):
                 config_mock.return_value = self.CONFIG
-                self.oidDb = oidDb.OidDb({'config': {}})
+                self.oidDb = oid_db.OidDb({'config': {}})
 
         self.container = predefined_oids.StaticAndPredefinedOids()
 
