@@ -70,7 +70,7 @@ See https://www.rtbrick.com for RtBrick product information.
     bdsAccess = BdsAccess(cliArgsDict)
 
     mibController = MibInstrumController()
-    mibController.setOidDbAndLogger(bdsAccess.getOidDb(), cliArgsDict)
+    mibController.setOidDbAndLogger(bdsAccess.oidDb, cliArgsDict)
 
     SnmpCommandResponder(cliArgsDict, mibController)
 

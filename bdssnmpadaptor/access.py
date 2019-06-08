@@ -7,6 +7,7 @@
 # License: BSD License 2.0
 #
 import asyncio
+import collections
 import time
 
 import aiohttp
@@ -24,34 +25,34 @@ BIRTHDAY = time.time()
 REQUEST_MAPPING_DICTS = {
     'confd_local.system.software.info.confd': {
         'mappingFunc': confd_local_system_software_info_confd.ConfdLocalSystemSoftwareInfoConfd,
-        'bdsRequestDict': {'process': 'confd',
-                           'urlSuffix': 'bds/table/walk?format=raw',
-                           'table': 'local.system.software.info.confd'}
+        'bdsRequest': {'process': 'confd',
+                       'urlSuffix': 'bds/table/walk?format=raw',
+                       'table': 'local.system.software.info.confd'}
     },
     'confd_global_startup_status_confd': {
         'mappingFunc': confd_global_startup_status_confd.ConfdGlobalStartupStatusConfd,
-        'bdsRequestDict': {'process': 'confd',
-                           'urlSuffix': 'bds/table/walk?format=raw',
-                           'table': 'global.startup.status.confd'}
+        'bdsRequest': {'process': 'confd',
+                       'urlSuffix': 'bds/table/walk?format=raw',
+                       'table': 'global.startup.status.confd'}
     },
     'confd_global_interface_physical': {
         'mappingFunc': confd_global_interface_physical.ConfdGlobalInterfacePhysical,
-        'bdsRequestDict': {'process': 'confd',
-                           'urlSuffix': 'bds/table/walk?format=raw',
-                           'table': 'global.interface.physical'}
+        'bdsRequest': {'process': 'confd',
+                       'urlSuffix': 'bds/table/walk?format=raw',
+                       'table': 'global.interface.physical'}
     }
     # 'ffwd_default_interface_logical' : {
     #     'mappingFunc': ffwd_default_interface_logical.FfwdDefaultInterfaceLogical,
     #     'lastSequenceHash': None,
-    #     'bdsRequestDict': {'process': 'fwdd-hald',      ## Check
-    #                        'urlSuffix':'bds/table/walk?format=raw',
-    #                        'table':'default.interface.logical'}
+    #     'bdsRequest': {'process': 'fwdd-hald',      ## Check
+#                        'urlSuffix':'bds/table/walk?format=raw',
+#                        'table':'default.interface.logical'}
     #  },
     # 'fwdd_global_interface_physical_statistics' : {
     #     'mappingFunc': fwdd_global_interface_physical_statistics.FwddGlobalInterfacePhysicalStatistics,
-    #     'bdsRequestDict': {'process': 'fwdd-hald',      ## Check
-    #                        'urlSuffix':'bds/table/walk?format=raw',
-    #                        'table':'global.interface.physical.statistics'}
+    #     'bdsRequest': {'process': 'fwdd-hald',      ## Check
+#                        'urlSuffix':'bds/table/walk?format=raw',
+#                        'table':'global.interface.physical.statistics'}
     #   }
 }
 
@@ -75,33 +76,33 @@ class BdsAccess(object):
         self.rtbrickPorts = (configDict['access']['rtbrickPorts'])
         # self.rtbrickCtrldPort = configDict['access']['rtbrickCtrldPort']
         # self.rtbrickContainerName = configDict['access']['rtbrickContainerName']
-        self.staticOidDict = {}
 
         self.staticOidDict = configDict['responder']['staticOidContent']
 
-        self.expirytimer = 50  ### FIXME
-        self.responseJsonDicts = {}
-        self.oidDb = OidDb(cliArgsDict)
+        # TODO: expire stale objects from the DB
+        self._oidDb = OidDb(cliArgsDict)
 
         # used for hashing numbers of objects and hash over sequence numbers
-        self.tableSequenceListDict = {}
+        # TODO: expire this
+        self.bdsIds = collections.defaultdict(list)
 
         # 'logging': 'warning'
-        # do more stuff here. e.g. connecectivity checks etc
+        # do more stuff here. e.g. connectivity checks etc
 
-    def getOidDb(self):
-        return self.oidDb
+    @property
+    def oidDb(self):
+        return self._oidDb
 
-    async def getJson(self, bdsRequestDict):
-        bdsProcess = bdsRequestDict['process']
-        bdsSuffix = bdsRequestDict['urlSuffix']
-        bdsTable = bdsRequestDict['table']
+    async def getJson(self, bdsRequest):
+        bdsProcess = bdsRequest['process']
+        bdsSuffix = bdsRequest['urlSuffix']
+        bdsTable = bdsRequest['table']
 
-        if 'attributes' in bdsRequestDict:
+        if 'attributes' in bdsRequest:
             attributeDict = {}
 
-            for attribute in bdsRequestDict['attributes']:
-                attributeDict[attribute] = bdsRequestDict['attributes'][attribute]
+            for attribute in bdsRequest['attributes']:
+                attributeDict[attribute] = bdsRequest['attributes'][attribute]
 
             requestData = {
                 'table': {
@@ -116,10 +117,9 @@ class BdsAccess(object):
 
         else:
             requestData = {
-                'table':
-                    {
-                        'table_name': bdsTable
-                    }
+                'table': {
+                    'table_name': bdsTable
+                }
             }
 
         rtbrickProcessPortDict = [
@@ -138,7 +138,7 @@ class BdsAccess(object):
                 async with session.post(url, timeout=5,
                                         headers=headers,
                                         json=requestData) as response:
-                    responseJsonDict = await response.json(content_type='application/json')
+                    bdsResponse = await response.json(content_type='application/json')
 
         except Exception as exc:
             self.moduleLogger.error(f'HTTP request for {url} failed: {exc}')
@@ -151,15 +151,7 @@ class BdsAccess(object):
         self.moduleLogger.info(f'received HTTP {response.status} for {url}')
         self.moduleLogger.debug(f'HTTP response {response}')
 
-        return True, responseJsonDict
-
-    def setTableSequenceDict(self, bdsRequestDictKey, responseJsonDict):
-        sequenceNumberList = []
-
-        for i, bdsJsonObject in enumerate(responseJsonDict['objects']):
-            sequenceNumberList.append(bdsJsonObject['sequence'])
-
-        self.tableSequenceListDict[bdsRequestDictKey] = sequenceNumberList
+        return True, bdsResponse
 
     async def run_forever(self):
 
@@ -168,49 +160,43 @@ class BdsAccess(object):
 
             try:
                 StaticAndPredefinedOids.setOids(
-                    self.oidDb, self.staticOidDict, [], 0)
+                    self._oidDb, self.staticOidDict, [], 0)
 
             except Exception as exc:
                 self.moduleLogger.error(
                     f'failed at populating OID DB with predefined OIDs: {exc}')
                 continue
 
-            for bdsRequestDictKey in REQUEST_MAPPING_DICTS:
-                self.moduleLogger.debug(f'working on {bdsRequestDictKey}')
+            for bdsReqKey in REQUEST_MAPPING_DICTS:
+                self.moduleLogger.debug(f'working on {bdsReqKey}')
 
-                bdsRequestDict = REQUEST_MAPPING_DICTS[bdsRequestDictKey]['bdsRequestDict']
-                mappingfunc = REQUEST_MAPPING_DICTS[bdsRequestDictKey]['mappingFunc']
-                bdsProcess = bdsRequestDict['process']
-                bdsTable = bdsRequestDict['table']
+                bdsRequest = REQUEST_MAPPING_DICTS[bdsReqKey]['bdsRequest']
+                mappingfunc = REQUEST_MAPPING_DICTS[bdsReqKey]['mappingFunc']
 
-                resultFlag, responseJsonDict = await self.getJson(bdsRequestDict)
+                resultFlag, bdsResponse = await self.getJson(bdsRequest)
 
                 if not resultFlag:
                     self.moduleLogger.error('BDS JSON is not available')
                     continue
 
-                responseTableKey = f'{bdsProcess}_{bdsTable}'
-
-                self.responseJsonDicts[responseTableKey] = responseJsonDict
+                tableKey = f'{bdsRequest["process"]}_{bdsRequest["table"]}'
 
                 self.moduleLogger.debug(
-                    f'responseJsonDicts[{responseTableKey}] {responseJsonDict}')
+                    f'bdsResponses[{tableKey}] {bdsResponse}')
 
-                if bdsRequestDictKey in self.tableSequenceListDict:
-                    tableSequenceList = self.tableSequenceListDict[bdsRequestDictKey]
-
-                else:
-                    tableSequenceList = []  # required for the first run
+                bdsId = self.bdsIds[bdsReqKey]
 
                 try:
                     mappingfunc.setOids(
-                        self.oidDb, responseJsonDict, tableSequenceList, BIRTHDAY)
+                        self._oidDb, bdsResponse, bdsId, BIRTHDAY)
 
                 except Exception as exc:
                     self.moduleLogger.error(
                         f'failed at populating OID DB from BDS response: {exc}')
                     continue
 
-                self.setTableSequenceDict(bdsRequestDictKey, responseJsonDict)
+                self.bdsIds[bdsReqKey] = [
+                    obj['sequence'] for obj in bdsResponse['objects']
+                ]
 
             self.moduleLogger.debug(f'done refreshing OID DB')
