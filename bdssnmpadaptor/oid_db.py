@@ -132,7 +132,9 @@ class OidDb(object):
             self._oids.clear()
             self._oids.update(self._candidateOids)
             self._candidateOids.clear()
-            self._expireBy = now + self.EXPIRE_PERIOD
+
+            # stale entries expire in two runs of `.add`
+            self._expireBy = now + self.EXPIRE_PERIOD / 2
 
     def deleteOidsWithPrefix(self, oidPrefix):
         oidPrefix = ObjectIdentifier(oidPrefix)
