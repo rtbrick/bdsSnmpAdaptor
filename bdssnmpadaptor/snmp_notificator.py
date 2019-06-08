@@ -36,8 +36,8 @@ class SnmpNotificationOriginator(object):
 
     TARGETS_TAG = 'mgrs'
 
-    def __init__(self, cliArgsDict, queue):
-        configDict = loadConfig(cliArgsDict['config'])
+    def __init__(self, args, queue):
+        configDict = loadConfig(args.config)
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 

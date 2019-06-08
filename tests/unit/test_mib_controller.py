@@ -41,7 +41,7 @@ class MibControllerTestCase(unittest.TestCase):
                              io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG)]):
             self.mc = mib_controller.MibInstrumController().setOidDbAndLogger(
-                self.mock_oidDb, {'config': '/file'})
+                self.mock_oidDb, mock.MagicMock(config={}))
 
         super(MibControllerTestCase, self).setUp()
 

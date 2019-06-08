@@ -72,7 +72,7 @@ class OidDbTestCase(unittest.TestCase):
     def setUp(self):
         with mock.patch.object(oid_db, 'loadConfig', autospec=True):
             with mock.patch.object(oid_db, 'set_logging', autospec=True):
-                self.oidDb = oid_db.OidDb({'config': {}})
+                self.oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
                 for ident, value in reversed(self.MIB_OBJECTS):
                     self.oidDb.add(*ident, value=value, bdsMappingFunc=__class__)
@@ -82,7 +82,7 @@ class OidDbTestCase(unittest.TestCase):
     @mock.patch.object(oid_db, 'loadConfig', autospec=True)
     @mock.patch.object(oid_db, 'set_logging', autospec=True)
     def test_add(self, mock_set_logging, mock_loadConfig):
-        oidDb = oid_db.OidDb({'config': {}})
+        oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
         oidDb.add('SNMPv2-MIB', 'sysDescr', 0, value='my system',
                   bdsMappingFunc=__class__)
@@ -103,7 +103,7 @@ class OidDbTestCase(unittest.TestCase):
     def test_add_expire(self, mock_set_logging, mock_loadConfig, mock_time):
         mock_time.return_value = 0
 
-        oidDb = oid_db.OidDb({'config': {}})
+        oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
         # add sysDescr and expect it to be in the OID DB
 

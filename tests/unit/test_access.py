@@ -53,7 +53,7 @@ bdsSnmpAdapter:
                 side_effect=[io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG)]):
-            self.access = access.BdsAccess({'config': '/file'})
+            self.access = access.BdsAccess(mock.MagicMock(config={}))
 
         super(BdsAccessTestCase, self).setUp()
 

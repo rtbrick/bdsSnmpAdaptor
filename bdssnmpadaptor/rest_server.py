@@ -21,11 +21,11 @@ class AsyncioRestServer(object):
     notification through REST API. Places received notifications
     into a queue for consumers to read from.
     """
-    def __init__(self, cliArgsDict, queue):
+    def __init__(self, args, queue):
 
         self.moduleFileNameWithoutPy, _ = os.path.splitext(os.path.basename(__file__))
 
-        configDict = loadConfig(cliArgsDict['config'])
+        configDict = loadConfig(args.config)
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 

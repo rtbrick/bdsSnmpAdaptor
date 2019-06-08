@@ -65,9 +65,9 @@ class BdsAccess(object):
     in the in-memory OID DB.
     """
 
-    def __init__(self, cliArgsDict):
+    def __init__(self, args):
 
-        configDict = loadConfig(cliArgsDict['config'])
+        configDict = loadConfig(args.config)
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
@@ -79,7 +79,7 @@ class BdsAccess(object):
 
         self.staticOidDict = configDict['responder']['staticOidContent']
 
-        self._oidDb = OidDb(cliArgsDict)
+        self._oidDb = OidDb(args)
 
         # keeps track of changes to the BDS data
         self._bdsIds = collections.defaultdict(list)

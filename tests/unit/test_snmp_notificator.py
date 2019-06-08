@@ -82,7 +82,7 @@ bdsSnmpAdapter:
                              io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG)]):
             snmp_notificator.SnmpNotificationOriginator(
-                {'config': '/file'}, self.mock_queue)
+                mock.MagicMock(config={}), self.mock_queue)
 
         mock_snmpEngine = mock_snmp_config.getSnmpEngine.return_value
 
@@ -138,7 +138,7 @@ bdsSnmpAdapter:
                              io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG)]):
             ntf = snmp_notificator.SnmpNotificationOriginator(
-                {'config': '/file'}, self.mock_queue)
+                mock.MagicMock(config={}), self.mock_queue)
 
         self.my_loop.run_until_complete(ntf.sendTrap({}))
 

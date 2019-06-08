@@ -46,12 +46,12 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
 
         return _oidDbItem.oid, _oidDbItem.value
 
-    def setOidDbAndLogger(self, _oidDb, cliArgsDict):
-        self._oidDb = _oidDb
+    def setOidDbAndLogger(self, oidDb, args):
+        self._oidDb = oidDb
 
         self.moduleFileNameWithoutPy, _ = os.path.splitext(os.path.basename(__file__))
 
-        configDict = loadConfig(cliArgsDict['config'])
+        configDict = loadConfig(args.config)
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 

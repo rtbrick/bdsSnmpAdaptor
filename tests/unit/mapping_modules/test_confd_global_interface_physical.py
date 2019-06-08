@@ -26,7 +26,7 @@ class ConfdGlobalInterfacePhysicalTestCase(unittest.TestCase):
     def setUp(self):
         with mock.patch.object(oid_db, 'loadConfig', autospec=True):
             with mock.patch.object(oid_db, 'set_logging', autospec=True):
-                self.oidDb = oid_db.OidDb({'config': {}})
+                self.oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
         self.container = confd_global_interface_physical.ConfdGlobalInterfacePhysical()
 

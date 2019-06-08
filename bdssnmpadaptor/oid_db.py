@@ -49,8 +49,8 @@ class OidDb(object):
      """
     EXPIRE_PERIOD = 60
 
-    def __init__(self, cliArgsDict):
-        configDict = loadConfig(cliArgsDict['config'])
+    def __init__(self, args):
+        configDict = loadConfig(args.config)
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 

@@ -44,7 +44,8 @@ bdsSnmpAdapter:
                              io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG)]):
             mock_queue = mock.MagicMock()
-            rs = rest_server.AsyncioRestServer({'config': '/file'}, mock_queue)
+            rs = rest_server.AsyncioRestServer(
+                mock.MagicMock(config={}), mock_queue)
 
             self.assertEqual('0.0.0.0', rs.listeningIP)
             self.assertEqual(5000, rs.listeningPort)
@@ -59,7 +60,8 @@ bdsSnmpAdapter:
                     side_effect=[io.StringIO(self.CONFIG),
                                  io.StringIO(self.CONFIG),
                                  io.StringIO(self.CONFIG)]):
-                rs = rest_server.AsyncioRestServer({'config': '/file'}, mock_queue)
+                rs = rest_server.AsyncioRestServer(
+                    mock.MagicMock(config={}), mock_queue)
 
             mock_web.json_response = asynctest.CoroutineMock()
 
@@ -85,7 +87,8 @@ bdsSnmpAdapter:
                     side_effect=[io.StringIO(self.CONFIG),
                                  io.StringIO(self.CONFIG),
                                  io.StringIO(self.CONFIG)]):
-                rs = rest_server.AsyncioRestServer({'config': '/file'}, mock_queue)
+                rs = rest_server.AsyncioRestServer(
+                    mock.MagicMock(config={}), mock_queue)
 
             mock_runner = mock_web.ServerRunner.return_value
             mock_runner.setup = asynctest.CoroutineMock()

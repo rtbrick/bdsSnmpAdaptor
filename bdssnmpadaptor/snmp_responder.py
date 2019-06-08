@@ -23,10 +23,10 @@ class SnmpCommandResponder(object):
     management information and responds back to SNMP manager.
     """
 
-    def __init__(self, cliArgsDict, mibController):
+    def __init__(self, args, mibController):
         self.mibController = mibController
 
-        configDict = loadConfig(cliArgsDict['config'])
+        configDict = loadConfig(args.config)
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
@@ -45,8 +45,6 @@ class SnmpCommandResponder(object):
         self.moduleLogger.info(
             f'Running SNMP engine ID {self.snmpEngine.snmpEngineID.prettyPrint()}, '
             f'boots {engineBoots}')
-
-        cliArgsDict['snmpEngineIdValue'] = self.snmpEngine.snmpEngineID.asOctets()
 
         # UDP over IPv4
         try:

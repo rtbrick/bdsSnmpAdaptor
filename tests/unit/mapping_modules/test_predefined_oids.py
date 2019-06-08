@@ -40,7 +40,7 @@ class StaticAndPredefinedOidsTestCase(unittest.TestCase):
         with mock.patch.object(oid_db, 'loadConfig', autospec=True) as config_mock:
             with mock.patch.object(oid_db, 'set_logging', autospec=True):
                 config_mock.return_value = self.CONFIG
-                self.oidDb = oid_db.OidDb({'config': {}})
+                self.oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
         self.container = predefined_oids.StaticAndPredefinedOids()
 
