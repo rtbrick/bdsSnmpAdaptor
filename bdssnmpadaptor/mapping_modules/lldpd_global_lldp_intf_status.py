@@ -150,3 +150,5 @@ class LldpdGlobalLldpIntfStatus(object):
                 else:
                     add('IF-MIB', 'ifTableLastChange', index,
                         value=currentSysTime)
+
+        bdsIds[:] = newBdsIds

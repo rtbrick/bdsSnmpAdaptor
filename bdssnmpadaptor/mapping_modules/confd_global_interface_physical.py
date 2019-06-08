@@ -159,3 +159,5 @@ class ConfdGlobalInterfacePhysical(object):
                     if 'bandwidth' in bdsJsonObject['attribute']:
                         add('IF-MIB', 'ifSpeed', index,
                             value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth']))
+
+        bdsIds[:] = newBdsIds

@@ -58,6 +58,11 @@ class FfwdDefaultInterfaceLogical(object):
             BdsError: on OID DB population error
         """
 
+        newBdsIds = [obj['sequence'] for obj in bdsData['objects']]
+
+        if newBdsIds == bdsIds:
+            return
+
         with oidDb.module(__name__) as add:
 
             for bdsJsonObject in bdsData['objects']:
@@ -70,3 +75,5 @@ class FfwdDefaultInterfaceLogical(object):
                     value=bdsJsonObject['attribute']['interface_name'])
 
                 add('IF-MIB', 'ifType', index, value=6)
+
+        bdsIds[:] = newBdsIds

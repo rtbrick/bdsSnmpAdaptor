@@ -60,6 +60,11 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
             BdsError: on OID DB population error
         """
 
+        newBdsIds = [obj['sequence'] for obj in bdsData['objects']]
+
+        if newBdsIds == bdsIds:
+            return
+
         swString = mapping_functions.stringFromSoftwareInfo(bdsData)
 
         with oidDb.module(__name__) as add:
@@ -96,3 +101,5 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
 
             # # in addition the SW Info Flag is set by
             # # creating an abbreviated string over all modules
+
+        bdsIds[:] = newBdsIds
