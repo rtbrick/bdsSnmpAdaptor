@@ -36,12 +36,11 @@ class ConfdGlobalStartupStatusConfd(object):
     """
 
     @classmethod
-    def setOids(cls, bdsJsonResponseDict, targetOidDb,
-                tableSequenceList, birthday):
+    def setOids(cls, oidDb, bdsData, bdsIds, birthday):
 
-        with targetOidDb.module(__name__) as add:
+        with oidDb.module(__name__) as add:
 
-            for index0, bdsJsonObject in enumerate(bdsJsonResponseDict['objects']):
+            for index0, bdsJsonObject in enumerate(bdsData['objects']):
                 index = index0 + 1
 
                 add('HOST-RESOURCES-MIB', 'hrSWOSIndex', index, value=index)

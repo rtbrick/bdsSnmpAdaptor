@@ -97,17 +97,17 @@ bdsSnmpAdapter:
         mock_phy = access.REQUEST_MAPPING_DICTS[
             'confd_global_interface_physical']['mappingFunc']
         mock_phy.setOids.assert_called_once_with(
-            self.JSON_RESPONSE, mock.ANY, mock.ANY, mock.ANY)
+            mock.ANY, self.JSON_RESPONSE, mock.ANY, mock.ANY)
 
         mock_startup = access.REQUEST_MAPPING_DICTS[
             'confd_global_startup_status_confd']['mappingFunc']
         mock_startup.setOids.assert_called_once_with(
-            self.JSON_RESPONSE, mock.ANY, mock.ANY, mock.ANY)
+            mock.ANY, self.JSON_RESPONSE, mock.ANY, mock.ANY)
 
         mock_sw = access.REQUEST_MAPPING_DICTS[
             'confd_local.system.software.info.confd']['mappingFunc']
         mock_sw.setOids.assert_called_once_with(
-            self.JSON_RESPONSE, mock.ANY, mock.ANY, mock.ANY)
+            mock.ANY, self.JSON_RESPONSE, mock.ANY, mock.ANY)
 
 
 suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])

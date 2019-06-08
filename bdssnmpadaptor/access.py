@@ -168,7 +168,7 @@ class BdsAccess(object):
 
             try:
                 StaticAndPredefinedOids.setOids(
-                    self.staticOidDict, self.oidDb, [], 0)
+                    self.oidDb, self.staticOidDict, [], 0)
 
             except Exception as exc:
                 self.moduleLogger.error(
@@ -204,7 +204,7 @@ class BdsAccess(object):
 
                 try:
                     mappingfunc.setOids(
-                        responseJsonDict, self.oidDb, tableSequenceList, BIRTHDAY)
+                        self.oidDb, responseJsonDict, tableSequenceList, BIRTHDAY)
 
                 except Exception as exc:
                     self.moduleLogger.error(

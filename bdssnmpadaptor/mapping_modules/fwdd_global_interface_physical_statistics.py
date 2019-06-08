@@ -129,14 +129,13 @@ class FwddGlobalInterfacePhysicalStatistics(object):
     }
     """
     @classmethod
-    def setOids(cls, bdsJsonResponseDict, targetOidDb,
-                lastSequenceNumberList, birthday):
+    def setOids(cls, oidDb, bdsData, bdsIds, birthday):
 
-        with targetOidDb.module(__name__) as add:
+        with oidDb.module(__name__) as add:
 
-            # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
+            # oidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
 
-            for i, bdsJsonObject in enumerate(bdsJsonResponseDict['objects']):
+            for i, bdsJsonObject in enumerate(bdsData['objects']):
                 attribute = bdsJsonObject['attribute']
 
                 ifName = attribute['interface_name']

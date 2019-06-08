@@ -65,7 +65,7 @@ class OidDb(object):
 
     def add(self, mibName, mibSymbol, *indices, value=None,
             valueFormat=None, bdsMappingFunc=None):
-        """ Database Item, which pysnmp attributes required for get and getnext.
+        """Database Item, which pysnmp attributes required for get and getnext.
 
         Args:
             mibName (str): MIB name e.g. SNMPv2-MIB. This MIB must be in MIB search path.

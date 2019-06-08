@@ -40,13 +40,12 @@ class FfwdDefaultInterfaceLogical(object):
     """
 
     @classmethod
-    def setOids(cls, bdsJsonResponseDict, targetOidDb,
-                tableSequenceList, birthday):
+    def setOids(cls, oidDb, bdsData, bdsIds, birthday):
 
-        with targetOidDb.module(__name__) as add:
-            # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
+        with oidDb.module(__name__) as add:
+            # oidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
 
-            for bdsJsonObject in bdsJsonResponseDict['objects']:
+            for bdsJsonObject in bdsData['objects']:
                 ifName = bdsJsonObject['attribute']['interface_name']
                 index = mapping_functions.ifIndexFromIfName(ifName)
 

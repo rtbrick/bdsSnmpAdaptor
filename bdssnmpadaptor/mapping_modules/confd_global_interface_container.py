@@ -125,74 +125,79 @@ class ConfdGlobalInterfaceContainer(object):
     """
 
     @classmethod
-    def setOids(cls, bdsJsonResponseDict, targetOidDb,
-                lastSequenceNumberList, birthday):
+    def setOids(cls, oidDb, bdsData, bdsIds, birthday):
+        """Initialize OID DB with BDS information.
 
-        newSequenceNumberList = [
-            obj['sequence'] for obj in bdsJsonResponseDict['objects']]
+        Takes known objects from JSON document, puts them into
+        the OID DB as specific MIB managed objects.
+        """
 
-        with targetOidDb.module(__name__) as add:
+        newBdsIds = [obj['sequence'] for obj in bdsData['objects']]
 
-            if str(newSequenceNumberList) != str(lastSequenceNumberList):
-                add('IF-MIB', 'ifNumber', 0,
-                    value=len(bdsJsonResponseDict['objects']))
+        if newBdsIds == bdsIds:
+            return
 
-                # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
+        with oidDb.module(__name__) as add:
 
-                for i, bdsJsonObject in enumerate(bdsJsonResponseDict['objects']):
-                    thisSequenceNumber = bdsJsonObject['sequence']
+            add('IF-MIB', 'ifNumber', 0,
+                value=len(bdsData['objects']))
 
-                    ifName = bdsJsonObject['attribute']['interface_name']
+            # oidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
 
-                    index = mapping_functions.ifIndexFromIfName(ifName)
+            for i, bdsObject in enumerate(bdsData['objects']):
+                currentId = bdsObject['sequence']
 
-                    ifSpeed = IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth'])
+                ifName = bdsObject['attribute']['interface_name']
 
-                    if ifSpeed == 100000000:
-                        ifGigEtherName = 'hundredGe-' + mapping_functions.stripIfPrefixFromIfName(ifName)
+                index = mapping_functions.ifIndexFromIfName(ifName)
 
-                    elif ifSpeed == 10000000:
-                        ifGigEtherName = 'tenGe-' + mapping_functions.stripIfPrefixFromIfName(ifName)
+                ifSpeed = IFSPEED_LAMBDA(bdsObject['attribute']['bandwidth'])
 
-                    else:
-                        ifGigEtherName = 'ge-' + mapping_functions.stripIfPrefixFromIfName(ifName)
+                if ifSpeed == 100000000:
+                    ifGigEtherName = 'hundredGe-' + mapping_functions.stripIfPrefixFromIfName(ifName)
 
-                    add('IF-MIB', 'ifIndex', index, value=index)
+                elif ifSpeed == 10000000:
+                    ifGigEtherName = 'tenGe-' + mapping_functions.stripIfPrefixFromIfName(ifName)
 
-                    add('IF-MIB', 'ifDescr', index, value=ifGigEtherName)
+                else:
+                    ifGigEtherName = 'ge-' + mapping_functions.stripIfPrefixFromIfName(ifName)
 
-                    add('IF-MIB', 'ifType', index,
-                        value=IFTYPEMAP[int(bdsJsonObject['attribute']['encapsulation_type'])])
+                add('IF-MIB', 'ifIndex', index, value=index)
 
-                    add('IF-MIB', 'ifMtu', index,
-                        value=IFMTU_LAMBDA(bdsJsonObject['attribute']['layer2_mtu']))
+                add('IF-MIB', 'ifDescr', index, value=ifGigEtherName)
 
-                    add('IF-MIB', 'ifPhysAddress', index,
-                        value=bdsJsonObject['attribute']['mac_address'].replace(':', ''),
-                        valueFormat='hexValue')
+                add('IF-MIB', 'ifType', index,
+                    value=IFTYPEMAP[int(bdsObject['attribute']['encapsulation_type'])])
 
-                    add('IF-MIB', 'ifAdminStatus', index,
-                        value=bdsJsonObject['attribute']['admin_status'])
+                add('IF-MIB', 'ifMtu', index,
+                    value=IFMTU_LAMBDA(bdsObject['attribute']['layer2_mtu']))
 
-                    add('IF-MIB', 'ifOperStatus', index,
-                        value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['link_status'])])
+                add('IF-MIB', 'ifPhysAddress', index,
+                    value=bdsObject['attribute']['mac_address'].replace(':', ''),
+                    valueFormat='hexValue')
 
-                    if len(lastSequenceNumberList) == 0:  # first run
-                        add('IF-MIB', 'ifLastChange', index, value=0)
+                add('IF-MIB', 'ifAdminStatus', index,
+                    value=bdsObject['attribute']['admin_status'])
 
-                    elif thisSequenceNumber != lastSequenceNumberList[i]:  # status has changed
-                        add('IF-MIB', 'ifLastChange', index,
-                            value=int((time.time() - birthday) * 100))
+                add('IF-MIB', 'ifOperStatus', index,
+                    value=IFOPERSTATUSMAP[int(bdsObject['attribute']['link_status'])])
 
-                    if len(lastSequenceNumberList) == 0:  # first run
-                        add('IF-MIB', 'ifStackLastChange', index, value=0)
+                if len(bdsIds) == 0:  # first run
+                    add('IF-MIB', 'ifLastChange', index, value=0)
 
-                        # Fixme - do we have to observe logical interfaces?
-                        add('IF-MIB', 'ifTableLastChange', index, value=0)
+                elif currentId != bdsIds[i]:  # status has changed
+                    add('IF-MIB', 'ifLastChange', index,
+                        value=int((time.time() - birthday) * 100))
 
-                    else:
-                        add('IF-MIB', 'ifTableLastChange', index,
-                            value=int((time.time() - birthday) * 100))
+                if len(bdsIds) == 0:  # first run
+                    add('IF-MIB', 'ifStackLastChange', index, value=0)
 
-                    add('IF-MIB', 'ifSpeed', index,
-                        value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth']))
+                    # Fixme - do we have to observe logical interfaces?
+                    add('IF-MIB', 'ifTableLastChange', index, value=0)
+
+                else:
+                    add('IF-MIB', 'ifTableLastChange', index,
+                        value=int((time.time() - birthday) * 100))
+
+                add('IF-MIB', 'ifSpeed', index,
+                    value=IFSPEED_LAMBDA(bdsObject['attribute']['bandwidth']))

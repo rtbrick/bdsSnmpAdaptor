@@ -120,26 +120,24 @@ class LldpdGlobalLldpIntfStatus(object):
     """
 
     @classmethod
-    def setOids(cls, bdsJsonResponseDict, targetOidDb,
-                lastSequenceNumberList, birthday):
+    def setOids(cls, oidDb, bdsData, bdsIds, birthday):
 
-        newSequenceNumberList = [
-            obj['sequence'] for obj in bdsJsonResponseDict['objects']]
+        newBdsIds = [obj['sequence'] for obj in bdsData['objects']]
 
-        if str(newSequenceNumberList) == str(lastSequenceNumberList):
+        if newBdsIds == bdsIds:
             return
 
         currentSysTime = int((time.time() - birthday) * 100)
 
-        with targetOidDb.module(__name__) as add:
+        with oidDb.module(__name__) as add:
 
             add('IF-MIB', 'ifNumber', 0,
-                value=len(bdsJsonResponseDict['objects']))
+                value=len(bdsData['objects']))
 
-            # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
+            # oidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
 
-            for i, bdsJsonObject in enumerate(bdsJsonResponseDict['objects']):
-                thisSequenceNumber = bdsJsonObject['sequence']
+            for i, bdsJsonObject in enumerate(bdsData['objects']):
+                currentId = bdsJsonObject['sequence']
 
                 attribute = bdsJsonObject['attribute']
 
@@ -170,13 +168,13 @@ class LldpdGlobalLldpIntfStatus(object):
                 add('IF-MIB', 'ifOperStatus', index,
                     value=IFOPERSTATUSMAP[int(attribute['link_status'])])
 
-                if len(lastSequenceNumberList) == 0:  # first run
+                if len(bdsIds) == 0:  # first run
                     add('IF-MIB', 'ifLastChange', index, value=0)
 
-                elif thisSequenceNumber != lastSequenceNumberList[i]:
+                elif currentId != bdsIds[i]:
                     add('IF-MIB', 'ifLastChange', index, value=currentSysTime)
 
-                if len(lastSequenceNumberList) == 0:  # first run
+                if len(bdsIds) == 0:  # first run
                     add('IF-MIB', 'ifStackLastChange', index, value=0)
 
                     # Fixme - do we have to observe logical interfaces?

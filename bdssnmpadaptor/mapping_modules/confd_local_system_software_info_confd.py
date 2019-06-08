@@ -14,19 +14,17 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
     """
 
     @classmethod
-    def setOids(cls, bdsJsonResponseDict, targetOidDb,
-                tableSequenceList, birthday):
+    def setOids(cls, oidDb, bdsData, bdsIds, birthday):
 
-        swString = mapping_functions.stringFromSoftwareInfo(bdsJsonResponseDict)
+        swString = mapping_functions.stringFromSoftwareInfo(bdsData)
 
-        with targetOidDb.module(__name__) as add:
+        with oidDb.module(__name__) as add:
 
-            #add('IF-MIB', 'ifDescr', 1, value=swString)
             add('SNMPv2-MIB', 'sysDescr', 1, value=swString)
 
-            # targetOidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
+            # oidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
 
-            # for index,bdsJsonObject in enumerate(bdsJsonResponseDict['objects"]):
+            # for index,bdsJsonObject in enumerate(bdsData['objects"]):
             #     #indexString = bdsJsonObject["attribute"]["library"]
             #     #indexCharList = [str(ord(c)) for c in indexString]
             #     #index = str(len(indexCharList)) + "." + ".".join(indexCharList)  # FIXME add description
