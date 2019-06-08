@@ -10,12 +10,17 @@ from bdssnmpadaptor import mapping_functions
 
 
 class FfwdDefaultInterfaceLogical(object):
-    """Logical interface
+    """Implement SNMP IF-MIB for logical BDS interfaces.
 
-    curl -X POST -H "Content-Type: application/json" -H "Accept: */*" -H "connection: close"\
-        -H "Accept-Encoding: application/json"\
-        -d '{"table": {"table_name": "default.interface.logical"}}'\
-        "http://10.0.3.50:5002/bds/table/walk?format=raw" | jq '.'
+    Populates SNMP managed objects of SNMP `IF-MIB` module from
+    `default.interface.logical` BDS table.
+
+    Notes
+    -----
+
+    Expected input:
+
+    .. code-block:: json
 
     {
       "objects": [
@@ -32,15 +37,26 @@ class FfwdDefaultInterfaceLogical(object):
           "update": true,
           "sequence": 1
         }
-      ],
-      "table": {
-        "table_name": "default.interface.logical"
-      }
+      ]
     }
     """
 
     @classmethod
     def setOids(cls, oidDb, bdsData, bdsIds, birthday):
+        """Populates OID DB with BDS information.
+
+        Takes known objects from JSON document, puts them into
+        the OID DB as specific MIB managed objects.
+
+        Args:
+            oidDb (OidDb): OID DB instance to work on
+            bdsData (dict): BDS information to put into OID DB
+            bdsIds (list): list of last known BDS record sequence IDs
+            birthday (float): timestamp of system initialization
+
+        Raises:
+            BdsError: on OID DB population error
+        """
 
         with oidDb.module(__name__) as add:
             # oidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
