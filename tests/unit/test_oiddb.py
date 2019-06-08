@@ -21,15 +21,12 @@ class OidDbItemTestCase(unittest.TestCase):
             bdsMappingFunc='interface_container',
             oid='1.3.6.7.8',
             name='ifIndex',
-            pysnmpBaseType=rfc1902.OctetString,
-            pysnmpRepresentation='hexValue',
-            value='123456789',
+            value=rfc1902.OctetString(hexValue='123456789'),
         )
 
         self.assertEqual('interface_container', oid.bdsMappingFunc)
         self.assertEqual(rfc1902.ObjectIdentifier('1.3.6.7.8'), oid.oid)
         self.assertEqual('ifIndex', oid.name)
-        self.assertEqual(rfc1902.OctetString, oid.pysnmpBaseType)
         self.assertEqual(b'\x124Vx\x90', oid.value)
 
     def test___lt__(self):
@@ -51,8 +48,7 @@ class OidDbItemTestCase(unittest.TestCase):
             bdsMappingFunc='interface_container',
             oid='1.3.6.7.8',
             name='ifIndex',
-            pysnmpBaseType=rfc1902.OctetString,
-            value='0x123456789',
+            value=rfc1902.OctetString(hexValue='123456789'),
         )
 
         self.assertIsInstance(str(oid), str)
