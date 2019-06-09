@@ -86,7 +86,7 @@ bdsSnmpAdapter:
         with asynctest.patch('asyncio.sleep') as sleep:
             sleep.side_effect = [lambda: 1, asyncio.CancelledError]
             try:
-                self.my_loop.run_until_complete(self.access.run_forever())
+                self.my_loop.run_until_complete(self.access.periodicRetriever())
 
             except asyncio.CancelledError:
                 pass

@@ -82,7 +82,7 @@ See https://www.rtbrick.com for RtBrick product information.
 
     try:
         loop.run_until_complete(
-            asyncio.gather(bdsAccess.run_forever(),
+            asyncio.gather(bdsAccess.periodicRetriever(),
                            snmpNtfOrg.run_forever(), httpServer.initialize())
         )
 
