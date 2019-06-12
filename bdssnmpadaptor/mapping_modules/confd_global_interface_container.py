@@ -96,8 +96,6 @@ class ConfdGlobalInterfaceContainer(object):
             add('IF-MIB', 'ifNumber', 0,
                 value=len(bdsData['objects']))
 
-            # oidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
-
             for i, bdsObject in enumerate(bdsData['objects']):
                 currentId = bdsObject['sequence']
 

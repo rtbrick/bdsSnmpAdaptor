@@ -147,8 +147,6 @@ class FwddGlobalInterfacePhysicalStatistics(object):
 
         with oidDb.module(__name__) as add:
 
-            # oidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
-
             for i, bdsJsonObject in enumerate(bdsData['objects']):
                 attribute = bdsJsonObject['attribute']
 

@@ -12,7 +12,7 @@ import sys
 import unittest
 from unittest import mock
 
-from bdssnmpadaptor import oidDb
+from bdssnmpadaptor import oid_db
 from bdssnmpadaptor.mapping_modules import confd_global_interface_container
 
 
@@ -24,9 +24,9 @@ class ConfdGlobalInterfaceContainerTestCase(unittest.TestCase):
         JSON_RESPONSE = json.load(fl)
 
     def setUp(self):
-        with mock.patch.object(oidDb, 'loadConfig', autospec=True):
-            with mock.patch.object(oidDb, 'set_logging', autospec=True):
-                self.oidDb = oidDb.OidDb({'config': {}})
+        with mock.patch.object(oid_db, 'loadConfig', autospec=True):
+            with mock.patch.object(oid_db, 'set_logging', autospec=True):
+                self.oidDb = oid_db.OidDb({'config': {}})
 
         self.container = confd_global_interface_container.ConfdGlobalInterfaceContainer()
 

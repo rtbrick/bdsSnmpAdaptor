@@ -103,8 +103,6 @@ class LldpdGlobalLldpIntfStatus(object):
             add('IF-MIB', 'ifNumber', 0,
                 value=len(bdsData['objects']))
 
-            # oidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
-
             for i, bdsJsonObject in enumerate(bdsData['objects']):
                 currentId = bdsJsonObject['sequence']
 

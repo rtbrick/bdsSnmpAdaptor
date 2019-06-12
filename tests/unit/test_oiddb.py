@@ -11,13 +11,13 @@ from unittest import mock
 
 from pysnmp.proto import rfc1902
 
-from bdssnmpadaptor import oidDb
+from bdssnmpadaptor import oid_db
 
 
 class OidDbItemTestCase(unittest.TestCase):
 
     def test___init__(self):
-        oid = oidDb.OidDbItem(
+        oid = oid_db.OidDbItem(
             bdsMappingFunc='interface_container',
             oid='1.3.6.7.8',
             name='ifIndex',
@@ -30,21 +30,21 @@ class OidDbItemTestCase(unittest.TestCase):
         self.assertEqual(b'\x124Vx\x90', oid.value)
 
     def test___lt__(self):
-        oid1 = oidDb.OidDbItem(oid='1.3.6.7.8')
-        oid2 = oidDb.OidDbItem(oid='1.3.6.8.1')
+        oid1 = oid_db.OidDbItem(oid='1.3.6.7.8')
+        oid2 = oid_db.OidDbItem(oid='1.3.6.8.1')
 
         self.assertLess(oid1, oid2)
         self.assertGreater(oid2, oid1)
 
     def test___eq__(self):
-        oid1 = oidDb.OidDbItem(oid='1.3.6.7.8')
-        oid2 = oidDb.OidDbItem(oid='1.3.6.8.1')
+        oid1 = oid_db.OidDbItem(oid='1.3.6.7.8')
+        oid2 = oid_db.OidDbItem(oid='1.3.6.8.1')
 
         self.assertNotEqual(oid1, oid2)
         self.assertEqual(oid1, oid1)
 
     def test___str__(self):
-        oid = oidDb.OidDbItem(
+        oid = oid_db.OidDbItem(
             bdsMappingFunc='interface_container',
             oid='1.3.6.7.8',
             name='ifIndex',
@@ -70,9 +70,9 @@ class OidDbTestCase(unittest.TestCase):
     ]
 
     def setUp(self):
-        with mock.patch.object(oidDb, 'loadConfig', autospec=True):
-            with mock.patch.object(oidDb, 'set_logging', autospec=True):
-                self.oidDb = oidDb.OidDb({'config': {}})
+        with mock.patch.object(oid_db, 'loadConfig', autospec=True):
+            with mock.patch.object(oid_db, 'set_logging', autospec=True):
+                self.oidDb = oid_db.OidDb({'config': {}})
 
                 for ident, value in reversed(self.MIB_OBJECTS):
                     self.oidDb.add(*ident, value=value, bdsMappingFunc=__class__)
@@ -136,9 +136,9 @@ class OidDbTestCase(unittest.TestCase):
 
         oid = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.6.0')
 
-        self.assertIn(oid, self.oidDb.oidDict)
-        self.assertEqual(b'DC', self.oidDb.oidDict[oid].value)
-        self.assertEqual('interfaces', self.oidDb.oidDict[oid].bdsMappingFunc)
+        self.assertIn(oid, self.oidDb._oids)
+        self.assertEqual(b'DC', self.oidDb._oids[oid].value)
+        self.assertEqual('interfaces', self.oidDb._oids[oid].bdsMappingFunc)
 
 
 suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])

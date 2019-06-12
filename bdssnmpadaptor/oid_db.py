@@ -8,6 +8,7 @@
 #
 import contextlib
 import functools
+import time
 from bisect import bisect
 from collections import OrderedDict
 
@@ -24,13 +25,13 @@ from bdssnmpadaptor.log import set_logging
 
 def lazilySorted(func):
     def wrapper(self, *args, **kwargs):
-        if self.dirty:
-            self.oidDict = OrderedDict(
-                sorted(self.oidDict.items(), key=lambda x: x[1]))
-            self.dirty = False
+        if self._dirty:
+            self._oids = OrderedDict(
+                sorted(self._oids.items(), key=lambda x: x[1]))
+            self._dirty = False
 
             self.moduleLogger.debug(
-                f'resorted OIDs in OID DB: {self.oidDict.keys()}')
+                f'resorted OIDs in OID DB: {tuple(self._oids)}')
 
         return func(self, *args, **kwargs)
 
@@ -46,6 +47,8 @@ class OidDb(object):
      Managed objects population is based on SNMP MIB information,
      retrieval is based on OID look up.
      """
+    EXPIRE_PERIOD = 60
+
     def __init__(self, cliArgsDict):
         configDict = loadConfig(cliArgsDict['config'])
 
@@ -54,14 +57,20 @@ class OidDb(object):
         self.moduleLogger.debug('configDict:{}'.format(configDict))
 
         mibBuilder = builder.MibBuilder()
-        self.mibViewController = view.MibViewController(mibBuilder)
+        self._mibViewController = view.MibViewController(mibBuilder)
 
         compiler.addMibCompiler(
             mibBuilder, sources=configDict['snmp'].get('mibs', ()))
 
-        self.oidDict = OrderedDict()  # this dict holds all OID items in this # DB
+        # this dict holds all OID items in this # DB
+        self._oids = {}
 
-        self.dirty = True  # DB needs sorting
+        # this dict holds the newer version of the above
+        self._candidateOids = {}
+
+        self._expireBy = time.time() + self.EXPIRE_PERIOD
+
+        self._dirty = True  # DB needs sorting
 
     def add(self, mibName, mibSymbol, *indices, value=None,
             valueFormat=None, bdsMappingFunc=None):
@@ -84,7 +93,7 @@ class OidDb(object):
         obj = rfc1902.ObjectType(
             rfc1902.ObjectIdentity(mibName, mibSymbol, *indices), value)
 
-        objectIdentity, objectSyntax = obj.resolveWithMib(self.mibViewController)
+        objectIdentity, objectSyntax = obj.resolveWithMib(self._mibViewController)
 
         representation = {valueFormat if valueFormat else 'value': value}
 
@@ -105,34 +114,49 @@ class OidDb(object):
                           objectIdentity.getOid(), objectSyntax, value))
 
         self.moduleLogger.debug(
-            f'{"updating" if oidDbItem.oid in self.oidDict else "adding"} '
+            f'{"updating" if oidDbItem.oid in self._oids else "adding"} '
             f'{oidDbItem.oid} {oidDbItem.value}')
 
-        self.oidDict[oidDbItem.oid] = oidDbItem
+        self._oids[oidDbItem.oid] = oidDbItem
 
-        self.dirty = True
+        self._dirty = True
+
+        now = time.time()
+
+        # We update two DBs for some time while use only one, eventually
+        # we drop the older DB and use the newer one. This effectively
+        # expires DB entries that do not get updated for some time.
+        self._candidateOids[oidDbItem.oid] = oidDbItem
+
+        if self._expireBy < now:
+            self._oids.clear()
+            self._oids.update(self._candidateOids)
+            self._candidateOids.clear()
+            self._expireBy = now + self.EXPIRE_PERIOD
 
     def deleteOidsWithPrefix(self, oidPrefix):
         oidPrefix = ObjectIdentifier(oidPrefix)
 
-        for oid in tuple(self.oidDict):
+        for oid in tuple(self._oids):
             if oidPrefix.isPrefixOf(oid):
                 self.moduleLogger.debug(
                     f'deleting {oid} by prefix {oidPrefix}')
-                del self.oidDict[oid]
-                self.dirty = True
+                self._oids.pop(oid)
+                self._candidateOids.pop(oid)
+                self._dirty = True
 
     def deleteOidsFromBdsMappingFunc(self, bdsMappingFunc):
-        for oid, item in tuple(self.oidDict.items()):
+        for oid, item in tuple(self._oids.items()):
             if item.bdsMappingFunc == bdsMappingFunc:
                 self.moduleLogger.debug(
                     f'deleting {oid} by func {bdsMappingFunc}')
-                del self.oidDict[oid]
-                self.dirty = True
+                self._oids.pop(oid)
+                self._candidateOids.pop(oid)
+                self._dirty = True
 
     def getObjFromOid(self, oid):
         try:
-            return self.oidDict[oid]
+            return self._oids[oid]
 
         except KeyError:
             self.moduleLogger.warning(
@@ -143,7 +167,7 @@ class OidDb(object):
         self.moduleLogger.debug(
             f'searching for OID next to {searchOid}')
 
-        sortedItems = tuple(self.oidDict.values())
+        sortedItems = tuple(self._oids.values())
 
         searchItem = (searchOid if isinstance(searchOid, OidDbItem)
                       else OidDbItem(oid=searchOid))
@@ -163,7 +187,7 @@ class OidDb(object):
 
     @lazilySorted
     def __str__(self):
-        return '\n'.join(self.oidDict)
+        return '\n'.join(self._oids)
 
     @contextlib.contextmanager
     def module(self, bdsMappingFunc):

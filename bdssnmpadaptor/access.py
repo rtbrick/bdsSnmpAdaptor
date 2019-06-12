@@ -17,7 +17,7 @@ from bdssnmpadaptor.log import set_logging
 from bdssnmpadaptor.mapping_modules import confd_global_interface_physical
 from bdssnmpadaptor.mapping_modules import confd_global_startup_status_confd
 from bdssnmpadaptor.mapping_modules import confd_local_system_software_info_confd
-from bdssnmpadaptor.oidDb import OidDb
+from bdssnmpadaptor.oid_db import OidDb
 from bdssnmpadaptor.mapping_modules.predefined_oids import StaticAndPredefinedOids
 
 BIRTHDAY = time.time()
@@ -79,12 +79,11 @@ class BdsAccess(object):
 
         self.staticOidDict = configDict['responder']['staticOidContent']
 
-        # TODO: expire stale objects from the DB
         self._oidDb = OidDb(cliArgsDict)
 
         # used for hashing numbers of objects and hash over sequence numbers
         # TODO: expire this
-        self.bdsIds = collections.defaultdict(list)
+        self._bdsIds = collections.defaultdict(list)
 
         # 'logging': 'warning'
         # do more stuff here. e.g. connectivity checks etc
@@ -184,7 +183,7 @@ class BdsAccess(object):
                 self.moduleLogger.debug(
                     f'bdsResponses[{tableKey}] {bdsResponse}')
 
-                bdsId = self.bdsIds[bdsReqKey]
+                bdsId = self._bdsIds[bdsReqKey]
 
                 try:
                     mappingfunc.setOids(
@@ -195,7 +194,7 @@ class BdsAccess(object):
                         f'failed at populating OID DB from BDS response: {exc}')
                     continue
 
-                self.bdsIds[bdsReqKey] = [
+                self._bdsIds[bdsReqKey] = [
                     obj['sequence'] for obj in bdsResponse['objects']
                 ]
 

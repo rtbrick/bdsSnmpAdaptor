@@ -66,8 +66,6 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
 
             add('SNMPv2-MIB', 'sysDescr', 1, value=swString)
 
-            # oidDb.deleteOidsWithPrefix(oidSegment)  #delete existing TableOids
-
             # for index,bdsJsonObject in enumerate(bdsData['objects"]):
             #     #indexString = bdsJsonObject["attribute"]["library"]
             #     #indexCharList = [str(ord(c)) for c in indexString]
