@@ -144,6 +144,10 @@ class FwddGlobalInterfacePhysicalStatistics(object):
         Raises:
             BdsError: on OID DB population error
         """
+        newBdsIds = [obj['sequence'] for obj in bdsData['objects']]
+
+        if newBdsIds == bdsIds:
+            return
 
         with oidDb.module(__name__) as add:
 
@@ -188,3 +192,5 @@ class FwddGlobalInterfacePhysicalStatistics(object):
 
                 add('IF-MIB', 'ifOutQLen', index,
                     value=LELL_LAMBDA(attribute['port_stat_if_out_qlen']))
+
+        bdsIds[:] = newBdsIds

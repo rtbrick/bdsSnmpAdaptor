@@ -153,3 +153,5 @@ class ConfdGlobalInterfaceContainer(object):
 
                 add('IF-MIB', 'ifSpeed', index,
                     value=IFSPEED_LAMBDA(bdsObject['attribute']['bandwidth']))
+
+        bdsIds[:] = newBdsIds

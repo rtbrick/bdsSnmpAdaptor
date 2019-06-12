@@ -63,6 +63,11 @@ class ConfdGlobalStartupStatusConfd(object):
             BdsError: on OID DB population error
         """
 
+        newBdsIds = [obj['sequence'] for obj in bdsData['objects']]
+
+        if newBdsIds == bdsIds:
+            return
+
         with oidDb.module(__name__) as add:
 
             for index0, bdsJsonObject in enumerate(bdsData['objects']):
@@ -84,3 +89,5 @@ class ConfdGlobalStartupStatusConfd(object):
 
                 add('HOST-RESOURCES-MIB', 'hrSWRunStatus', index,
                     value=HRSWRUNSTATUSMAP[int(bdsJsonObject['attribute']['startup_status'])])
+
+        bdsIds[:] = newBdsIds

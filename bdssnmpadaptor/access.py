@@ -81,8 +81,7 @@ class BdsAccess(object):
 
         self._oidDb = OidDb(cliArgsDict)
 
-        # used for hashing numbers of objects and hash over sequence numbers
-        # TODO: expire this
+        # keeps track of changes to the BDS data
         self._bdsIds = collections.defaultdict(list)
 
         # 'logging': 'warning'
@@ -193,9 +192,5 @@ class BdsAccess(object):
                     self.moduleLogger.error(
                         f'failed at populating OID DB from BDS response: {exc}')
                     continue
-
-                self._bdsIds[bdsReqKey] = [
-                    obj['sequence'] for obj in bdsResponse['objects']
-                ]
 
             self.moduleLogger.debug(f'done refreshing OID DB')
