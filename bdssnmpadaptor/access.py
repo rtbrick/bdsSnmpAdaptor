@@ -159,17 +159,16 @@ class BdsAccess(object):
         from BDS REST API and pushing it into OID DB.
         """
 
+        try:
+            StaticAndPredefinedOids.setOids(
+                self._oidDb, self._staticOidDict, [], 0)
+
+        except Exception as exc:
+            self._moduleLogger.error(
+                f'failed at populating OID DB with predefined OIDs: {exc}')
+
         while True:
             await asyncio.sleep(self.POLL_PERIOD)
-
-            try:
-                StaticAndPredefinedOids.setOids(
-                    self._oidDb, self._staticOidDict, [], 0)
-
-            except Exception as exc:
-                self._moduleLogger.error(
-                    f'failed at populating OID DB with predefined OIDs: {exc}')
-                continue
 
             for bdsReqKey in REQUEST_MAPPING_DICTS:
                 self._moduleLogger.debug(f'working on {bdsReqKey}')

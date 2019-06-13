@@ -19,13 +19,27 @@ from bdssnmpadaptor.mapping_modules import predefined_oids
 class StaticAndPredefinedOidsTestCase(unittest.TestCase):
 
     STATIC_CONFIG = {
-        'sysDescr': 'l2.pod2.nbg2.rtbrick.net',
-        'sysContact': 'stefan@rtbrick.com',
-        'sysName': 'l2.pod2.nbg2.rtbrick.net',
-        'sysLocation': 'nbg2.rtbrick.net',
-        'sysObjectID': '1.3.6.1.4.1.50058.102.1',
-        'sysUpTime': 0,
-        'sysServices': 72
+        'SNMPv2-MIB::sysDescr': {
+            'value': 'l2.pod2.nbg2.rtbrick.net'
+        },
+        'SNMPv2-MIB::sysContact': {
+            'value':'stefan@rtbrick.com'
+        },
+        'SNMPv2-MIB::sysName': {
+            'value': 'l2.pod2.nbg2.rtbrick.net'
+        },
+        'SNMPv2-MIB::sysLocation': {
+            'value': 'nbg2.rtbrick.net'
+        },
+        'SNMPv2-MIB::sysObjectID': {
+            'value': '1.3.6.1.4.1.50058.102.1'
+        },
+        'SNMPv2-MIB::sysUpTime': {
+            'value': 0
+        },
+        'SNMPv2-MIB::sysServices': {
+            'value': 72
+        }
     }
 
     CONFIG = {
@@ -67,7 +81,6 @@ class StaticAndPredefinedOidsTestCase(unittest.TestCase):
             '1.3.6.1.2.1.1.5.0',
             '1.3.6.1.2.1.1.6.0',
             '1.3.6.1.2.1.1.7.0',
-            '1.3.6.1.2.1.25.1.1.0',
             '1.3.6.1.2.1.47.1.1.1.1.1.1',
             '1.3.6.1.2.1.47.1.1.1.1.1.2',
             '1.3.6.1.2.1.47.1.1.1.1.1.3',

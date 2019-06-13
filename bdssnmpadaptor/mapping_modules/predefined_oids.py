@@ -15,16 +15,6 @@ class StaticAndPredefinedOids(object):
     `SNMPv2-MIB` and `ENTITY-MIB` modules based on statically configured data.
     """
 
-    SYSTEM_TABLE_COLUMNS = [
-        'sysDescr',
-        'sysObjectID',
-        'sysUpTime',
-        'sysContact',
-        'sysName',
-        'sysLocation',
-        'sysServices'
-    ]
-
     ENT_TABLE_COLUMNS = [
         'entPhysicalIndex',
         'entPhysicalDescr',
@@ -188,14 +178,21 @@ class StaticAndPredefinedOids(object):
 
         with oidDb.module(__name__) as add:
 
-            for column in cls.SYSTEM_TABLE_COLUMNS:
-                add('SNMPv2-MIB', column, 0, value=staticOidDict[column])
+            for objectName, objectInfo in staticOidDict.items():
+                mibName, mibSymbol = objectName.split('::', 1)
 
-            add('HOST-RESOURCES-MIB', 'hrSystemUptime', 0, value=0)
+                code = None
+
+                if 'code' in objectInfo:
+                    code = compile(objectInfo['code'], '<%s>' % objectName, 'exec')
+
+                value = objectInfo.get('value')
+
+                add(mibName, mibSymbol, 0, value=value, code=code)
 
         for i, phyValueList in enumerate(cls.ENT_PHYSICAL_TABLE):
 
             row = cls.ENT_PHYSICAL_TABLE[i]
 
-            for j, column in enumerate(cls.ENT_TABLE_COLUMNS):
-                add('ENTITY-MIB', column, row[0], value=row[j])
+            for j, scalar in enumerate(cls.ENT_TABLE_COLUMNS):
+                add('ENTITY-MIB', scalar, row[0], value=row[j])

@@ -23,28 +23,38 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
     Implements SNMP agent interface to OID DB in form of MIB
     instrumentation controller complying to pysnmp API.
     """
-    # TODO: we probably need explicit SNMP type spec in YAML map
-    SNMP_TYPE_MAP = {
-        int: v2c.Integer32,
-        str: v2c.OctetString,
-        'pysnmp.proto.rfc1902.ObjectIdentifier': v2c.ObjectIdentifier
-    }
 
-    def createVarbindFromOidDbItem(self, _oidDbItem):
-        if _oidDbItem.value is None:
-            return _oidDbItem.oid, v2c.NoSuchObject()
+    def createVarbindFromOidDbItem(self, oidDbItem):
 
-        if _oidDbItem.name in ['sysUpTime', 'hrSystemUptime']:  # FIXME: add a function for realitime OIDs
-            _oidDbItem.value = _oidDbItem.value.clone(int((time.time() - BIRTHDAY) * 100))
+        if oidDbItem.code:
+            scope = {}
 
-        if _oidDbItem.name in ['snmpEngineTime']:  # FIXME: add a function for realitime OIDs
-            _oidDbItem.value = _oidDbItem.value.clone(int((time.time() - BIRTHDAY)))
+            try:
+                exec(oidDbItem.code, globals(), scope)
+
+                value = scope['value']
+
+                if callable(value):
+                    value = value(oidDbItem.oid, oidDbItem.value)
+
+                value = oidDbItem.value.clone(value)
+
+            except Exception as ex:
+                self.moduleLogger.error(f'code snippet execution error for object '
+                                        f'{oidDbItem.name}: {ex}')
+                return oidDbItem.oid, v2c.NoSuchObject()
+
+        else:
+            value = oidDbItem.value
+
+        if value is None:
+            return oidDbItem.oid, v2c.NoSuchObject()
 
         self.moduleLogger.debug(
             f'createVarbindFromOidDbItem returning oid '
-            f'{_oidDbItem.oid} with value {_oidDbItem.value}')
+            f'{oidDbItem.oid} with value {value}')
 
-        return _oidDbItem.oid, _oidDbItem.value
+        return oidDbItem.oid, value
 
     def setOidDbAndLogger(self, oidDb, args):
         self._oidDb = oidDb
