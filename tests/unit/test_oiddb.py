@@ -6,6 +6,7 @@
 # License: BSD License 2.0
 #
 import sys
+import types
 import unittest
 from unittest import mock
 
@@ -81,7 +82,7 @@ class OidDbTestCase(unittest.TestCase):
 
     @mock.patch.object(oid_db, 'loadConfig', autospec=True)
     @mock.patch.object(oid_db, 'set_logging', autospec=True)
-    def test_add(self, mock_set_logging, mock_loadConfig):
+    def test_add_value(self, mock_set_logging, mock_loadConfig):
         oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
         oidDb.add('SNMPv2-MIB', 'sysDescr', 0, value='my system',
@@ -96,6 +97,27 @@ class OidDbTestCase(unittest.TestCase):
 
         expectedValue = rfc1902.OctetString('my system')
         self.assertEqual(expectedValue, oidItem.value)
+
+        self.assertIsNone(oidItem.code)
+
+    @mock.patch.object(oid_db, 'loadConfig', autospec=True)
+    @mock.patch.object(oid_db, 'set_logging', autospec=True)
+    def test_add_code(self, mock_set_logging, mock_loadConfig):
+        oidDb = oid_db.OidDb(mock.MagicMock(config={}))
+
+        code = """
+# no op
+pass
+"""
+        oidDb.add('SNMPv2-MIB', 'sysDescr', 0, value='', code=code)
+
+        expectedOid = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
+
+        oidItem = oidDb.getObjFromOid(expectedOid)
+
+        self.assertEqual(expectedOid, oidItem.oid)
+        self.assertEqual('', str(oidItem.value))
+        self.assertIsInstance(oidItem.code, types.CodeType)
 
     @mock.patch('time.time', autospec=True)
     @mock.patch.object(oid_db, 'loadConfig', autospec=True)

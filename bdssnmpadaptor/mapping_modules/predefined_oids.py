@@ -181,14 +181,8 @@ class StaticAndPredefinedOids(object):
             for objectName, objectInfo in staticOidDict.items():
                 mibName, mibSymbol = objectName.split('::', 1)
 
-                code = None
-
-                if 'code' in objectInfo:
-                    code = compile(objectInfo['code'], '<%s>' % objectName, 'exec')
-
-                value = objectInfo.get('value')
-
-                add(mibName, mibSymbol, 0, value=value, code=code)
+                add(mibName, mibSymbol, 0, value=objectInfo.get('value'),
+                    code=objectInfo.get('code'))
 
         for i, phyValueList in enumerate(cls.ENT_PHYSICAL_TABLE):
 

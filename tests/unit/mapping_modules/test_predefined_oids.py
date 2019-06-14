@@ -8,11 +8,14 @@
 import asyncio
 import os
 import sys
+import types
 import unittest
 from unittest import mock
 
 from bdssnmpadaptor import oid_db
 from bdssnmpadaptor.mapping_modules import predefined_oids
+
+from pysnmp.proto.rfc1902 import ObjectIdentifier
 
 
 @mock.patch('tempfile.NamedTemporaryFile', new=mock.MagicMock)
@@ -22,23 +25,12 @@ class StaticAndPredefinedOidsTestCase(unittest.TestCase):
         'SNMPv2-MIB::sysDescr': {
             'value': 'l2.pod2.nbg2.rtbrick.net'
         },
-        'SNMPv2-MIB::sysContact': {
-            'value':'stefan@rtbrick.com'
-        },
-        'SNMPv2-MIB::sysName': {
-            'value': 'l2.pod2.nbg2.rtbrick.net'
-        },
-        'SNMPv2-MIB::sysLocation': {
-            'value': 'nbg2.rtbrick.net'
-        },
-        'SNMPv2-MIB::sysObjectID': {
-            'value': '1.3.6.1.4.1.50058.102.1'
-        },
         'SNMPv2-MIB::sysUpTime': {
-            'value': 0
-        },
-        'SNMPv2-MIB::sysServices': {
-            'value': 72
+            'value': 0,
+            'code': """
+# no op
+pass
+"""
         }
     }
 
@@ -63,7 +55,23 @@ class StaticAndPredefinedOidsTestCase(unittest.TestCase):
 
         super(StaticAndPredefinedOidsTestCase, self).setUp()
 
-    def test_setOids(self):
+    def test_setOidsStaticValue(self):
+        self.container.setOids(self.oidDb, self.STATIC_CONFIG, [], 0)
+
+        obj = self.oidDb.getObjFromOid(ObjectIdentifier('1.3.6.1.2.1.1.1.0'))
+
+        self.assertEqual('l2.pod2.nbg2.rtbrick.net', str(obj.value))
+        self.assertIsNone(obj.code)
+
+    def test_setOidsCodeValue(self):
+        self.container.setOids(self.oidDb, self.STATIC_CONFIG, [], 0)
+
+        obj = self.oidDb.getObjFromOid(ObjectIdentifier('1.3.6.1.2.1.1.3.0'))
+
+        self.assertIsInstance(obj.code, types.CodeType)
+        self.assertEqual(0, obj.value)
+
+    def test_setFromStaticConfig(self):
         self.container.setOids(self.oidDb, self.STATIC_CONFIG, [], 0)
 
         oids_in_db = []
@@ -75,12 +83,7 @@ class StaticAndPredefinedOidsTestCase(unittest.TestCase):
 
         expected = [
             '1.3.6.1.2.1.1.1.0',
-            '1.3.6.1.2.1.1.2.0',
             '1.3.6.1.2.1.1.3.0',
-            '1.3.6.1.2.1.1.4.0',
-            '1.3.6.1.2.1.1.5.0',
-            '1.3.6.1.2.1.1.6.0',
-            '1.3.6.1.2.1.1.7.0',
             '1.3.6.1.2.1.47.1.1.1.1.1.1',
             '1.3.6.1.2.1.47.1.1.1.1.1.2',
             '1.3.6.1.2.1.47.1.1.1.1.1.3',

@@ -74,16 +74,22 @@ class OidDb(object):
 
     def add(self, mibName, mibSymbol, *indices, value=None,
             valueFormat=None, code=None, bdsMappingFunc=None):
-        """Database Item, which pysnmp attributes required for get and getnext.
+        """Add SNMP MIB managed object instance to the OID DB
 
         Args:
-            mibName (str): MIB name e.g. SNMPv2-MIB. This MIB must be in MIB search path.
+            mibName (str): MIB name e.g. SNMPv2-MIB. This MIB must be in MIB
+                search path.
             mibSymbol (str): MIB symbol name
-            indices (vararg): one or more objects representing indices. Should be `0` for scalars.
-            value: put this value into MIB managed object. This is what SNMP manager will get in response.
-            valueFormat (string): 'hexValue' to indiciate hex `value` initializer
-            code (object): use this Python code object for getting a value at run time
-            bdsMappingFunc(string): used to mark, which mapping function owns this oid. (used for delete)
+            indices (vararg): one or more objects representing indices.
+                Should be `0` for scalars.
+            value: put this value into MIB managed object. This is what SNMP
+                manager will get in response.
+            valueFormat (string): 'hexValue' to indicate hex `value` initializer.
+                Optional.
+            code (string): compile and use this Python code snippet for getting a
+                value at run time. Optional.
+            bdsMappingFunc(string): used to mark, which mapping function owns
+                this oid (used for delete). Optional
 
         Examples:
           add('SNMPv2-MIB', 'sysDescr', 0,
@@ -91,6 +97,10 @@ class OidDb(object):
               bdsMappingFunc="confd_global_interface_container")
 
         """
+        if value is None:
+            raise error.BdsError(
+                'Initial value for the managed object must be provided')
+
         obj = rfc1902.ObjectType(
             rfc1902.ObjectIdentity(mibName, mibSymbol, *indices), value)
 
@@ -99,6 +109,9 @@ class OidDb(object):
         try:
             representation = {valueFormat if valueFormat else 'value': value}
             objectSyntax = objectSyntax.clone(**representation)
+
+            if code:
+                code = compile(code, '<%s::%s>' % (mibName, mibSymbol), 'exec')
 
             oidDbItem = OidDbItem(
                 bdsMappingFunc=bdsMappingFunc,
