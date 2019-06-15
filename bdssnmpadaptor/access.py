@@ -65,21 +65,21 @@ class BdsAccess(object):
     in the in-memory OID DB.
     """
 
-    def __init__(self, cliArgsDict):
+    POLL_PERIOD = 5
 
-        configDict = loadConfig(cliArgsDict['config'])
+    def __init__(self, args):
 
-        self.moduleLogger = set_logging(configDict, __class__.__name__)
+        configDict = loadConfig(args.config)
 
-        self.moduleLogger.debug(f'configDict:{configDict}')
-        self.rtbrickHost = configDict['access']['rtbrickHost']
-        self.rtbrickPorts = (configDict['access']['rtbrickPorts'])
-        # self.rtbrickCtrldPort = configDict['access']['rtbrickCtrldPort']
-        # self.rtbrickContainerName = configDict['access']['rtbrickContainerName']
+        self._moduleLogger = set_logging(configDict, __class__.__name__)
 
-        self.staticOidDict = configDict['responder']['staticOidContent']
+        self._moduleLogger.debug(f'configDict:{configDict}')
+        self._restHost = configDict['access']['rtbrickHost']
+        self._restPorts = (configDict['access']['rtbrickPorts'])
 
-        self._oidDb = OidDb(cliArgsDict)
+        self._staticOidDict = configDict['responder']['staticOidContent']
+
+        self._oidDb = OidDb(args)
 
         # keeps track of changes to the BDS data
         self._bdsIds = collections.defaultdict(list)
@@ -89,26 +89,34 @@ class BdsAccess(object):
 
     @property
     def oidDb(self):
+        """Return OID DB instance"""
         return self._oidDb
 
-    async def getJson(self, bdsRequest):
-        bdsProcess = bdsRequest['process']
-        bdsSuffix = bdsRequest['urlSuffix']
-        bdsTable = bdsRequest['table']
+    async def fetchTable(self, tableInfo):
+        """Fetch BDS table from REST API within asyncio loop.
 
-        if 'attributes' in bdsRequest:
-            attributeDict = {}
+        Args:
+            tableInfo (dict): table information to read
 
-            for attribute in bdsRequest['attributes']:
-                attributeDict[attribute] = bdsRequest['attributes'][attribute]
+        Returns:
+            tuple: (status, responseData) where `status` being `True`
+                indicates success, `False` indicates failure.
+                BDS table contents is returned in the response `dict`.
+        """
+        process = tableInfo['process']
+        suffix = tableInfo['urlSuffix']
+        table = tableInfo['table']
+
+        if 'attributes' in tableInfo:
+            attributes = tableInfo['attributes']
 
             requestData = {
                 'table': {
-                    'table_name': bdsTable
+                    'table_name': table
                 },
                 'objects': [
                     {
-                        'attribute': attributeDict
+                        'attribute': attributes
                     }
                 ]
             }
@@ -116,81 +124,79 @@ class BdsAccess(object):
         else:
             requestData = {
                 'table': {
-                    'table_name': bdsTable
+                    'table_name': table
                 }
             }
 
-        rtbrickProcessPortDict = [
-            x for x in self.rtbrickPorts if list(x)[0] == bdsProcess][0]
+        ports = [int(x[process]) for x in self._restPorts
+                 if process in x]
 
-        rtbrickPort = int(rtbrickProcessPortDict[bdsProcess])
-
-        url = f'http://{self.rtbrickHost}:{rtbrickPort}/{bdsSuffix}'
+        url = f'http://{self._restHost}:{ports[0]}/{suffix}'
 
         try:
-            headers = {
-                'Content-Type': 'application/json'
-            }
-
             async with aiohttp.ClientSession() as session:
-                async with session.post(url, timeout=5,
-                                        headers=headers,
-                                        json=requestData) as response:
-                    bdsResponse = await response.json(content_type='application/json')
+                async with session.post(
+                        url, timeout=5, json=requestData) as response:
+                    responseData = await response.json()
 
         except Exception as exc:
-            self.moduleLogger.error(f'HTTP request for {url} failed: {exc}')
+            self._moduleLogger.error(f'HTTP request for {url} failed: {exc}')
             return False, exc
 
         if response.status != 200:
-            self.moduleLogger.error(f'received {response.status} for {url}')
+            self._moduleLogger.error(f'received {response.status} for {url}')
             return False, 'status != 200'
 
-        self.moduleLogger.info(f'received HTTP {response.status} for {url}')
-        self.moduleLogger.debug(f'HTTP response {response}')
+        self._moduleLogger.info(f'received HTTP {response.status} for {url}')
+        self._moduleLogger.debug(f'HTTP response {responseData}')
 
-        return True, bdsResponse
+        return True, responseData
 
-    async def run_forever(self):
+    async def periodicRetriever(self):
+        """Periodically fetch BDS information.
+
+        Loops infinitely over asyncio coroutines fetching BDS information
+        from BDS REST API and pushing it into OID DB.
+        """
+
+        try:
+            StaticAndPredefinedOids.setOids(
+                self._oidDb, self._staticOidDict, [], 0)
+
+        except Exception as exc:
+            self._moduleLogger.error(
+                f'failed at populating OID DB with predefined OIDs: {exc}')
 
         while True:
-            await asyncio.sleep(5)
-
-            try:
-                StaticAndPredefinedOids.setOids(
-                    self._oidDb, self.staticOidDict, [], 0)
-
-            except Exception as exc:
-                self.moduleLogger.error(
-                    f'failed at populating OID DB with predefined OIDs: {exc}')
-                continue
+            await asyncio.sleep(self.POLL_PERIOD)
 
             for bdsReqKey in REQUEST_MAPPING_DICTS:
-                self.moduleLogger.debug(f'working on {bdsReqKey}')
+                self._moduleLogger.debug(f'working on {bdsReqKey}')
 
                 bdsRequest = REQUEST_MAPPING_DICTS[bdsReqKey]['bdsRequest']
-                mappingfunc = REQUEST_MAPPING_DICTS[bdsReqKey]['mappingFunc']
 
-                resultFlag, bdsResponse = await self.getJson(bdsRequest)
+                resultFlag, bdsResponse = await self.fetchTable(bdsRequest)
 
                 if not resultFlag:
-                    self.moduleLogger.error('BDS JSON is not available')
+                    self._moduleLogger.error('BDS information is not available')
                     continue
 
                 tableKey = f'{bdsRequest["process"]}_{bdsRequest["table"]}'
 
-                self.moduleLogger.debug(
+                self._moduleLogger.debug(
                     f'bdsResponses[{tableKey}] {bdsResponse}')
 
                 bdsId = self._bdsIds[bdsReqKey]
+
+                mappingfunc = REQUEST_MAPPING_DICTS[bdsReqKey]['mappingFunc']
 
                 try:
                     mappingfunc.setOids(
                         self._oidDb, bdsResponse, bdsId, BIRTHDAY)
 
                 except Exception as exc:
-                    self.moduleLogger.error(
+                    self._moduleLogger.error(
                         f'failed at populating OID DB from BDS response: {exc}')
                     continue
 
-            self.moduleLogger.debug(f'done refreshing OID DB')
+            self._moduleLogger.debug(f'done refreshing OID DB')

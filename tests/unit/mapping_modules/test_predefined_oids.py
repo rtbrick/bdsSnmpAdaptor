@@ -8,24 +8,30 @@
 import asyncio
 import os
 import sys
+import types
 import unittest
 from unittest import mock
 
 from bdssnmpadaptor import oid_db
 from bdssnmpadaptor.mapping_modules import predefined_oids
 
+from pysnmp.proto.rfc1902 import ObjectIdentifier
+
 
 @mock.patch('tempfile.NamedTemporaryFile', new=mock.MagicMock)
 class StaticAndPredefinedOidsTestCase(unittest.TestCase):
 
     STATIC_CONFIG = {
-        'sysDescr': 'l2.pod2.nbg2.rtbrick.net',
-        'sysContact': 'stefan@rtbrick.com',
-        'sysName': 'l2.pod2.nbg2.rtbrick.net',
-        'sysLocation': 'nbg2.rtbrick.net',
-        'sysObjectID': '1.3.6.1.4.1.50058.102.1',
-        'sysUpTime': 0,
-        'sysServices': 72
+        'SNMPv2-MIB::sysDescr': {
+            'value': 'l2.pod2.nbg2.rtbrick.net'
+        },
+        'SNMPv2-MIB::sysUpTime': {
+            'value': 0,
+            'code': """
+# no op
+pass
+"""
+        }
     }
 
     CONFIG = {
@@ -40,7 +46,7 @@ class StaticAndPredefinedOidsTestCase(unittest.TestCase):
         with mock.patch.object(oid_db, 'loadConfig', autospec=True) as config_mock:
             with mock.patch.object(oid_db, 'set_logging', autospec=True):
                 config_mock.return_value = self.CONFIG
-                self.oidDb = oid_db.OidDb({'config': {}})
+                self.oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
         self.container = predefined_oids.StaticAndPredefinedOids()
 
@@ -49,7 +55,23 @@ class StaticAndPredefinedOidsTestCase(unittest.TestCase):
 
         super(StaticAndPredefinedOidsTestCase, self).setUp()
 
-    def test_setOids(self):
+    def test_setOidsStaticValue(self):
+        self.container.setOids(self.oidDb, self.STATIC_CONFIG, [], 0)
+
+        obj = self.oidDb.getObjFromOid(ObjectIdentifier('1.3.6.1.2.1.1.1.0'))
+
+        self.assertEqual('l2.pod2.nbg2.rtbrick.net', str(obj.value))
+        self.assertIsNone(obj.code)
+
+    def test_setOidsCodeValue(self):
+        self.container.setOids(self.oidDb, self.STATIC_CONFIG, [], 0)
+
+        obj = self.oidDb.getObjFromOid(ObjectIdentifier('1.3.6.1.2.1.1.3.0'))
+
+        self.assertIsInstance(obj.code, types.CodeType)
+        self.assertEqual(0, obj.value)
+
+    def test_setFromStaticConfig(self):
         self.container.setOids(self.oidDb, self.STATIC_CONFIG, [], 0)
 
         oids_in_db = []
@@ -61,13 +83,7 @@ class StaticAndPredefinedOidsTestCase(unittest.TestCase):
 
         expected = [
             '1.3.6.1.2.1.1.1.0',
-            '1.3.6.1.2.1.1.2.0',
             '1.3.6.1.2.1.1.3.0',
-            '1.3.6.1.2.1.1.4.0',
-            '1.3.6.1.2.1.1.5.0',
-            '1.3.6.1.2.1.1.6.0',
-            '1.3.6.1.2.1.1.7.0',
-            '1.3.6.1.2.1.25.1.1.0',
             '1.3.6.1.2.1.47.1.1.1.1.1.1',
             '1.3.6.1.2.1.47.1.1.1.1.1.2',
             '1.3.6.1.2.1.47.1.1.1.1.1.3',

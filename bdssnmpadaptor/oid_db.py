@@ -49,8 +49,8 @@ class OidDb(object):
      """
     EXPIRE_PERIOD = 60
 
-    def __init__(self, cliArgsDict):
-        configDict = loadConfig(cliArgsDict['config'])
+    def __init__(self, args):
+        configDict = loadConfig(args.config)
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
@@ -73,16 +73,23 @@ class OidDb(object):
         self._dirty = True  # DB needs sorting
 
     def add(self, mibName, mibSymbol, *indices, value=None,
-            valueFormat=None, bdsMappingFunc=None):
-        """Database Item, which pysnmp attributes required for get and getnext.
+            valueFormat=None, code=None, bdsMappingFunc=None):
+        """Add SNMP MIB managed object instance to the OID DB
 
         Args:
-            mibName (str): MIB name e.g. SNMPv2-MIB. This MIB must be in MIB search path.
+            mibName (str): MIB name e.g. SNMPv2-MIB. This MIB must be in MIB
+                search path.
             mibSymbol (str): MIB symbol name
-            indices (vararg): one or more objects representing indices. Should be `0` for scalars.
-            value: put this value into MIB managed object. This is what SNMP manager will get in response.
-            valueFormat (string): 'hexValue' to indiciate hex `value` initializer
-            bdsMappingFunc(string): used to mark, which mapping function owns this oid. (used for delete)
+            indices (vararg): one or more objects representing indices.
+                Should be `0` for scalars.
+            value: put this value into MIB managed object. This is what SNMP
+                manager will get in response.
+            valueFormat (string): 'hexValue' to indicate hex `value` initializer.
+                Optional.
+            code (string): compile and use this Python code snippet for getting a
+                value at run time. Optional.
+            bdsMappingFunc(string): used to mark, which mapping function owns
+                this oid (used for delete). Optional
 
         Examples:
           add('SNMPv2-MIB', 'sysDescr', 0,
@@ -90,21 +97,28 @@ class OidDb(object):
               bdsMappingFunc="confd_global_interface_container")
 
         """
+        if value is None:
+            raise error.BdsError(
+                'Initial value for the managed object must be provided')
+
         obj = rfc1902.ObjectType(
             rfc1902.ObjectIdentity(mibName, mibSymbol, *indices), value)
 
         objectIdentity, objectSyntax = obj.resolveWithMib(self._mibViewController)
 
-        representation = {valueFormat if valueFormat else 'value': value}
-
         try:
+            representation = {valueFormat if valueFormat else 'value': value}
             objectSyntax = objectSyntax.clone(**representation)
+
+            if code:
+                code = compile(code, '<%s::%s>' % (mibName, mibSymbol), 'exec')
 
             oidDbItem = OidDbItem(
                 bdsMappingFunc=bdsMappingFunc,
                 oid=objectIdentity.getOid(),
                 name=objectIdentity.getMibSymbol()[1],
-                value=objectSyntax
+                value=objectSyntax,
+                code=code
             )
 
         except Exception as exc:
@@ -115,7 +129,7 @@ class OidDb(object):
 
         self.moduleLogger.debug(
             f'{"updating" if oidDbItem.oid in self._oids else "adding"} '
-            f'{oidDbItem.oid} {oidDbItem.value}')
+            f'{oidDbItem.oid} {"<code>" if code else oidDbItem.value}')
 
         self._oids[oidDbItem.oid] = oidDbItem
 
@@ -202,7 +216,7 @@ class OidDbItem(object):
     Implements managed objects comparison what is used for ordering
     objects by OID.
     """
-    def __init__(self, bdsMappingFunc=None, oid=None, name=None, value=None):
+    def __init__(self, bdsMappingFunc=None, oid=None, name=None, value=None, code=None):
         """Database Item, which pysnmp attributes required for get and getnext.
 
         Args:
@@ -210,6 +224,7 @@ class OidDbItem(object):
             oid(string): oid as string, separated by dots.
             name(string): name of the oid, should map with MIB identifier name, although this is not enforced
             value: object that holds the value of the OID. Type is flexible, subject to OID type
+            code (object): use this Python code object for getting a value at run time
 
         Examples:
           OidDbItem(
@@ -222,6 +237,7 @@ class OidDbItem(object):
         self.oid = ObjectIdentifier(oid)
         self.name = name
         self.value = value
+        self.code = code
 
     def __lt__(self, oidItem):
         return self.oid < oidItem.oid
@@ -230,4 +246,4 @@ class OidDbItem(object):
         return self.oid == oidItem.oid
 
     def __str__(self):
-        return "{self.name}({self.value}):{self.value}"
+        return "{self.name}({self.value}):{self.value}{self.code}"

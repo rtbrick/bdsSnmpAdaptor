@@ -9,22 +9,18 @@ import time
 
 from pysnmp.entity.rfc3413 import ntforg
 from pysnmp.proto.rfc1902 import Integer32
-from pysnmp.proto.rfc1902 import ObjectIdentifier
 from pysnmp.proto.rfc1902 import OctetString
 from pysnmp.proto.rfc1902 import TimeTicks
 from pysnmp.proto.rfc1902 import Unsigned32
+from pysnmp.smi import builder
+from pysnmp.smi import compiler
+from pysnmp.smi import rfc1902
+from pysnmp.smi import view
 
 from bdssnmpadaptor import error
 from bdssnmpadaptor import snmp_config
 from bdssnmpadaptor.config import loadConfig
 from bdssnmpadaptor.log import set_logging
-
-RTBRICKSYSLOGTRAP = '1.3.6.1.4.1.50058.103.1.1'
-SYSLOGMSG = '1.3.6.1.4.1.50058.104.2.1.0'
-SYSLOGMSGNUMBER = '1.3.6.1.4.1.50058.104.2.1.1.0'
-SYSLOGMSGFACILITY = '1.3.6.1.4.1.50058.104.2.1.2.0'
-SYSLOGMSGSEVERITY = '1.3.6.1.4.1.50058.104.2.1.3.0'
-SYSLOGMSGTEXT = '1.3.6.1.4.1.50058.104.2.1.4.0'
 
 
 class SnmpNotificationOriginator(object):
@@ -36,8 +32,8 @@ class SnmpNotificationOriginator(object):
 
     TARGETS_TAG = 'mgrs'
 
-    def __init__(self, cliArgsDict, queue):
-        configDict = loadConfig(cliArgsDict['config'])
+    def __init__(self, args, queue):
+        configDict = loadConfig(args.config)
 
         self.moduleLogger = set_logging(configDict, __class__.__name__)
 
@@ -125,17 +121,60 @@ class SnmpNotificationOriginator(object):
                 f'Configuring target {address}:{port} using security '
                 f'name {security}')
 
+        self._configureMibObjects(configDict)
+
         self.ntfOrg = ntforg.NotificationOriginator()
 
-        self.trapCounter = 0
+        self._trapCounter = 0
 
         self.moduleLogger.info(
             f'Running SNMP engine ID {self.snmpEngine}, boots {engineBoots}')
 
+    def _configureMibObjects(self, configDict):
+
+        mibBuilder = builder.MibBuilder()
+        mibViewController = view.MibViewController(mibBuilder)
+
+        compiler.addMibCompiler(
+            mibBuilder, sources=configDict['snmp'].get('mibs', ()))
+
+        self._sysUpTime = rfc1902.ObjectIdentity(
+            'SNMPv2-MIB', 'sysUpTime', 0).resolveWithMib(mibViewController)
+
+        self._snmpTrapOID = rfc1902.ObjectIdentity(
+            'SNMPv2-MIB', 'snmpTrapOID', 0).resolveWithMib(mibViewController)
+
+        self._rtbrickSyslogNotifications = rfc1902.ObjectIdentity(
+            'RTBRICK-MIB', 'rtbrickSyslogNotifications', 1).resolveWithMib(mibViewController)
+
+        self._syslogMsgNumber = rfc1902.ObjectIdentity(
+            'RTBRICK-SYSLOG-MIB', 'syslogMsgNumber', 0).resolveWithMib(mibViewController)
+
+        self._syslogMsgFacility = rfc1902.ObjectIdentity(
+            'RTBRICK-SYSLOG-MIB', 'syslogMsgFacility', 0).resolveWithMib(mibViewController)
+
+        self._syslogMsgSeverity = rfc1902.ObjectIdentity(
+            'RTBRICK-SYSLOG-MIB', 'syslogMsgSeverity', 0).resolveWithMib(mibViewController)
+
+        self._syslogMsgText = rfc1902.ObjectIdentity(
+            'RTBRICK-SYSLOG-MIB', 'syslogMsgText', 0).resolveWithMib(mibViewController)
+
+        self.moduleLogger.info(
+            f'Notifications will include these SNMP objects: '
+            f'{self._sysUpTime}=TimeTicks, '
+            f'{self._snmpTrapOID}={self._rtbrickSyslogNotifications} '
+            f'{self._syslogMsgNumber}=Unsigned32 '
+            f'{self._syslogMsgFacility}=OctetString '
+            f'{self._syslogMsgSeverity}=Integer32 '
+            f'{self._syslogMsgText}=OctetString')
+
     async def sendTrap(self, bdsLogDict):
         self.moduleLogger.info(f'sendTrap bdsLogDict: {bdsLogDict}')
 
-        self.trapCounter += 1
+        self._trapCounter += 1
+
+        if self._trapCounter == 0xffffffff:
+            self._trapCounter = 0
 
         try:
             syslogMsgFacility = bdsLogDict['host']
@@ -181,12 +220,12 @@ class SnmpNotificationOriginator(object):
         uptime = int((time.time() - self.birthday) * 100)
 
         varBinds = [
-            (ObjectIdentifier('1.3.6.1.2.1.1.3.0'), TimeTicks(uptime)),
-            (ObjectIdentifier('1.3.6.1.6.3.1.1.4.1.0'), ObjectIdentifier(RTBRICKSYSLOGTRAP)),
-            (ObjectIdentifier(SYSLOGMSGNUMBER), Unsigned32(self.trapCounter)),
-            (ObjectIdentifier(SYSLOGMSGFACILITY), OctetString(syslogMsgFacility)),
-            (ObjectIdentifier(SYSLOGMSGSEVERITY), Integer32(syslogMsgSeverity)),
-            (ObjectIdentifier(SYSLOGMSGTEXT), OctetString(syslogMsgText))
+            (self._sysUpTime, TimeTicks(uptime)),
+            (self._snmpTrapOID, self._rtbrickSyslogNotifications),
+            (self._syslogMsgNumber, Unsigned32(self._trapCounter)),
+            (self._syslogMsgFacility, OctetString(syslogMsgFacility)),
+            (self._syslogMsgSeverity, Integer32(syslogMsgSeverity)),
+            (self._syslogMsgText, OctetString(syslogMsgText))
         ]
 
         sendRequestHandle = self.ntfOrg.sendVarBinds(

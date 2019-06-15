@@ -20,13 +20,11 @@ from bdssnmpadaptor.mapping_modules import confd_global_startup_status_confd
 class ConfdGlobalStartupStatusConfdTestCase(unittest.TestCase):
 
     CONFIG = {
-        'config': {
-            'snmp': {
-                'mibs': [
-                    'mibs',
-                    '/usr/share/snmp/mibs'
-                ]
-            }
+        'snmp': {
+            'mibs': [
+                'mibs',
+                '/usr/share/snmp/mibs'
+            ]
         }
     }
 
@@ -36,10 +34,10 @@ class ConfdGlobalStartupStatusConfdTestCase(unittest.TestCase):
 
     def setUp(self):
         with mock.patch.object(oid_db, 'loadConfig', autospec=True) as config_mock:
-            config_mock.return_value = self.CONFIG['config']
+            config_mock.return_value = self.CONFIG
 
             with mock.patch.object(oid_db, 'set_logging', autospec=True):
-                self.oidDb = oid_db.OidDb(self.CONFIG)
+                self.oidDb = oid_db.OidDb(mock.MagicMock(config=self.CONFIG))
 
         self.container = confd_global_startup_status_confd.ConfdGlobalStartupStatusConfd()
 

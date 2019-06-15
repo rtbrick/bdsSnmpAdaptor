@@ -26,7 +26,7 @@ class FfwdDefaultInterfaceLogicalTestCase(unittest.TestCase):
     def setUp(self):
         with mock.patch.object(oid_db, 'loadConfig', autospec=True):
             with mock.patch.object(oid_db, 'set_logging', autospec=True):
-                self.oidDb = oid_db.OidDb({'config': {}})
+                self.oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
         self.container = ffwd_default_interface_logical.FfwdDefaultInterfaceLogical()
 

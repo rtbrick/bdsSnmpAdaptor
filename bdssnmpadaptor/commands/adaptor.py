@@ -55,36 +55,34 @@ See https://www.rtbrick.com for RtBrick product information.
         '--pidfile', type=str,
         help='Path to a PID file the process would create')
 
-    cliargs = parser.parse_args()
+    args = parser.parse_args()
 
-    cliArgsDict = vars(cliargs)
+    args.config = os.path.abspath(args.config)
 
-    cliargs.config = os.path.abspath(cliargs.config)
-
-    if cliargs.daemonize:
+    if args.daemonize:
         daemon.daemonize()
 
-    if cliargs.pidfile:
-        daemon.pidfile(cliargs.pidfile)
+    if args.pidfile:
+        daemon.pidfile(args.pidfile)
 
-    bdsAccess = BdsAccess(cliArgsDict)
+    bdsAccess = BdsAccess(args)
 
     mibController = MibInstrumController()
-    mibController.setOidDbAndLogger(bdsAccess.oidDb, cliArgsDict)
+    mibController.setOidDbAndLogger(bdsAccess.oidDb, args)
 
-    SnmpCommandResponder(cliArgsDict, mibController)
+    SnmpCommandResponder(args, mibController)
 
     queue = asyncio.Queue()
 
-    snmpNtfOrg = SnmpNotificationOriginator(cliArgsDict, queue)
+    snmpNtfOrg = SnmpNotificationOriginator(args, queue)
 
-    httpServer = AsyncioRestServer(cliArgsDict, queue)
+    httpServer = AsyncioRestServer(args, queue)
 
     loop = asyncio.get_event_loop()
 
     try:
         loop.run_until_complete(
-            asyncio.gather(bdsAccess.run_forever(),
+            asyncio.gather(bdsAccess.periodicRetriever(),
                            snmpNtfOrg.run_forever(), httpServer.initialize())
         )
 

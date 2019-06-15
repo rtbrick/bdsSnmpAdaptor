@@ -59,7 +59,8 @@ bdsSnmpAdapter:
                              io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG)]):
             mock_oiddb = mock.MagicMock()
-            snmp_responder.SnmpCommandResponder({'config': '/file'}, mock_oiddb)
+            snmp_responder.SnmpCommandResponder(
+                mock.MagicMock(config={}), mock_oiddb)
 
         mock_snmpEngine = mock_snmp_config.getSnmpEngine.return_value
 

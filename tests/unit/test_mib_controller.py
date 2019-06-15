@@ -26,10 +26,21 @@ class MibControllerTestCase(unittest.TestCase):
          - fwdd-hald: 5002  # fwwd REST API listens on this port"
       responder:
         staticOidContent:
-          sysDescr: l2.pod2.nbg2.rtbrick.net
-          sysContact: stefan@rtbrick.com
-          sysName: l2.pod2.nbg2.rtbrick.net
-          sysLocation: nbg2.rtbrick.net
+          SNMPv2-MIB::sysDescr:
+            value:
+              l2.pod2.nbg2.rtbrick.net
+
+          SNMPv2-MIB::sysContact:
+            value:
+              stefan@rtbrick.com
+    
+          SNMPv2-MIB::sysName:
+            value:
+              l2.pod2.nbg2.rtbrick.net
+    
+          SNMPv2-MIB::sysLocation:
+            value:
+              nbg2.rtbrick.net
     """
 
     def setUp(self):
@@ -41,7 +52,7 @@ class MibControllerTestCase(unittest.TestCase):
                              io.StringIO(self.CONFIG),
                              io.StringIO(self.CONFIG)]):
             self.mc = mib_controller.MibInstrumController().setOidDbAndLogger(
-                self.mock_oidDb, {'config': '/file'})
+                self.mock_oidDb, mock.MagicMock(config={}))
 
         super(MibControllerTestCase, self).setUp()
 
@@ -49,8 +60,7 @@ class MibControllerTestCase(unittest.TestCase):
         varBinds = [('1.3.6.1.2.1.1.0', 123)]
 
         mock_oidItem = self.mock_oidDb.getObjFromOid.return_value
-        mock_oidItem.pysnmpBaseType = lambda **kw: kw['key']
-        mock_oidItem.pysnmpRepresentation = 'key'
+        mock_oidItem.code = None
 
         rspVarBinds = self.mc.readVars(varBinds)
 
@@ -67,8 +77,7 @@ class MibControllerTestCase(unittest.TestCase):
 
         mock_getNextOid = self.mock_oidDb.getNextOid.return_value
         mock_oidItem = self.mock_oidDb.getObjFromOid.return_value
-        mock_oidItem.pysnmpBaseType = lambda **kw: kw['key']
-        mock_oidItem.pysnmpRepresentation = 'key'
+        mock_oidItem.code = None
 
         rspVarBinds = self.mc.readNextVars(varBinds)
 

@@ -29,7 +29,7 @@ class BdsSnmpAdaptorTestCase(unittest.TestCase):
 
         mock_access_instance = mock_access.return_value
 
-        mock_access_instance.run_forever.assert_called_once_with()
+        mock_access_instance.periodicRetriever.assert_called_once_with()
 
         mock_mibctrl.assert_called_once_with()
 
