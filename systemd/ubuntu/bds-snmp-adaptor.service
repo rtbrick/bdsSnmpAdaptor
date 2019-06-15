@@ -1,5 +1,5 @@
 [Unit]
-Description=RtBrick SNMP Adaptor
+Description=RtBrick BDS SNMP Adaptor
 After=network.target auditd.service
 
 [Service]

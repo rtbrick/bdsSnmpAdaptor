@@ -129,7 +129,7 @@ class OidDb(object):
 
         self.moduleLogger.debug(
             f'{"updating" if oidDbItem.oid in self._oids else "adding"} '
-            f'{oidDbItem.oid} {"<code>" if code else oidDbItem.value}')
+            f'{oidDbItem.oid} {"<code>" if code else oidDbItem.value.prettyPrint()}')
 
         self._oids[oidDbItem.oid] = oidDbItem
 

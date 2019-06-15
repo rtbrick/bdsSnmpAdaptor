@@ -146,14 +146,14 @@ bdsSnmpAdapter:
 
         expectedVarBinds = [
             (rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.3.0'), mock.ANY),
-            (rfc1902.ObjectIdentifier('1.3.6.1.6.3.1.1.4.1.0'), rfc1902.ObjectIdentifier('1.3.6.1.4.1.50058.103.1.1')),
+            (rfc1902.ObjectIdentifier('1.3.6.1.6.3.1.1.4.1.0'), rfc1902.ObjectIdentifier('1.3.6.1.4.1.50058.103.1.0.1.1')),
             (rfc1902.ObjectIdentifier('1.3.6.1.4.1.50058.104.2.1.1.0'), rfc1902.Integer32(1)),
             (rfc1902.ObjectIdentifier('1.3.6.1.4.1.50058.104.2.1.2.0'), rfc1902.OctetString('error')),
             (rfc1902.ObjectIdentifier('1.3.6.1.4.1.50058.104.2.1.3.0'), rfc1902.Integer32(0)),
             (rfc1902.ObjectIdentifier('1.3.6.1.4.1.50058.104.2.1.4.0'), rfc1902.OctetString('error')),
         ]
 
-        ntf.ntfOrg.sendVarBinds.assert_called_once_with(
+        ntf._ntfOrg.sendVarBinds.assert_called_once_with(
             mock_snmpEngine, mock.ANY, None, '', expectedVarBinds, mock.ANY)
 
 

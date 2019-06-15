@@ -6,13 +6,13 @@
 # X-Stop-After:      sendsigs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: RtBrick SNMP Adaptor
-# Description:       RtBrick SNMP Adaptor
+# Short-Description: RtBrick BDS SNMP Adaptor
+# Description:       RtBrick BDS SNMP Adaptor
 ### END INIT INFO
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="BDS SNMP Notification Originator"
+DESC="RtBrick BDS SNMP Adaptor"
 NAME=bds-snmp-adaptor
 
 DAEMON=/usr/local/bin/bds-snmp-adaptor
