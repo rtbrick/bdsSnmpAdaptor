@@ -175,6 +175,64 @@ pass
 
         self.assertEqual(expected, oidItem.oid)
 
+    @mock.patch('time.time', autospec=True)
+    @mock.patch.object(oid_db, 'loadConfig', autospec=True)
+    @mock.patch.object(oid_db, 'set_logging', autospec=True)
+    def test_add_permanent(self, mock_set_logging, mock_loadConfig, mock_time):
+        mock_time.return_value = 0
+
+        oidDb = oid_db.OidDb(mock.MagicMock(config={}))
+
+        # add sysDescr and expect it to be in the OID DB
+
+        oidDb.add('SNMPv2-MIB', 'sysDescr', 0, value='my system',
+                  bdsMappingFunc=__class__, permanent=True)
+
+        expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
+
+        oidItem = oidDb.getObjFromOid(expected)
+
+        self.assertEqual(expected, oidItem.oid)
+
+        mock_time.return_value = 61
+
+        # add snmpOutNoSuchNames and expect sysDescr & snmpOutNoSuchNames
+        # to be in the OID DB
+
+        oidDb.add('SNMPv2-MIB', 'snmpOutNoSuchNames', 0, value=123,
+                  bdsMappingFunc=__class__)
+
+        expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
+
+        oidItem = oidDb.getObjFromOid(expected)
+
+        self.assertEqual(expected, oidItem.oid)
+
+        expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.11.21.0')
+
+        oidItem = oidDb.getObjFromOid(expected)
+
+        self.assertEqual(expected, oidItem.oid)
+
+        mock_time.return_value = 122
+
+        # update snmpOutNoSuchNames, but expect sysDescr to still be there
+
+        oidDb.add('SNMPv2-MIB', 'snmpOutNoSuchNames', 0, value=123,
+                  bdsMappingFunc=__class__)
+
+        expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
+
+        oidItem = oidDb.getObjFromOid(expected)
+
+        self.assertEqual(expected, oidItem.oid)
+
+        expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.11.21.0')
+
+        oidItem = oidDb.getObjFromOid(expected)
+
+        self.assertEqual(expected, oidItem.oid)
+
     def test_getNextOid(self):
         for idx, oid in enumerate(self.OIDS[:-1]):
             nextOid = self.oidDb.getNextOid(oid)

@@ -65,6 +65,9 @@ class OidDb(object):
         # this dict holds all OID items in this # DB
         self._oids = {}
 
+        # this dict maintains non-expiring OID items
+        self._permanentOids = {}
+
         # this dict holds the newer version of the above
         self._candidateOids = {}
 
@@ -73,7 +76,7 @@ class OidDb(object):
         self._dirty = True  # DB needs sorting
 
     def add(self, mibName, mibSymbol, *indices, value=None,
-            valueFormat=None, code=None, bdsMappingFunc=None):
+            valueFormat=None, code=None, bdsMappingFunc=None, permanent=False):
         """Add SNMP MIB managed object instance to the OID DB
 
         Args:
@@ -90,6 +93,7 @@ class OidDb(object):
                 value at run time. Optional.
             bdsMappingFunc(string): used to mark, which mapping function owns
                 this oid (used for delete). Optional
+            permanent (bool): never expire this object
 
         Examples:
           add('SNMPv2-MIB', 'sysDescr', 0,
@@ -133,6 +137,9 @@ class OidDb(object):
 
         self._oids[oidDbItem.oid] = oidDbItem
 
+        if permanent:
+            self._permanentOids[oidDbItem.oid] = oidDbItem
+
         self._dirty = True
 
         now = time.time()
@@ -144,6 +151,7 @@ class OidDb(object):
 
         if self._expireBy < now:
             self._oids.clear()
+            self._oids.update(self._permanentOids)
             self._oids.update(self._candidateOids)
             self._candidateOids.clear()
 
@@ -206,8 +214,8 @@ class OidDb(object):
         return '\n'.join(self._oids)
 
     @contextlib.contextmanager
-    def module(self, bdsMappingFunc):
-        yield functools.partial(self.add, bdsMappingFunc=bdsMappingFunc)
+    def module(self, bdsMappingFunc, permanent=False):
+        yield functools.partial(self.add, bdsMappingFunc=bdsMappingFunc, permanent=permanent)
 
 
 class OidDbItem(object):
