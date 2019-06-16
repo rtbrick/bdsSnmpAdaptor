@@ -39,7 +39,7 @@ class SnmpNotificationOriginator(object):
 
         self.moduleLogger.info(f'original configDict: {configDict}')
 
-        self.queue = queue
+        self._queue = queue
 
         # temp lines for graylog client end #
         # configDict['usmUserDataMatrix'] = [ usmUserTuple.strip().split(',')
@@ -48,15 +48,15 @@ class SnmpNotificationOriginator(object):
         # configDict['usmUsers'] = []
         self.moduleLogger.info(f'modified configDict: {configDict}')
 
-        self.snmpEngine = snmp_config.getSnmpEngine(
+        self._snmpEngine = snmp_config.getSnmpEngine(
             engineId=configDict['snmp'].get('engineId'))
 
         engineBoots = snmp_config.setSnmpEngineBoots(
-            self.snmpEngine, configDict.get('stateDir', '.'))
+            self._snmpEngine, configDict.get('stateDir', '.'))
 
-        snmp_config.setSnmpTransport(self.snmpEngine)
+        snmp_config.setSnmpTransport(self._snmpEngine)
 
-        self.targets = snmp_config.setTrapTypeForTag(self.snmpEngine, self.TARGETS_TAG)
+        self._targets = snmp_config.setTrapTypeForTag(self._snmpEngine, self.TARGETS_TAG)
 
         authEntries = {}
 
@@ -72,7 +72,7 @@ class SnmpNotificationOriginator(object):
                     community = snmpConfig['community']
 
                     authLevel = snmp_config.setCommunity(
-                        self.snmpEngine, security, community, version=snmpVersion, tag=self.TARGETS_TAG)
+                        self._snmpEngine, security, community, version=snmpVersion, tag=self.TARGETS_TAG)
 
                     self.moduleLogger.info(
                         f'Configuring SNMPv{snmpVersion} security name '
@@ -85,7 +85,7 @@ class SnmpNotificationOriginator(object):
                 for security, usmCreds in snmpConfigEntries.get('usmUsers', {}).items():
 
                     authLevel = snmp_config.setUsmUser(
-                        self.snmpEngine, security,
+                        self._snmpEngine, security,
                         usmCreds.get('user'),
                         usmCreds.get('authKey'), usmCreds.get('authProtocol'),
                         usmCreds.get('privKey'), usmCreds.get('privProtocol'))
@@ -101,7 +101,7 @@ class SnmpNotificationOriginator(object):
             else:
                 raise error.BdsError(f'Unknown SNMP version {snmpVersion}')
 
-            self.birthday = time.time()
+            self._birthday = time.time()
 
         for targetName, targetConfig in configDict['notificator'].get(
                 'snmpTrapTargets', {}).items():
@@ -110,12 +110,12 @@ class SnmpNotificationOriginator(object):
             security = targetConfig['security-name']
 
             snmp_config.setTrapTargetAddress(
-                self.snmpEngine, security, (address, port), self.TARGETS_TAG)
+                self._snmpEngine, security, (address, port), self.TARGETS_TAG)
 
             snmpVersion, authLevel = authEntries[security]
 
             snmp_config.setTrapVersion(
-                self.snmpEngine, security, authLevel, snmpVersion)
+                self._snmpEngine, security, authLevel, snmpVersion)
 
             self.moduleLogger.info(
                 f'Configuring target {address}:{port} using security '
@@ -123,12 +123,12 @@ class SnmpNotificationOriginator(object):
 
         self._configureMibObjects(configDict)
 
-        self.ntfOrg = ntforg.NotificationOriginator()
+        self._ntfOrg = ntforg.NotificationOriginator()
 
         self._trapCounter = 0
 
         self.moduleLogger.info(
-            f'Running SNMP engine ID {self.snmpEngine}, boots {engineBoots}')
+            f'Running SNMP engine ID {self._snmpEngine}, boots {engineBoots}')
 
     def _configureMibObjects(self, configDict):
 
@@ -144,8 +144,8 @@ class SnmpNotificationOriginator(object):
         self._snmpTrapOID = rfc1902.ObjectIdentity(
             'SNMPv2-MIB', 'snmpTrapOID', 0).resolveWithMib(mibViewController)
 
-        self._rtbrickSyslogNotifications = rfc1902.ObjectIdentity(
-            'RTBRICK-MIB', 'rtbrickSyslogNotifications', 1).resolveWithMib(mibViewController)
+        self._rtbrickSyslogTrap = rfc1902.ObjectIdentity(
+            'RTBRICK-SYSLOG-MIB', 'rtbrickSyslogTrap', 1).resolveWithMib(mibViewController)
 
         self._syslogMsgNumber = rfc1902.ObjectIdentity(
             'RTBRICK-SYSLOG-MIB', 'syslogMsgNumber', 0).resolveWithMib(mibViewController)
@@ -162,7 +162,7 @@ class SnmpNotificationOriginator(object):
         self.moduleLogger.info(
             f'Notifications will include these SNMP objects: '
             f'{self._sysUpTime}=TimeTicks, '
-            f'{self._snmpTrapOID}={self._rtbrickSyslogNotifications} '
+            f'{self._snmpTrapOID}={self._rtbrickSyslogTrap} '
             f'{self._syslogMsgNumber}=Unsigned32 '
             f'{self._syslogMsgFacility}=OctetString '
             f'{self._syslogMsgSeverity}=Integer32 '
@@ -203,7 +203,7 @@ class SnmpNotificationOriginator(object):
             syslogMsgText = 'error'
 
         self.moduleLogger.info(
-            f'data sendTrap {self.trapCounter} {syslogMsgFacility} '
+            f'data sendTrap {self._trapCounter} {syslogMsgFacility} '
             f'{syslogMsgSeverity} {syslogMsgText}')
 
         def cbFun(snmpEngine, sendRequestHandle, errorIndication,
@@ -217,21 +217,21 @@ class SnmpNotificationOriginator(object):
                 self.moduleLogger.error(
                     f'notification {sendRequestHandle} succeeded')
 
-        uptime = int((time.time() - self.birthday) * 100)
+        uptime = int((time.time() - self._birthday) * 100)
 
         varBinds = [
             (self._sysUpTime, TimeTicks(uptime)),
-            (self._snmpTrapOID, self._rtbrickSyslogNotifications),
+            (self._snmpTrapOID, self._rtbrickSyslogTrap),
             (self._syslogMsgNumber, Unsigned32(self._trapCounter)),
             (self._syslogMsgFacility, OctetString(syslogMsgFacility)),
             (self._syslogMsgSeverity, Integer32(syslogMsgSeverity)),
             (self._syslogMsgText, OctetString(syslogMsgText))
         ]
 
-        sendRequestHandle = self.ntfOrg.sendVarBinds(
-            self.snmpEngine,
+        sendRequestHandle = self._ntfOrg.sendVarBinds(
+            self._snmpEngine,
             # Notification targets
-            self.targets,
+            self._targets,
             None, '',  # contextEngineId, contextName
             varBinds,
             cbFun
@@ -243,7 +243,7 @@ class SnmpNotificationOriginator(object):
     async def run_forever(self):
 
         while True:
-            bdsLogToBeProcessed = await self.queue.get()
+            bdsLogToBeProcessed = await self._queue.get()
 
             self.moduleLogger.info(f'new log record: {bdsLogToBeProcessed}')
 
