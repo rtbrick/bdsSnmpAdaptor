@@ -69,7 +69,7 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
 
         with oidDb.module(__name__) as add:
 
-            add('SNMPv2-MIB', 'sysDescr', 1, value=swString)
+            add('SNMPv2-MIB', 'sysDescr', 0, value=swString)
 
             # for index,bdsJsonObject in enumerate(bdsData['objects"]):
             #     #indexString = bdsJsonObject["attribute"]["library"]

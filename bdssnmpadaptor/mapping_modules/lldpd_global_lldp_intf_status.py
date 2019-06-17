@@ -104,7 +104,6 @@ class LldpdGlobalLldpIntfStatus(object):
                 value=len(bdsData['objects']))
 
             for i, bdsJsonObject in enumerate(bdsData['objects']):
-                currentId = bdsJsonObject['sequence']
 
                 attribute = bdsJsonObject['attribute']
 
@@ -135,9 +134,8 @@ class LldpdGlobalLldpIntfStatus(object):
                 add('IF-MIB', 'ifOperStatus', index,
                     value=IFOPERSTATUSMAP[int(attribute['link_status'])])
 
-                if not bdsIds or currentId != bdsIds[i]:  # first run or changed status
-                    add('IF-MIB', 'ifLastChange', index,
-                        value=currentSysTime if bdsIds else 0)
+                add('IF-MIB', 'ifLastChange', index,
+                    value=currentSysTime if bdsIds else 0)
 
             add('IF-MIB', 'ifStackLastChange', 0,
                 value=currentSysTime if bdsIds else 0)

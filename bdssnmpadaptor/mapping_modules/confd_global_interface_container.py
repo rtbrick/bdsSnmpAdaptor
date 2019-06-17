@@ -99,7 +99,6 @@ class ConfdGlobalInterfaceContainer(object):
                 value=len(bdsData['objects']))
 
             for i, bdsObject in enumerate(bdsData['objects']):
-                currentId = bdsObject['sequence']
 
                 ifName = bdsObject['attribute']['interface_name']
 
@@ -139,9 +138,8 @@ class ConfdGlobalInterfaceContainer(object):
                 add('IF-MIB', 'ifSpeed', index,
                     value=IFSPEED_LAMBDA(bdsObject['attribute']['bandwidth']))
 
-                if not bdsIds or currentId != bdsIds[i]:  # first run or changed status
-                    add('IF-MIB', 'ifLastChange', index,
-                        value=currentSysTime if bdsIds else 0)
+                add('IF-MIB', 'ifLastChange', index,
+                    value=currentSysTime if bdsIds else 0)
 
         add('IF-MIB', 'ifStackLastChange', 0,
             value=currentSysTime if bdsIds else 0)
