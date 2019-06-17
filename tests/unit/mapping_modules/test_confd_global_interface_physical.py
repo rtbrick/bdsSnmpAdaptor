@@ -56,8 +56,8 @@ class ConfdGlobalInterfacePhysicalTestCase(unittest.TestCase):
             '1.3.6.1.2.1.2.2.1.7.4096',
             '1.3.6.1.2.1.2.2.1.8.4096',
             '1.3.6.1.2.1.2.2.1.9.4096',
-            '1.3.6.1.2.1.31.1.5.4096',
-            '1.3.6.1.2.1.31.1.6.4096'
+            '1.3.6.1.2.1.31.1.5.0',
+            '1.3.6.1.2.1.31.1.6.0'
         ]
 
         self.assertEqual(expected, [str(o) for o in oids_in_db])

@@ -144,21 +144,13 @@ class ConfdGlobalInterfacePhysical(object):
                         add('IF-MIB', 'ifSpeed', index,
                             value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth']))
 
-                    if len(bdsIds) == 0:  # first run
-                        add('IF-MIB', 'ifLastChange', index, value=0)
+                    if not bdsIds or currentId != bdsIds[i]:  # first run or changed status
+                        add('IF-MIB', 'ifLastChange', index,
+                            value=currentSysTime if bdsIds else 0)
 
-                    else:
-                        add('IF-MIB', 'ifLastChange', index, value=currentSysTime)
-
-
-        if len(bdsIds) == 0:  # first run
-            add('IF-MIB', 'ifStackLastChange', 0, value=0)
-
-            add('IF-MIB', 'ifTableLastChange', 0, value=0)
-
-        else:
-            add('IF-MIB', 'ifStackLastChange', 0, value=currentSysTime)
-
-            add('IF-MIB', 'ifTableLastChange', 0, value=currentSysTime)
+            add('IF-MIB', 'ifStackLastChange', 0,
+                value=currentSysTime if bdsIds else 0)
+            add('IF-MIB', 'ifTableLastChange', 0,
+                value=currentSysTime if bdsIds else 0)
 
         bdsIds[:] = newBdsIds
