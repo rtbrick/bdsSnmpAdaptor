@@ -143,21 +143,21 @@ class ConfdGlobalInterfacePhysical(object):
                     if len(bdsIds) == 0:  # first run
                         add('IF-MIB', 'ifLastChange', index, value=0)
 
-                    elif currentId != bdsIds[i]:
-                        add('IF-MIB', 'ifLastChange', index, value=currentSysTime)
-
-                    if len(bdsIds) == 0:  # first run
-                        add('IF-MIB', 'ifStackLastChange', index, value=0)
-
-                        # Fixme - do we have to observe logical interfaces?
-                        add('IF-MIB', 'ifTableLastChange', index, value=0)
-
                     else:
-                        add('IF-MIB', 'ifTableLastChange', index,
-                            value=currentSysTime)
+                        add('IF-MIB', 'ifLastChange', index, value=currentSysTime)
 
                     if 'bandwidth' in bdsJsonObject['attribute']:
                         add('IF-MIB', 'ifSpeed', index,
                             value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth']))
+
+        if len(bdsIds) == 0:  # first run
+            add('IF-MIB', 'ifStackLastChange', 0, value=0)
+
+            add('IF-MIB', 'ifTableLastChange', 0, value=0)
+
+        else:
+            add('IF-MIB', 'ifStackLastChange', 0, value=currentSysTime)
+
+            add('IF-MIB', 'ifTableLastChange', 0, value=currentSysTime)
 
         bdsIds[:] = newBdsIds
