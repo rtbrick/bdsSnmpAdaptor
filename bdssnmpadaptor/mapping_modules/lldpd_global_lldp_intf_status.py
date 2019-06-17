@@ -135,20 +135,13 @@ class LldpdGlobalLldpIntfStatus(object):
                 add('IF-MIB', 'ifOperStatus', index,
                     value=IFOPERSTATUSMAP[int(attribute['link_status'])])
 
-                if len(bdsIds) == 0:  # first run
-                    add('IF-MIB', 'ifLastChange', index, value=0)
+                if not bdsIds or currentId != bdsIds[i]:  # first run or changed status
+                    add('IF-MIB', 'ifLastChange', index,
+                        value=currentSysTime if bdsIds else 0)
 
-                elif currentId != bdsIds[i]:
-                    add('IF-MIB', 'ifLastChange', index, value=currentSysTime)
-
-                if len(bdsIds) == 0:  # first run
-                    add('IF-MIB', 'ifStackLastChange', index, value=0)
-
-                    # Fixme - do we have to observe logical interfaces?
-                    add('IF-MIB', 'ifTableLastChange', index, value=0)
-
-                else:
-                    add('IF-MIB', 'ifTableLastChange', index,
-                        value=currentSysTime)
+            add('IF-MIB', 'ifStackLastChange', 0,
+                value=currentSysTime if bdsIds else 0)
+            add('IF-MIB', 'ifTableLastChange', 0,
+                value=currentSysTime if bdsIds else 0)
 
         bdsIds[:] = newBdsIds

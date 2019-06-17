@@ -91,6 +91,8 @@ class ConfdGlobalInterfaceContainer(object):
         if newBdsIds == bdsIds:
             return
 
+        currentSysTime = int((time.time() - birthday) * 100)
+
         with oidDb.module(__name__) as add:
 
             add('IF-MIB', 'ifNumber', 0,
@@ -134,24 +136,16 @@ class ConfdGlobalInterfaceContainer(object):
                 add('IF-MIB', 'ifOperStatus', index,
                     value=IFOPERSTATUSMAP[int(bdsObject['attribute']['link_status'])])
 
-                if len(bdsIds) == 0:  # first run
-                    add('IF-MIB', 'ifLastChange', index, value=0)
-
-                elif currentId != bdsIds[i]:  # status has changed
-                    add('IF-MIB', 'ifLastChange', index,
-                        value=int((time.time() - birthday) * 100))
-
-                if len(bdsIds) == 0:  # first run
-                    add('IF-MIB', 'ifStackLastChange', index, value=0)
-
-                    # Fixme - do we have to observe logical interfaces?
-                    add('IF-MIB', 'ifTableLastChange', index, value=0)
-
-                else:
-                    add('IF-MIB', 'ifTableLastChange', index,
-                        value=int((time.time() - birthday) * 100))
-
                 add('IF-MIB', 'ifSpeed', index,
                     value=IFSPEED_LAMBDA(bdsObject['attribute']['bandwidth']))
+
+                if not bdsIds or currentId != bdsIds[i]:  # first run or changed status
+                    add('IF-MIB', 'ifLastChange', index,
+                        value=currentSysTime if bdsIds else 0)
+
+        add('IF-MIB', 'ifStackLastChange', 0,
+            value=currentSysTime if bdsIds else 0)
+        add('IF-MIB', 'ifTableLastChange', 0,
+            value=currentSysTime if bdsIds else 0)
 
         bdsIds[:] = newBdsIds
