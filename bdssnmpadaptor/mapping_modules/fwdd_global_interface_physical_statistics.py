@@ -153,9 +153,6 @@ class FwddGlobalInterfacePhysicalStatistics(object):
 
             for i, bdsJsonObject in enumerate(bdsData['objects']):
 
-                if i < len(bdsIds) and newBdsIds[i] == bdsIds[i]:
-                    continue
-
                 attribute = bdsJsonObject['attribute']
 
                 ifName = attribute['interface_name']

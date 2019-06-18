@@ -67,9 +67,6 @@ class FfwdDefaultInterfaceLogical(object):
 
             for bdsJsonObject in bdsData['objects']:
 
-                if i < len(bdsIds) and newBdsIds[i] == bdsIds[i]:
-                    continue
-
                 ifName = bdsJsonObject['attribute']['interface_name']
 
                 index = mapping_functions.ifIndexFromIfName(ifName)

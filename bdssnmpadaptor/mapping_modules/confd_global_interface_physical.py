@@ -100,18 +100,16 @@ class ConfdGlobalInterfacePhysical(object):
 
         with oidDb.module(__name__) as add:
 
-            add('IF-MIB', 'ifNumber', 0,
-                value=len(bdsData['objects']))
+            ifNumber = 0
 
             for i, bdsJsonObject in enumerate(bdsData['objects']):
-
-                if i < len(bdsIds) and newBdsIds[i] == bdsIds[i]:
-                    continue
 
                 ifName = bdsJsonObject['attribute']['interface_name']
 
                 if not ifName.startswith('if'):     #fix for lo0 in table
                     continue
+
+                ifNumber += 1
 
                 index = mapping_functions.ifIndexFromIfName(ifName)
 
@@ -146,9 +144,18 @@ class ConfdGlobalInterfacePhysical(object):
                     add('IF-MIB', 'ifSpeed', index,
                         value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth']))
 
-                add('IF-MIB', 'ifLastChange', index,
-                    value=currentSysTime if bdsIds else 0)
+                if i < len(bdsIds):
+                    # possible table entry change
+                    ifLastChange = None if newBdsIds[i] == bdsIds[i] else currentSysTime
 
+                else:
+                    # initial run or table size change
+                    ifLastChange = 0 if bdsIds else currentSysTime
+
+                add('IF-MIB', 'ifLastChange', index, value=ifLastChange)
+
+            add('IF-MIB', 'ifNumber', 0,
+                value=ifNumber)
             add('IF-MIB', 'ifStackLastChange', 0,
                 value=currentSysTime if bdsIds else 0)
             add('IF-MIB', 'ifTableLastChange', 0,
