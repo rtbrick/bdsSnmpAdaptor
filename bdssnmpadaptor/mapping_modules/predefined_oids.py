@@ -176,7 +176,7 @@ class StaticAndPredefinedOids(object):
             BdsError: on OID DB population error
         """
 
-        with oidDb.module(__name__, permanent=True) as add:
+        with oidDb.module(__name__) as add:
 
             for objectName, objectInfo in staticOidDict.items():
                 mibName, mibSymbol = objectName.split('::', 1)
@@ -189,4 +189,4 @@ class StaticAndPredefinedOids(object):
             row = cls.ENT_PHYSICAL_TABLE[i]
 
             for j, scalar in enumerate(cls.ENT_TABLE_COLUMNS):
-                add('ENTITY-MIB', scalar, row[0], value=row[j], permanent=True)
+                add('ENTITY-MIB', scalar, row[0], value=row[j])

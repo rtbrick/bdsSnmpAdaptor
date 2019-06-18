@@ -10,7 +10,7 @@ import contextlib
 import functools
 import time
 from bisect import bisect
-from collections import OrderedDict
+import collections
 
 from pysnmp.proto.rfc1902 import ObjectIdentifier
 from pysnmp.smi import builder
@@ -26,7 +26,7 @@ from bdssnmpadaptor.log import set_logging
 def lazilySorted(func):
     def wrapper(self, *args, **kwargs):
         if self._dirty:
-            self._oids = OrderedDict(
+            self._oids = collections.OrderedDict(
                 sorted(self._oids.items(), key=lambda x: x[1]))
             self._dirty = False
 
@@ -68,8 +68,8 @@ class OidDb(object):
         # this dict maintains non-expiring OID items
         self._permanentOids = {}
 
-        # this dict holds the newer version of the above
-        self._candidateOids = {}
+        # this dict holds only recently updated OIDs (indexed by module)
+        self._candidateOids = collections.defaultdict(dict)
 
         self._expireBy = time.time() + self.EXPIRE_PERIOD
 
@@ -135,6 +135,7 @@ class OidDb(object):
             f'{"updating" if oidDbItem.oid in self._oids else "adding"} '
             f'{oidDbItem.oid} {"<code>" if code else oidDbItem.value.prettyPrint()}')
 
+        # put new OID online immediately
         self._oids[oidDbItem.oid] = oidDbItem
 
         if permanent:
@@ -147,13 +148,21 @@ class OidDb(object):
         # We update two DBs for some time while use only one, eventually
         # we drop the older DB and use the newer one. This effectively
         # expires DB entries that do not get updated for some time.
-        self._candidateOids[oidDbItem.oid] = oidDbItem
+        self._candidateOids[bdsMappingFunc][oidDbItem.oid] = oidDbItem
 
         if self._expireBy < now:
+            # drop all online OIDs
             self._oids.clear()
+
+            # put non-expiring OIDs online
             self._oids.update(self._permanentOids)
-            self._oids.update(self._candidateOids)
-            self._candidateOids.clear()
+
+            # put recently updated OIDs online
+            for module in self._candidateOids:
+                self._oids.update(self._candidateOids[module])
+
+            # clean up candidate OIDs only for the module being updated
+            self._candidateOids[bdsMappingFunc].clear()
 
             # stale entries expire in two runs of `.add`
             self._expireBy = now + self.EXPIRE_PERIOD / 2
@@ -165,8 +174,9 @@ class OidDb(object):
             if oidPrefix.isPrefixOf(oid):
                 self.moduleLogger.debug(
                     f'deleting {oid} by prefix {oidPrefix}')
-                self._oids.pop(oid)
-                self._candidateOids.pop(oid)
+                oidItem = self._oids.pop(oid)
+                if oidItem:
+                    self._candidateOids[oidItem.bdsMappingFunc].pop(oid)
                 self._dirty = True
 
     def deleteOidsFromBdsMappingFunc(self, bdsMappingFunc):
@@ -174,8 +184,9 @@ class OidDb(object):
             if item.bdsMappingFunc == bdsMappingFunc:
                 self.moduleLogger.debug(
                     f'deleting {oid} by func {bdsMappingFunc}')
-                self._oids.pop(oid)
-                self._candidateOids.pop(oid)
+                oidItem = self._oids.pop(oid)
+                if oidItem:
+                    self._candidateOids[oidItem.bdsMappingFunc].pop(oid)
                 self._dirty = True
 
     def getObjFromOid(self, oid):
