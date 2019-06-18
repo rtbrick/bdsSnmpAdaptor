@@ -86,7 +86,8 @@ class OidDb(object):
             indices (vararg): one or more objects representing indices.
                 Should be `0` for scalars.
             value: put this value into MIB managed object. This is what SNMP
-                manager will get in response.
+                manager will get in response. The `None` sentinel refreshes
+                existing object.
             valueFormat (string): 'hexValue' to indicate hex `value` initializer.
                 Optional.
             code (string): compile and use this Python code snippet for getting a
@@ -102,34 +103,44 @@ class OidDb(object):
 
         """
         if value is None:
-            raise error.BdsError(
-                'Initial value for the managed object must be provided')
+            objectIdentity = rfc1902.ObjectIdentity(
+                mibName, mibSymbol, *indices).resolveWithMib(self._mibViewController)
+            objectSyntax = None
 
-        obj = rfc1902.ObjectType(
-            rfc1902.ObjectIdentity(mibName, mibSymbol, *indices), value)
+            try:
+                oidDbItem = self._oids[objectIdentity.getOid()]
 
-        objectIdentity, objectSyntax = obj.resolveWithMib(self._mibViewController)
+            except KeyError:
+                raise error.BdsError(
+                    'Initial value for managed %s::%s object must be '
+                    'provided' % (mibName, mibSymbol))
 
-        try:
-            representation = {valueFormat if valueFormat else 'value': value}
-            objectSyntax = objectSyntax.clone(**representation)
+        else:
+            obj = rfc1902.ObjectType(
+                rfc1902.ObjectIdentity(mibName, mibSymbol, *indices), value)
 
-            if code:
-                code = compile(code, '<%s::%s>' % (mibName, mibSymbol), 'exec')
+            objectIdentity, objectSyntax = obj.resolveWithMib(self._mibViewController)
 
-            oidDbItem = OidDbItem(
-                bdsMappingFunc=bdsMappingFunc,
-                oid=objectIdentity.getOid(),
-                name=objectIdentity.getMibSymbol()[1],
-                value=objectSyntax,
-                code=code
-            )
+            try:
+                representation = {valueFormat if valueFormat else 'value': value}
+                objectSyntax = objectSyntax.clone(**representation)
 
-        except Exception as exc:
-            raise error.BdsError(
-                'Error setting managed object %s (%s) of type %s to value '
-                '"%s"' % ('::'.join(objectIdentity.getMibSymbol()),
-                          objectIdentity.getOid(), objectSyntax, value))
+                if code:
+                    code = compile(code, '<%s::%s>' % (mibName, mibSymbol), 'exec')
+
+                oidDbItem = OidDbItem(
+                    bdsMappingFunc=bdsMappingFunc,
+                    oid=objectIdentity.getOid(),
+                    name=objectIdentity.getMibSymbol()[1],
+                    value=objectSyntax,
+                    code=code
+                )
+
+            except Exception as exc:
+                raise error.BdsError(
+                    'Error setting managed object %s (%s) of type %s to value '
+                    '"%s"' % ('::'.join(objectIdentity.getMibSymbol()),
+                              objectIdentity.getOid(), objectSyntax, value))
 
         self.moduleLogger.debug(
             f'{"updating" if oidDbItem.oid in self._oids else "adding"} '

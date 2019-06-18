@@ -95,13 +95,9 @@ class ConfdGlobalInterfaceContainer(object):
 
         with oidDb.module(__name__) as add:
 
-            add('IF-MIB', 'ifNumber', 0,
-                value=len(bdsData['objects']))
+            add('IF-MIB', 'ifNumber', 0, value=len(bdsData['objects']))
 
             for i, bdsObject in enumerate(bdsData['objects']):
-
-                if i < len(bdsIds) and newBdsIds[i] == bdsIds[i]:
-                    continue
 
                 ifName = bdsObject['attribute']['interface_name']
 
@@ -141,8 +137,15 @@ class ConfdGlobalInterfaceContainer(object):
                 add('IF-MIB', 'ifSpeed', index,
                     value=IFSPEED_LAMBDA(bdsObject['attribute']['bandwidth']))
 
-                add('IF-MIB', 'ifLastChange', index,
-                    value=currentSysTime if bdsIds else 0)
+                if i < len(bdsIds):
+                    # possible table entry change
+                    ifLastChange = None if newBdsIds[i] == bdsIds[i] else currentSysTime
+
+                else:
+                    # initial run or table size change
+                    ifLastChange = 0 if bdsIds else currentSysTime
+
+                add('IF-MIB', 'ifLastChange', index, value=ifLastChange)
 
         add('IF-MIB', 'ifStackLastChange', 0,
             value=currentSysTime if bdsIds else 0)

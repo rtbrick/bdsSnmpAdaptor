@@ -105,9 +105,6 @@ class LldpdGlobalLldpIntfStatus(object):
 
             for i, bdsJsonObject in enumerate(bdsData['objects']):
 
-                if i < len(bdsIds) and newBdsIds[i] == bdsIds[i]:
-                    continue
-
                 attribute = bdsJsonObject['attribute']
 
                 ifName = attribute['interface_name']
@@ -137,8 +134,15 @@ class LldpdGlobalLldpIntfStatus(object):
                 add('IF-MIB', 'ifOperStatus', index,
                     value=IFOPERSTATUSMAP[int(attribute['link_status'])])
 
-                add('IF-MIB', 'ifLastChange', index,
-                    value=currentSysTime if bdsIds else 0)
+                if i < len(bdsIds):
+                    # possible table entry change
+                    ifLastChange = None if newBdsIds[i] == bdsIds[i] else currentSysTime
+
+                else:
+                    # initial run or table size change
+                    ifLastChange = 0 if bdsIds else currentSysTime
+
+                add('IF-MIB', 'ifLastChange', index, value=ifLastChange)
 
             add('IF-MIB', 'ifStackLastChange', 0,
                 value=currentSysTime if bdsIds else 0)

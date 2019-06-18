@@ -9,6 +9,7 @@ import asyncio
 import json
 import os
 import sys
+import time
 import unittest
 from unittest import mock
 
@@ -36,7 +37,7 @@ class ConfdGlobalInterfacePhysicalTestCase(unittest.TestCase):
         super(ConfdGlobalInterfacePhysicalTestCase, self).setUp()
 
     def test_setOids(self):
-        self.container.setOids(self.oidDb, self.JSON_RESPONSE, [], 0)
+        self.container.setOids(self.oidDb, self.JSON_RESPONSE, [], time.time())
 
         oids_in_db = []
         oid = '1.3.6'
