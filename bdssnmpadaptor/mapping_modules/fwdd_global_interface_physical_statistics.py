@@ -152,9 +152,14 @@ class FwddGlobalInterfacePhysicalStatistics(object):
         with oidDb.module(__name__) as add:
 
             for i, bdsJsonObject in enumerate(bdsData['objects']):
+
+                if i < len(bdsIds) and newBdsIds[i] == bdsIds[i]:
+                    continue
+
                 attribute = bdsJsonObject['attribute']
 
                 ifName = attribute['interface_name']
+
                 index = mapping_functions.ifIndexFromIfName(ifName)
 
                 add('IF-MIB', 'ifInOctets', index,
