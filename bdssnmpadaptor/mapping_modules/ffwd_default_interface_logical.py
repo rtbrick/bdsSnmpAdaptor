@@ -66,7 +66,12 @@ class FfwdDefaultInterfaceLogical(object):
         with oidDb.module(__name__) as add:
 
             for bdsJsonObject in bdsData['objects']:
+
+                if i < len(bdsIds) and newBdsIds[i] == bdsIds[i]:
+                    continue
+
                 ifName = bdsJsonObject['attribute']['interface_name']
+
                 index = mapping_functions.ifIndexFromIfName(ifName)
 
                 add('IF-MIB', 'ifIndex', index, value=index)

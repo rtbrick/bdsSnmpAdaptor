@@ -100,6 +100,9 @@ class ConfdGlobalInterfaceContainer(object):
 
             for i, bdsObject in enumerate(bdsData['objects']):
 
+                if i < len(bdsIds) and newBdsIds[i] == bdsIds[i]:
+                    continue
+
                 ifName = bdsObject['attribute']['interface_name']
 
                 index = mapping_functions.ifIndexFromIfName(ifName)

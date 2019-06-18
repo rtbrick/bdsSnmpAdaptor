@@ -105,6 +105,9 @@ class ConfdGlobalInterfacePhysical(object):
 
             for i, bdsJsonObject in enumerate(bdsData['objects']):
 
+                if i < len(bdsIds) and newBdsIds[i] == bdsIds[i]:
+                    continue
+
                 ifName = bdsJsonObject['attribute']['interface_name']
 
                 if not ifName.startswith('if'):     #fix for lo0 in table
