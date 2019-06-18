@@ -105,48 +105,46 @@ class ConfdGlobalInterfacePhysical(object):
 
             for i, bdsJsonObject in enumerate(bdsData['objects']):
 
-                currentId = bdsJsonObject['sequence']
-
                 ifName = bdsJsonObject['attribute']['interface_name']
+
+                if not ifName.startswith('if'):     #fix for lo0 in table
+                    continue
 
                 index = mapping_functions.ifIndexFromIfName(ifName)
 
                 #ifPhysicalLocation = mapping_functions.stripIfPrefixFromIfName(ifName)
 
-                if ifName.startswith('if'):     #fix for lo0 in table
+                add('IF-MIB', 'ifIndex', index, value=index)
 
-                    add('IF-MIB', 'ifIndex', index, value=index)
+                add('IF-MIB', 'ifDescr', index, value=ifName)
 
-                    add('IF-MIB', 'ifDescr', index, value=ifName)
+                if 'interface_type' in bdsJsonObject['attribute']:
+                    add('IF-MIB', 'ifType', index,
+                        value=IFTYPEMAP[int(bdsJsonObject['attribute']['interface_type'])])
 
-                    if 'interface_type' in bdsJsonObject['attribute']:
-                        add('IF-MIB', 'ifType', index,
-                            value=IFTYPEMAP[int(bdsJsonObject['attribute']['interface_type'])])
+                if 'layer2_mtu' in bdsJsonObject['attribute']:
+                    add('IF-MIB', 'ifMtu', index,
+                        value=IFMTU_LAMBDA(bdsJsonObject['attribute']['layer2_mtu']))
 
-                    if 'layer2_mtu' in bdsJsonObject['attribute']:
-                        add('IF-MIB', 'ifMtu', index,
-                            value=IFMTU_LAMBDA(bdsJsonObject['attribute']['layer2_mtu']))
+                if 'mac_address' in bdsJsonObject['attribute']:
+                    add('IF-MIB', 'ifPhysAddress', index,
+                        valueFormat='hexValue',
+                        value=bdsJsonObject['attribute']['mac_address'].replace(':', ''))
 
-                    if 'mac_address' in bdsJsonObject['attribute']:
-                        add('IF-MIB', 'ifPhysAddress', index,
-                            valueFormat='hexValue',
-                            value=bdsJsonObject['attribute']['mac_address'].replace(':', ''))
+                if 'admin_status' in bdsJsonObject['attribute']:
+                    add('IF-MIB', 'ifAdminStatus', index,
+                        value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['admin_status'])])
 
-                    if 'admin_status' in bdsJsonObject['attribute']:
-                        add('IF-MIB', 'ifAdminStatus', index,
-                            value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['admin_status'])])
+                if 'link_status' in bdsJsonObject['attribute']:
+                    add('IF-MIB', 'ifOperStatus', index,
+                        value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['link_status'])])
 
-                    if 'link_status' in bdsJsonObject['attribute']:
-                        add('IF-MIB', 'ifOperStatus', index,
-                            value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['link_status'])])
+                if 'bandwidth' in bdsJsonObject['attribute']:
+                    add('IF-MIB', 'ifSpeed', index,
+                        value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth']))
 
-                    if 'bandwidth' in bdsJsonObject['attribute']:
-                        add('IF-MIB', 'ifSpeed', index,
-                            value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth']))
-
-                    if not bdsIds or currentId != bdsIds[i]:  # first run or changed status
-                        add('IF-MIB', 'ifLastChange', index,
-                            value=currentSysTime if bdsIds else 0)
+                add('IF-MIB', 'ifLastChange', index,
+                    value=currentSysTime if bdsIds else 0)
 
             add('IF-MIB', 'ifStackLastChange', 0,
                 value=currentSysTime if bdsIds else 0)
