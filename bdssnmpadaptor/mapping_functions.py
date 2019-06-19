@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# -*- coding: future_fstrings -*-
 #
 # This file is part of bdsSnmpAdaptor software.
 #
