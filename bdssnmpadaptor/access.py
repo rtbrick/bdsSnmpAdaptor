@@ -91,7 +91,8 @@ class BdsAccess(object):
         """Return OID DB instance"""
         return self._oidDb
 
-    async def fetchTable(self, tableInfo):
+    @asyncio.coroutine
+    def fetchTable(self, tableInfo):
         """Fetch BDS table from REST API within asyncio loop.
 
         Args:
@@ -132,15 +133,21 @@ class BdsAccess(object):
 
         url = f'http://{self._restHost}:{ports[0]}/{suffix}'
 
+        session = None
+
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                        url, timeout=5, json=requestData) as response:
-                    responseData = await response.json()
+            session = aiohttp.ClientSession()
+            response = yield from session.post(
+                url, timeout=5, json=requestData)
+            responseData = yield from response.json()
 
         except Exception as exc:
             self._moduleLogger.error(f'HTTP request for {url} failed: {exc}')
             return False, exc
+
+        finally:
+            if session:
+                yield from session.close()
 
         if response.status != 200:
             self._moduleLogger.error(f'received {response.status} for {url}')
@@ -151,7 +158,8 @@ class BdsAccess(object):
 
         return True, responseData
 
-    async def periodicRetriever(self):
+    @asyncio.coroutine
+    def periodicRetriever(self):
         """Periodically fetch BDS information.
 
         Loops infinitely over asyncio coroutines fetching BDS information
@@ -167,14 +175,14 @@ class BdsAccess(object):
                 f'failed at populating OID DB with predefined OIDs: {exc}')
 
         while True:
-            await asyncio.sleep(self.POLL_PERIOD)
+            yield from asyncio.sleep(self.POLL_PERIOD)
 
             for bdsReqKey in REQUEST_MAPPING_DICTS:
                 self._moduleLogger.debug(f'working on {bdsReqKey}')
 
                 bdsRequest = REQUEST_MAPPING_DICTS[bdsReqKey]['bdsRequest']
 
-                resultFlag, bdsResponse = await self.fetchTable(bdsRequest)
+                resultFlag, bdsResponse = yield from self.fetchTable(bdsRequest)
 
                 if not resultFlag:
                     self._moduleLogger.error('BDS information is not available')

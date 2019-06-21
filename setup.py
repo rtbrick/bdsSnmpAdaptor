@@ -29,8 +29,8 @@ Topic :: Software Development :: Libraries :: Python Modules
 
 requires = open('requirements.txt').read()
 
-if sys.version_info[:3] < (3, 5, 3):
-    print("ERROR: this package requires Python 3.5.3 or later!")
+if sys.version_info[:2] < (3, 4):
+    print("ERROR: this package requires Python 3.4 or later!")
     sys.exit(1)
 
 try:

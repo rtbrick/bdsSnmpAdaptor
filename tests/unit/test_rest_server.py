@@ -90,17 +90,12 @@ bdsSnmpAdapter:
                 rs = rest_server.AsyncioRestServer(
                     mock.MagicMock(config={}), mock_queue)
 
-            mock_runner = mock_web.ServerRunner.return_value
-            mock_runner.setup = asynctest.CoroutineMock()
-
-            mock_site = mock_web.TCPSite.return_value
-            mock_site.start = asynctest.CoroutineMock()
+            self.my_loop.create_server = asynctest.CoroutineMock()
 
             self.my_loop.run_until_complete(rs.initialize())
 
-            mock_runner.setup.assert_called_once()
-
-            mock_site.start.assert_called_once()
+            mock_server = mock_web.Server
+            mock_server.assert_called_once()
 
 
 suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])

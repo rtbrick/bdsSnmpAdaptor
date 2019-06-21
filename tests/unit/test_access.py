@@ -77,11 +77,14 @@ bdsSnmpAdapter:
             'confd_local.system.software.info.confd'],
         {'mappingFunc': asynctest.Mock(setOids=asynctest.CoroutineMock())})
     def test_run_forever(self, mock_predefined_oids, mock_http):
-        mock_session = mock_http.return_value.__aenter__.return_value
-        mock_response = mock_session.post.return_value.__aenter__.return_value
-        mock_response.json = asynctest.CoroutineMock(
+        mock_session = mock_http.return_value
+
+        mock_json = asynctest.CoroutineMock(
             return_value=self.JSON_RESPONSE)
-        mock_response.status = 200
+        mock_response = mock.MagicMock(
+            json=mock_json, status=200)
+        mock_session.post = asynctest.CoroutineMock(
+            return_value=mock_response)
 
         with asynctest.patch('asyncio.sleep') as sleep:
             sleep.side_effect = [lambda: 1, asyncio.CancelledError]

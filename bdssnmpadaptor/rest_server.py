@@ -5,6 +5,7 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
+import asyncio
 import json
 import os
 
@@ -36,7 +37,8 @@ class AsyncioRestServer(object):
 
         self.queue = queue
 
-    async def handler(self, request):
+    @asyncio.coroutine
+    def handler(self, request):
         """Handle HTTP request
 
         A coroutine that accepts a Request instance as its only argument.
@@ -54,7 +56,7 @@ class AsyncioRestServer(object):
             'headers': dict(request.headers)
         }
 
-        jsonTxt = await request.text()
+        jsonTxt = yield from request.text()
 
         try:
             bdsLogDict = json.loads(jsonTxt)
@@ -68,13 +70,10 @@ class AsyncioRestServer(object):
 
         return web.json_response(data)
 
-    async def initialize(self):
+    @asyncio.coroutine
+    def initialize(self):
         server = web.Server(self.handler)
-        runner = web.ServerRunner(server)
 
-        await runner.setup()
+        loop = asyncio.get_event_loop()
 
-        site = web.TCPSite(runner, self.listeningIP, self.listeningPort)
-
-        await site.start()
-
+        yield from loop.create_server(server, self.listeningIP, self.listeningPort)

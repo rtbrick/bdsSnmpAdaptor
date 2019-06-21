@@ -5,6 +5,7 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
+import asyncio
 import time
 
 from pysnmp.entity.rfc3413 import ntforg
@@ -168,7 +169,8 @@ class SnmpNotificationOriginator(object):
             f'{self._syslogMsgSeverity}=Integer32 '
             f'{self._syslogMsgText}=OctetString')
 
-    async def sendTrap(self, bdsLogDict):
+    @asyncio.coroutine
+    def sendTrap(self, bdsLogDict):
         self.moduleLogger.info(f'sendTrap bdsLogDict: {bdsLogDict}')
 
         self._trapCounter += 1
@@ -240,15 +242,16 @@ class SnmpNotificationOriginator(object):
         self.moduleLogger.info(
             f'notification {sendRequestHandle or ""} submitted')
 
-    async def run_forever(self):
+    @asyncio.coroutine
+    def run_forever(self):
 
         while True:
-            bdsLogToBeProcessed = await self._queue.get()
+            bdsLogToBeProcessed = yield from self._queue.get()
 
             self.moduleLogger.info(f'new log record: {bdsLogToBeProcessed}')
 
             try:
-                await self.sendTrap(bdsLogToBeProcessed)
+                yield from self.sendTrap(bdsLogToBeProcessed)
 
             except Exception as exc:
                 self.moduleLogger.error(f'TRAP not sent: {exc}')
