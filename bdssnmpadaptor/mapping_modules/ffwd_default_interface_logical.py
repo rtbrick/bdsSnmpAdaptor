@@ -63,19 +63,25 @@ class FfwdDefaultInterfaceLogical(object):
         if newBdsIds == bdsIds:
             return
 
-        with oidDb.module(__name__) as add:
+        add = oidDb.add
 
-            for bdsJsonObject in bdsData['objects']:
+        for bdsJsonObject in bdsData['objects']:
 
-                ifName = bdsJsonObject['attribute']['interface_name']
+            ifName = bdsJsonObject['attribute']['interface_name']
 
-                index = mapping_functions.ifIndexFromIfName(ifName)
+            index = mapping_functions.ifIndexFromIfName(ifName)
 
-                add('IF-MIB', 'ifIndex', index, value=index)
+            add('IF-MIB', 'ifIndex', index, value=index)
 
-                add('IF-MIB', 'ifDescr', index,
-                    value=bdsJsonObject['attribute']['interface_name'])
+            add('IF-MIB', 'ifDescr', index,
+                value=bdsJsonObject['attribute']['interface_name'])
 
-                add('IF-MIB', 'ifType', index, value=6)
+            add('IF-MIB', 'ifType', index, value=6)
+
+        # count *all* IF-MIB interfaces we currently have - some
+        # may be contributed by other modules
+        ifNumber = len(oidDb.getObjectsByName('IF-MIB', 'ifIndex'))
+
+        add('IF-MIB', 'ifNumber', 0, value=ifNumber)
 
         bdsIds[:] = newBdsIds

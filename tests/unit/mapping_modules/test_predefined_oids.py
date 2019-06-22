@@ -58,7 +58,7 @@ pass
     def test_setOidsStaticValue(self):
         self.container.setOids(self.oidDb, self.STATIC_CONFIG, [], 0)
 
-        obj = self.oidDb.getObjFromOid(ObjectIdentifier('1.3.6.1.2.1.1.1.0'))
+        obj = self.oidDb.getObjectByOid(ObjectIdentifier('1.3.6.1.2.1.1.1.0'))
 
         self.assertEqual('l2.pod2.nbg2.rtbrick.net', str(obj.value))
         self.assertIsNone(obj.code)
@@ -66,7 +66,7 @@ pass
     def test_setOidsCodeValue(self):
         self.container.setOids(self.oidDb, self.STATIC_CONFIG, [], 0)
 
-        obj = self.oidDb.getObjFromOid(ObjectIdentifier('1.3.6.1.2.1.1.3.0'))
+        obj = self.oidDb.getObjectByOid(ObjectIdentifier('1.3.6.1.2.1.1.3.0'))
 
         self.assertIsInstance(obj.code, types.CodeType)
         self.assertEqual(0, obj.value)

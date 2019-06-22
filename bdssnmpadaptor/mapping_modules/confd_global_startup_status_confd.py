@@ -68,26 +68,26 @@ class ConfdGlobalStartupStatusConfd(object):
         if newBdsIds == bdsIds:
             return
 
-        with oidDb.module(__name__) as add:
+        add = oidDb.add
 
-            for index0, bdsJsonObject in enumerate(bdsData['objects']):
-                index = index0 + 1
+        for index0, bdsJsonObject in enumerate(bdsData['objects']):
+            index = index0 + 1
 
-                add('HOST-RESOURCES-MIB', 'hrSWOSIndex', index, value=index)
+            add('HOST-RESOURCES-MIB', 'hrSWOSIndex', index, value=index)
 
-                add('HOST-RESOURCES-MIB', 'hrSWRunName', index,
-                    value=bdsJsonObject['attribute']['module_name'])
+            add('HOST-RESOURCES-MIB', 'hrSWRunName', index,
+                value=bdsJsonObject['attribute']['module_name'])
 
-                add('HOST-RESOURCES-MIB', 'hrSWRunID', index, value='0.0')
+            add('HOST-RESOURCES-MIB', 'hrSWRunID', index, value='0.0')
 
-                add('HOST-RESOURCES-MIB', 'hrSWRunPath', index,
-                    value=bdsJsonObject['attribute']['bd_name'])
+            add('HOST-RESOURCES-MIB', 'hrSWRunPath', index,
+                value=bdsJsonObject['attribute']['bd_name'])
 
-                add('HOST-RESOURCES-MIB', 'hrSWRunParameters', index, value='')
+            add('HOST-RESOURCES-MIB', 'hrSWRunParameters', index, value='')
 
-                add('HOST-RESOURCES-MIB', 'hrSWRunType', index, value=4)  # 4 - application
+            add('HOST-RESOURCES-MIB', 'hrSWRunType', index, value=4)  # 4 - application
 
-                add('HOST-RESOURCES-MIB', 'hrSWRunStatus', index,
-                    value=HRSWRUNSTATUSMAP[int(bdsJsonObject['attribute']['startup_status'])])
+            add('HOST-RESOURCES-MIB', 'hrSWRunStatus', index,
+                value=HRSWRUNSTATUSMAP[int(bdsJsonObject['attribute']['startup_status'])])
 
         bdsIds[:] = newBdsIds

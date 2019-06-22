@@ -98,67 +98,67 @@ class ConfdGlobalInterfacePhysical(object):
 
         currentSysTime = int((time.time() - birthday) * 100)
 
-        with oidDb.module(__name__) as add:
+        add = oidDb.add
 
-            ifNumber = 0
+        for i, bdsJsonObject in enumerate(bdsData['objects']):
 
-            for i, bdsJsonObject in enumerate(bdsData['objects']):
+            ifName = bdsJsonObject['attribute']['interface_name']
 
-                ifName = bdsJsonObject['attribute']['interface_name']
+            if not ifName.startswith('if'):     #fix for lo0 in table
+                continue
 
-                if not ifName.startswith('if'):     #fix for lo0 in table
-                    continue
+            index = mapping_functions.ifIndexFromIfName(ifName)
 
-                ifNumber += 1
+            #ifPhysicalLocation = mapping_functions.stripIfPrefixFromIfName(ifName)
 
-                index = mapping_functions.ifIndexFromIfName(ifName)
+            add('IF-MIB', 'ifIndex', index, value=index)
 
-                #ifPhysicalLocation = mapping_functions.stripIfPrefixFromIfName(ifName)
+            add('IF-MIB', 'ifDescr', index, value=ifName)
 
-                add('IF-MIB', 'ifIndex', index, value=index)
+            if 'interface_type' in bdsJsonObject['attribute']:
+                add('IF-MIB', 'ifType', index,
+                    value=IFTYPEMAP[int(bdsJsonObject['attribute']['interface_type'])])
 
-                add('IF-MIB', 'ifDescr', index, value=ifName)
+            if 'layer2_mtu' in bdsJsonObject['attribute']:
+                add('IF-MIB', 'ifMtu', index,
+                    value=IFMTU_LAMBDA(bdsJsonObject['attribute']['layer2_mtu']))
 
-                if 'interface_type' in bdsJsonObject['attribute']:
-                    add('IF-MIB', 'ifType', index,
-                        value=IFTYPEMAP[int(bdsJsonObject['attribute']['interface_type'])])
+            if 'mac_address' in bdsJsonObject['attribute']:
+                add('IF-MIB', 'ifPhysAddress', index,
+                    valueFormat='hexValue',
+                    value=bdsJsonObject['attribute']['mac_address'].replace(':', ''))
 
-                if 'layer2_mtu' in bdsJsonObject['attribute']:
-                    add('IF-MIB', 'ifMtu', index,
-                        value=IFMTU_LAMBDA(bdsJsonObject['attribute']['layer2_mtu']))
+            if 'admin_status' in bdsJsonObject['attribute']:
+                add('IF-MIB', 'ifAdminStatus', index,
+                    value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['admin_status'])])
 
-                if 'mac_address' in bdsJsonObject['attribute']:
-                    add('IF-MIB', 'ifPhysAddress', index,
-                        valueFormat='hexValue',
-                        value=bdsJsonObject['attribute']['mac_address'].replace(':', ''))
+            if 'link_status' in bdsJsonObject['attribute']:
+                add('IF-MIB', 'ifOperStatus', index,
+                    value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['link_status'])])
 
-                if 'admin_status' in bdsJsonObject['attribute']:
-                    add('IF-MIB', 'ifAdminStatus', index,
-                        value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['admin_status'])])
+            if 'bandwidth' in bdsJsonObject['attribute']:
+                add('IF-MIB', 'ifSpeed', index,
+                    value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth']))
 
-                if 'link_status' in bdsJsonObject['attribute']:
-                    add('IF-MIB', 'ifOperStatus', index,
-                        value=IFOPERSTATUSMAP[int(bdsJsonObject['attribute']['link_status'])])
+            if i < len(bdsIds):
+                # possible table entry change
+                ifLastChange = None if newBdsIds[i] == bdsIds[i] else currentSysTime
 
-                if 'bandwidth' in bdsJsonObject['attribute']:
-                    add('IF-MIB', 'ifSpeed', index,
-                        value=IFSPEED_LAMBDA(bdsJsonObject['attribute']['bandwidth']))
+            else:
+                # initial run or table size change
+                ifLastChange = 0 if bdsIds else currentSysTime
 
-                if i < len(bdsIds):
-                    # possible table entry change
-                    ifLastChange = None if newBdsIds[i] == bdsIds[i] else currentSysTime
+            add('IF-MIB', 'ifLastChange', index, value=ifLastChange)
 
-                else:
-                    # initial run or table size change
-                    ifLastChange = 0 if bdsIds else currentSysTime
+        # count *all* IF-MIB interfaces we currently have - some
+        # may be contributed by other modules
+        ifNumber = len(oidDb.getObjectsByName('IF-MIB', 'ifIndex'))
 
-                add('IF-MIB', 'ifLastChange', index, value=ifLastChange)
+        add('IF-MIB', 'ifNumber', 0, value=ifNumber)
 
-            add('IF-MIB', 'ifNumber', 0,
-                value=ifNumber)
-            add('IF-MIB', 'ifStackLastChange', 0,
-                value=currentSysTime if bdsIds else 0)
-            add('IF-MIB', 'ifTableLastChange', 0,
-                value=currentSysTime if bdsIds else 0)
+        add('IF-MIB', 'ifStackLastChange', 0,
+            value=currentSysTime if bdsIds else 0)
+        add('IF-MIB', 'ifTableLastChange', 0,
+            value=currentSysTime if bdsIds else 0)
 
         bdsIds[:] = newBdsIds

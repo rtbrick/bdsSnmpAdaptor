@@ -175,13 +175,13 @@ class StaticAndPredefinedOids(object):
             BdsError: on OID DB population error
         """
 
-        with oidDb.module(__name__) as add:
+        add = oidDb.add
 
-            for objectName, objectInfo in staticOidDict.items():
-                mibName, mibSymbol = objectName.split('::', 1)
+        for objectName, objectInfo in staticOidDict.items():
+            mibName, mibSymbol = objectName.split('::', 1)
 
-                add(mibName, mibSymbol, 0, value=objectInfo.get('value'),
-                    code=objectInfo.get('code'))
+            add(mibName, mibSymbol, 0, value=objectInfo.get('value'),
+                code=objectInfo.get('code'))
 
         for i, phyValueList in enumerate(cls.ENT_PHYSICAL_TABLE):
 

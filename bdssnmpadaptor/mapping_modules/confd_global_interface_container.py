@@ -93,59 +93,63 @@ class ConfdGlobalInterfaceContainer(object):
 
         currentSysTime = int((time.time() - birthday) * 100)
 
-        with oidDb.module(__name__) as add:
+        add = oidDb.add
 
-            add('IF-MIB', 'ifNumber', 0, value=len(bdsData['objects']))
+        for i, bdsObject in enumerate(bdsData['objects']):
 
-            for i, bdsObject in enumerate(bdsData['objects']):
+            ifName = bdsObject['attribute']['interface_name']
 
-                ifName = bdsObject['attribute']['interface_name']
+            index = mapping_functions.ifIndexFromIfName(ifName)
 
-                index = mapping_functions.ifIndexFromIfName(ifName)
+            ifSpeed = IFSPEED_LAMBDA(bdsObject['attribute']['bandwidth'])
 
-                ifSpeed = IFSPEED_LAMBDA(bdsObject['attribute']['bandwidth'])
+            if ifSpeed == 100000000:
+                ifGigEtherName = 'hundredGe-' + mapping_functions.stripIfPrefixFromIfName(ifName)
 
-                if ifSpeed == 100000000:
-                    ifGigEtherName = 'hundredGe-' + mapping_functions.stripIfPrefixFromIfName(ifName)
+            elif ifSpeed == 10000000:
+                ifGigEtherName = 'tenGe-' + mapping_functions.stripIfPrefixFromIfName(ifName)
 
-                elif ifSpeed == 10000000:
-                    ifGigEtherName = 'tenGe-' + mapping_functions.stripIfPrefixFromIfName(ifName)
+            else:
+                ifGigEtherName = 'ge-' + mapping_functions.stripIfPrefixFromIfName(ifName)
 
-                else:
-                    ifGigEtherName = 'ge-' + mapping_functions.stripIfPrefixFromIfName(ifName)
+            add('IF-MIB', 'ifIndex', index, value=index)
 
-                add('IF-MIB', 'ifIndex', index, value=index)
+            add('IF-MIB', 'ifDescr', index, value=ifGigEtherName)
 
-                add('IF-MIB', 'ifDescr', index, value=ifGigEtherName)
+            add('IF-MIB', 'ifType', index,
+                value=IFTYPEMAP[int(bdsObject['attribute']['encapsulation_type'])])
 
-                add('IF-MIB', 'ifType', index,
-                    value=IFTYPEMAP[int(bdsObject['attribute']['encapsulation_type'])])
+            add('IF-MIB', 'ifMtu', index,
+                value=IFMTU_LAMBDA(bdsObject['attribute']['layer2_mtu']))
 
-                add('IF-MIB', 'ifMtu', index,
-                    value=IFMTU_LAMBDA(bdsObject['attribute']['layer2_mtu']))
+            add('IF-MIB', 'ifPhysAddress', index,
+                value=bdsObject['attribute']['mac_address'].replace(':', ''),
+                valueFormat='hexValue')
 
-                add('IF-MIB', 'ifPhysAddress', index,
-                    value=bdsObject['attribute']['mac_address'].replace(':', ''),
-                    valueFormat='hexValue')
+            add('IF-MIB', 'ifAdminStatus', index,
+                value=bdsObject['attribute']['admin_status'])
 
-                add('IF-MIB', 'ifAdminStatus', index,
-                    value=bdsObject['attribute']['admin_status'])
+            add('IF-MIB', 'ifOperStatus', index,
+                value=IFOPERSTATUSMAP[int(bdsObject['attribute']['link_status'])])
 
-                add('IF-MIB', 'ifOperStatus', index,
-                    value=IFOPERSTATUSMAP[int(bdsObject['attribute']['link_status'])])
+            add('IF-MIB', 'ifSpeed', index,
+                value=IFSPEED_LAMBDA(bdsObject['attribute']['bandwidth']))
 
-                add('IF-MIB', 'ifSpeed', index,
-                    value=IFSPEED_LAMBDA(bdsObject['attribute']['bandwidth']))
+            if i < len(bdsIds):
+                # possible table entry change
+                ifLastChange = None if newBdsIds[i] == bdsIds[i] else currentSysTime
 
-                if i < len(bdsIds):
-                    # possible table entry change
-                    ifLastChange = None if newBdsIds[i] == bdsIds[i] else currentSysTime
+            else:
+                # initial run or table size change
+                ifLastChange = 0 if bdsIds else currentSysTime
 
-                else:
-                    # initial run or table size change
-                    ifLastChange = 0 if bdsIds else currentSysTime
+            add('IF-MIB', 'ifLastChange', index, value=ifLastChange)
 
-                add('IF-MIB', 'ifLastChange', index, value=ifLastChange)
+        # count *all* IF-MIB interfaces we currently have - some
+        # may be contributed by other modules
+        ifNumber = len(oidDb.getObjectsByName('IF-MIB', 'ifIndex'))
+
+        add('IF-MIB', 'ifNumber', 0, value=ifNumber)
 
         add('IF-MIB', 'ifStackLastChange', 0,
             value=currentSysTime if bdsIds else 0)

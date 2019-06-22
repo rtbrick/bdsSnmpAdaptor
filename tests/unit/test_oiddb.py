@@ -19,13 +19,11 @@ class OidDbItemTestCase(unittest.TestCase):
 
     def test___init__(self):
         oid = oid_db.OidDbItem(
-            bdsMappingFunc='interface_container',
             oid='1.3.6.7.8',
             name='ifIndex',
             value=rfc1902.OctetString(hexValue='123456789'),
         )
 
-        self.assertEqual('interface_container', oid.bdsMappingFunc)
         self.assertEqual(rfc1902.ObjectIdentifier('1.3.6.7.8'), oid.oid)
         self.assertEqual('ifIndex', oid.name)
         self.assertEqual(b'\x124Vx\x90', oid.value)
@@ -46,7 +44,6 @@ class OidDbItemTestCase(unittest.TestCase):
 
     def test___str__(self):
         oid = oid_db.OidDbItem(
-            bdsMappingFunc='interface_container',
             oid='1.3.6.7.8',
             name='ifIndex',
             value=rfc1902.OctetString(hexValue='123456789'),
@@ -76,7 +73,7 @@ class OidDbTestCase(unittest.TestCase):
                 self.oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
                 for ident, value in reversed(self.MIB_OBJECTS):
-                    self.oidDb.add(*ident, value=value, bdsMappingFunc=__class__)
+                    self.oidDb.add(*ident, value=value)
 
         super(OidDbTestCase, self).setUp()
 
@@ -85,15 +82,13 @@ class OidDbTestCase(unittest.TestCase):
     def test_add_value(self, mock_set_logging, mock_loadConfig):
         oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
-        oidDb.add('SNMPv2-MIB', 'sysDescr', 0, value='my system',
-                  bdsMappingFunc=__class__)
+        oidDb.add('SNMPv2-MIB', 'sysDescr', 0, value='my system')
 
         expectedOid = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
 
-        oidItem = oidDb.getObjFromOid(expectedOid)
+        oidItem = oidDb.getObjectByOid(expectedOid)
 
         self.assertEqual(expectedOid, oidItem.oid)
-        self.assertEqual(__class__, oidItem.bdsMappingFunc)
 
         expectedValue = rfc1902.OctetString('my system')
         self.assertEqual(expectedValue, oidItem.value)
@@ -113,7 +108,7 @@ pass
 
         expectedOid = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
 
-        oidItem = oidDb.getObjFromOid(expectedOid)
+        oidItem = oidDb.getObjectByOid(expectedOid)
 
         self.assertEqual(expectedOid, oidItem.oid)
         self.assertEqual('', str(oidItem.value))
@@ -127,51 +122,56 @@ pass
 
         oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
-        # add sysDescr and expect it to be in the OID DB
+        # add sysDescr.0 and expect it to be in the OID DB
 
-        oidDb.add('SNMPv2-MIB', 'sysDescr', 0, value='my system',
-                  bdsMappingFunc=__class__)
+        oidDb.add('SNMPv2-MIB', 'sysDescr', 0, value='my system')
 
         expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
 
-        oidItem = oidDb.getObjFromOid(expected)
+        oidItem = oidDb.getObjectByOid(expected)
 
         self.assertEqual(expected, oidItem.oid)
 
         mock_time.return_value = 61
 
-        # add snmpOutNoSuchNames and expect sysDescr & snmpOutNoSuchNames
+        # add sysORDescr.1 and expect sysDescr.0 & sysORDescr.1
         # to be in the OID DB
 
-        oidDb.add('SNMPv2-MIB', 'snmpOutNoSuchNames', 0, value=123,
-                  bdsMappingFunc=__class__)
+        oidDb.add('SNMPv2-MIB', 'sysORDescr', 1, value='descr')
 
         expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
 
-        oidItem = oidDb.getObjFromOid(expected)
+        oidItem = oidDb.getObjectByOid(expected)
 
         self.assertEqual(expected, oidItem.oid)
 
-        expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.11.21.0')
+        expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.9.1.3.1')
 
-        oidItem = oidDb.getObjFromOid(expected)
+        oidItem = oidDb.getObjectByOid(expected)
 
         self.assertEqual(expected, oidItem.oid)
 
         mock_time.return_value = 122
 
-        # update snmpOutNoSuchNames and expect sysDescr to expire by now
+        # add sysORDescr.2 and expect sysORDescr.1 to expire
 
-        oidDb.add('SNMPv2-MIB', 'snmpOutNoSuchNames', 0, value=123,
-                  bdsMappingFunc=__class__)
+        oidDb.add('SNMPv2-MIB', 'sysORDescr', 2, value='descr')
 
-        not_expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
+        expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
 
-        self.assertIsNone(oidDb.getObjFromOid(not_expected))
+        oidItem = oidDb.getObjectByOid(expected)
 
-        expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.11.21.0')
+        self.assertEqual(expected, oidItem.oid)
 
-        oidItem = oidDb.getObjFromOid(expected)
+        not_expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.9.1.3.1')
+
+        oidItem = oidDb.getObjectByOid(not_expected)
+
+        self.assertIsNone(oidItem)
+
+        expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.9.1.3.2')
+
+        oidItem = oidDb.getObjectByOid(expected)
 
         self.assertEqual(expected, oidItem.oid)
 
@@ -185,12 +185,11 @@ pass
 
         # add sysDescr and expect it to be in the OID DB
 
-        oidDb.add('SNMPv2-MIB', 'sysDescr', 0, value='my system',
-                  bdsMappingFunc=__class__, permanent=True)
+        oidDb.add('SNMPv2-MIB', 'sysDescr', 0, value='my system')
 
         expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
 
-        oidItem = oidDb.getObjFromOid(expected)
+        oidItem = oidDb.getObjectByOid(expected)
 
         self.assertEqual(expected, oidItem.oid)
 
@@ -199,18 +198,17 @@ pass
         # add snmpOutNoSuchNames and expect sysDescr & snmpOutNoSuchNames
         # to be in the OID DB
 
-        oidDb.add('SNMPv2-MIB', 'snmpOutNoSuchNames', 0, value=123,
-                  bdsMappingFunc=__class__)
+        oidDb.add('SNMPv2-MIB', 'snmpOutNoSuchNames', 0, value=123)
 
         expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
 
-        oidItem = oidDb.getObjFromOid(expected)
+        oidItem = oidDb.getObjectByOid(expected)
 
         self.assertEqual(expected, oidItem.oid)
 
         expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.11.21.0')
 
-        oidItem = oidDb.getObjFromOid(expected)
+        oidItem = oidDb.getObjectByOid(expected)
 
         self.assertEqual(expected, oidItem.oid)
 
@@ -218,18 +216,17 @@ pass
 
         # update snmpOutNoSuchNames, but expect sysDescr to still be there
 
-        oidDb.add('SNMPv2-MIB', 'snmpOutNoSuchNames', 0, value=123,
-                  bdsMappingFunc=__class__)
+        oidDb.add('SNMPv2-MIB', 'snmpOutNoSuchNames', 0, value=123)
 
         expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.1.0')
 
-        oidItem = oidDb.getObjFromOid(expected)
+        oidItem = oidDb.getObjectByOid(expected)
 
         self.assertEqual(expected, oidItem.oid)
 
         expected = rfc1902.ObjectIdentifier('1.3.6.1.2.1.11.21.0')
 
-        oidItem = oidDb.getObjFromOid(expected)
+        oidItem = oidDb.getObjectByOid(expected)
 
         self.assertEqual(expected, oidItem.oid)
 
@@ -239,60 +236,15 @@ pass
 
             self.assertEqual(self.OIDS[idx + 1], nextOid)
 
-    def test_deleteOidsWithPrefix_all(self):
-        self.oidDb.deleteOidsWithPrefix('1.3.6')
-
-        nextOid = self.oidDb.getNextOid(self.OIDS[0])
-
-        self.assertIsNone(nextOid)
-
-    def test_deleteOidsWithPrefix_one(self):
-        self.oidDb.deleteOidsWithPrefix(self.OIDS[1])
-
-        nextOid = self.oidDb.getNextOid(self.OIDS[0])
-
-        self.assertEqual(self.OIDS[2], nextOid)
-
-    def test_deleteOidsWithPrefix_none(self):
-        self.oidDb.deleteOidsWithPrefix(self.OIDS[0] + (123,))
-
-        nextOid = self.oidDb.getNextOid(self.OIDS[0])
-
-        self.assertEqual(self.OIDS[1], nextOid)
-
-    def test_deleteOidsFromBdsMappingFunc_all(self):
-        self.oidDb.deleteOidsFromBdsMappingFunc(self.__class__)
-
-        nextOid = self.oidDb.getNextOid(self.OIDS[1])
-
-        self.assertIsNone(nextOid)
-
-    def test_deleteOidsFromBdsMappingFunc_none(self):
-        self.oidDb.deleteOidsFromBdsMappingFunc(None)
-
-        nextOid = self.oidDb.getNextOid(self.OIDS[0])
-
-        self.assertEqual(self.OIDS[1], nextOid)
-
     def test_getObjFromOid_good(self):
-        oidItem = self.oidDb.getObjFromOid(self.OIDS[1])
+        oidItem = self.oidDb.getObjectByOid(self.OIDS[1])
 
         self.assertEqual(self.OIDS[1], oidItem.oid)
 
     def test_getObjFromOid_not_exists(self):
-        oidItem = self.oidDb.getObjFromOid(self.OIDS[1] + (1,))
+        oidItem = self.oidDb.getObjectByOid(self.OIDS[1] + (1,))
 
         self.assertIsNone(oidItem)
-
-    def test_contextManager(self):
-        with self.oidDb.module('interfaces') as add:
-            add('SNMPv2-MIB', 'sysLocation', 0, value='DC')
-
-        oid = rfc1902.ObjectIdentifier('1.3.6.1.2.1.1.6.0')
-
-        self.assertIn(oid, self.oidDb._oids)
-        self.assertEqual(b'DC', self.oidDb._oids[oid].value)
-        self.assertEqual('interfaces', self.oidDb._oids[oid].bdsMappingFunc)
 
 
 suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])

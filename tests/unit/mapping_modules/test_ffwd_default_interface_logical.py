@@ -46,6 +46,7 @@ class FfwdDefaultInterfaceLogicalTestCase(unittest.TestCase):
                 oids_in_db.append(oid)
 
         expected = [
+            '1.3.6.1.2.1.2.1.0',
             '1.3.6.1.2.1.2.2.1.1.528385',
             '1.3.6.1.2.1.2.2.1.2.528385',
             '1.3.6.1.2.1.2.2.1.3.528385'

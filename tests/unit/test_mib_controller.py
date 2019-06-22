@@ -59,12 +59,12 @@ class MibControllerTestCase(unittest.TestCase):
     def test_readVars(self):
         varBinds = [('1.3.6.1.2.1.1.0', 123)]
 
-        mock_oidItem = self.mock_oidDb.getObjFromOid.return_value
+        mock_oidItem = self.mock_oidDb.getObjectByOid.return_value
         mock_oidItem.code = None
 
         rspVarBinds = self.mc.readVars(varBinds)
 
-        self.mock_oidDb.getObjFromOid.assert_called_once_with(
+        self.mock_oidDb.getObjectByOid.assert_called_once_with(
             '1.3.6.1.2.1.1.0')
 
         expected = [
@@ -76,12 +76,12 @@ class MibControllerTestCase(unittest.TestCase):
         varBinds = [('1.3.6.1.2.1.1.0', 123)]
 
         mock_getNextOid = self.mock_oidDb.getNextOid.return_value
-        mock_oidItem = self.mock_oidDb.getObjFromOid.return_value
+        mock_oidItem = self.mock_oidDb.getObjectByOid.return_value
         mock_oidItem.code = None
 
         rspVarBinds = self.mc.readNextVars(varBinds)
 
-        self.mock_oidDb.getObjFromOid.assert_called_once_with(
+        self.mock_oidDb.getObjectByOid.assert_called_once_with(
             mock_getNextOid)
 
         expected = [
