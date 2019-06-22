@@ -7,6 +7,7 @@
 #
 import binascii
 import struct
+import time
 
 from bdssnmpadaptor import mapping_functions
 
@@ -149,6 +150,8 @@ class FwddGlobalInterfacePhysicalStatistics(object):
         if newBdsIds == bdsIds:
             return
 
+        currentSysTime = int((time.time() - birthday) * 100)
+
         add = oidDb.add
 
         for i, bdsJsonObject in enumerate(bdsData['objects']):
@@ -195,10 +198,25 @@ class FwddGlobalInterfacePhysicalStatistics(object):
             add('IF-MIB', 'ifOutQLen', index,
                 value=LELL_LAMBDA(attribute['port_stat_if_out_qlen']))
 
+            if i < len(bdsIds):
+                # possible table entry change
+                ifLastChange = None if newBdsIds[i] == bdsIds[i] else currentSysTime
+
+            else:
+                # initial run or table size change
+                ifLastChange = currentSysTime if bdsIds else 0
+
+            add('IF-MIB', 'ifLastChange', index, value=ifLastChange)
+
         # count *all* IF-MIB interfaces we currently have - some
         # may be contributed by other modules
         ifNumber = len(oidDb.getObjectsByName('IF-MIB', 'ifIndex'))
 
         add('IF-MIB', 'ifNumber', 0, value=ifNumber)
+
+        add('IF-MIB', 'ifStackLastChange', 0,
+            value=currentSysTime if bdsIds else 0)
+        add('IF-MIB', 'ifTableLastChange', 0,
+            value=currentSysTime if bdsIds else 0)
 
         bdsIds[:] = newBdsIds

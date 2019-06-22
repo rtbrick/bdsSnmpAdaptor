@@ -47,6 +47,7 @@ class FwddGlobalInterfacePhysicalStatisticsTestCase(unittest.TestCase):
 
         expected = [
             '1.3.6.1.2.1.2.1.0',
+            '1.3.6.1.2.1.2.2.1.9.528384',
             '1.3.6.1.2.1.2.2.1.10.528384',
             '1.3.6.1.2.1.2.2.1.11.528384',
             '1.3.6.1.2.1.2.2.1.12.528384',
@@ -58,7 +59,9 @@ class FwddGlobalInterfacePhysicalStatisticsTestCase(unittest.TestCase):
             '1.3.6.1.2.1.2.2.1.18.528384',
             '1.3.6.1.2.1.2.2.1.19.528384',
             '1.3.6.1.2.1.2.2.1.20.528384',
-            '1.3.6.1.2.1.2.2.1.21.528384'
+            '1.3.6.1.2.1.2.2.1.21.528384',
+            '1.3.6.1.2.1.31.1.5.0',
+            '1.3.6.1.2.1.31.1.6.0'
         ]
 
         self.assertEqual(expected, [str(o) for o in oids_in_db])
