@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 from pygelf import GelfHttpHandler
 import logging
 
