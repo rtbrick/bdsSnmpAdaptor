@@ -8,7 +8,8 @@ DUT_REST_IP = "127.0.0.1"
 DUT_REST_PORT = 5000
 
 
-async def sendRequests():
+@asyncio.coroutine
+def sendRequests():
     httpRequestCounter = 0
 
     url = "http://{}:{}/dummyUrl".format(DUT_REST_IP, DUT_REST_PORT)

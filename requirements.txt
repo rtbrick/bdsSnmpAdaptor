@@ -1,5 +1,10 @@
 pysnmp>=4.4.8,<5.0.0
-aiohttp
 requests
 pyyaml
 future-fstrings
+# pin aiohttp for Python 3.4+
+aiohttp<2.3.0
+# missing dependency in aiohttp->yarl
+typing
+# unconstrained dependency in aiohttp->yarl
+yarl<1.0.0
