@@ -43,7 +43,7 @@ class FfwdDefaultInterfaceLogical(object):
     """
 
     @classmethod
-    def setOids(cls, oidDb, bdsData, bdsIds, birthday):
+    def setOids(cls, oidDb, bdsData, bdsIds, uptime):
         """Populates OID DB with BDS information.
 
         Takes known objects from JSON document, puts them into
@@ -53,7 +53,7 @@ class FfwdDefaultInterfaceLogical(object):
             oidDb (OidDb): OID DB instance to work on
             bdsData (dict): BDS information to put into OID DB
             bdsIds (list): list of last known BDS record sequence IDs
-            birthday (float): timestamp of system initialization
+            uptime (int): system uptime in hundreds of seconds
 
         Raises:
             BdsError: on OID DB population error
@@ -63,8 +63,6 @@ class FfwdDefaultInterfaceLogical(object):
 
         if newBdsIds == bdsIds:
             return
-
-        currentSysTime = int((time.time() - birthday) * 100)
 
         add = oidDb.add
 
@@ -83,11 +81,13 @@ class FfwdDefaultInterfaceLogical(object):
 
             if i < len(bdsIds):
                 # possible table entry change
-                ifLastChange = None if newBdsIds[i] == bdsIds[i] else currentSysTime
+                ifLastChange = None if newBdsIds[i] == bdsIds[i] else uptime
 
             else:
                 # initial run or table size change
-                ifLastChange = currentSysTime if bdsIds else 0
+                ifLastChange = uptime if bdsIds else 0
+
+            add('IF-MIB', 'ifLastChange', index, value=ifLastChange)
 
         # count *all* IF-MIB interfaces we currently have - some
         # may be contributed by other modules
@@ -96,8 +96,8 @@ class FfwdDefaultInterfaceLogical(object):
         add('IF-MIB', 'ifNumber', 0, value=ifNumber)
 
         add('IF-MIB', 'ifStackLastChange', 0,
-            value=currentSysTime if bdsIds else 0)
+            value=uptime if bdsIds else 0)
         add('IF-MIB', 'ifTableLastChange', 0,
-            value=currentSysTime if bdsIds else 0)
+            value=uptime if bdsIds else 0)
 
         bdsIds[:] = newBdsIds

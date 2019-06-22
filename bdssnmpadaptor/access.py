@@ -177,6 +177,8 @@ class BdsAccess(object):
         while True:
             yield from asyncio.sleep(self.POLL_PERIOD)
 
+            uptime = int(time.time() - BIRTHDAY * 100)
+
             for bdsReqKey in REQUEST_MAPPING_DICTS:
                 self._moduleLogger.debug(f'working on {bdsReqKey}')
 
@@ -199,7 +201,7 @@ class BdsAccess(object):
 
                 try:
                     mappingfunc.setOids(
-                        self._oidDb, bdsResponse, bdsId, BIRTHDAY)
+                        self._oidDb, bdsResponse, bdsId, uptime)
 
                 except Exception as exc:
                     self._moduleLogger.error(

@@ -75,7 +75,7 @@ class ConfdGlobalInterfacePhysical(object):
     """
 
     @classmethod
-    def setOids(cls, oidDb, bdsData, bdsIds, birthday):
+    def setOids(cls, oidDb, bdsData, bdsIds, uptime):
         """Populates OID DB with BDS information.
 
         Takes known objects from JSON document, puts them into
@@ -85,7 +85,7 @@ class ConfdGlobalInterfacePhysical(object):
             oidDb (OidDb): OID DB instance to work on
             bdsData (dict): BDS information to put into OID DB
             bdsIds (list): list of last known BDS record sequence IDs
-            birthday (float): timestamp of system initialization
+            uptime (int): system uptime in hundreds of seconds
 
         Raises:
             BdsError: on OID DB population error
@@ -95,8 +95,6 @@ class ConfdGlobalInterfacePhysical(object):
 
         if newBdsIds == bdsIds:
             return
-
-        currentSysTime = int((time.time() - birthday) * 100)
 
         add = oidDb.add
 
@@ -142,11 +140,11 @@ class ConfdGlobalInterfacePhysical(object):
 
             if i < len(bdsIds):
                 # possible table entry change
-                ifLastChange = None if newBdsIds[i] == bdsIds[i] else currentSysTime
+                ifLastChange = None if newBdsIds[i] == bdsIds[i] else uptime
 
             else:
                 # initial run or table size change
-                ifLastChange = currentSysTime if bdsIds else 0
+                ifLastChange = uptime if bdsIds else 0
 
             add('IF-MIB', 'ifLastChange', index, value=ifLastChange)
 
@@ -157,8 +155,8 @@ class ConfdGlobalInterfacePhysical(object):
         add('IF-MIB', 'ifNumber', 0, value=ifNumber)
 
         add('IF-MIB', 'ifStackLastChange', 0,
-            value=currentSysTime if bdsIds else 0)
+            value=uptime if bdsIds else 0)
         add('IF-MIB', 'ifTableLastChange', 0,
-            value=currentSysTime if bdsIds else 0)
+            value=uptime if bdsIds else 0)
 
         bdsIds[:] = newBdsIds
