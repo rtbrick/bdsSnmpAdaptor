@@ -149,50 +149,56 @@ class FwddGlobalInterfacePhysicalStatistics(object):
         if newBdsIds == bdsIds:
             return
 
-        with oidDb.module(__name__) as add:
+        add = oidDb.add
 
-            for i, bdsJsonObject in enumerate(bdsData['objects']):
+        for i, bdsJsonObject in enumerate(bdsData['objects']):
 
-                attribute = bdsJsonObject['attribute']
+            attribute = bdsJsonObject['attribute']
 
-                ifName = attribute['interface_name']
+            ifName = attribute['interface_name']
 
-                index = mapping_functions.ifIndexFromIfName(ifName)
+            index = mapping_functions.ifIndexFromIfName(ifName)
 
-                add('IF-MIB', 'ifInOctets', index,
-                    value=LELL_LAMBDA(attribute['port_stat_if_in_octets']))
+            add('IF-MIB', 'ifInOctets', index,
+                value=LELL_LAMBDA(attribute['port_stat_if_in_octets']))
 
-                add('IF-MIB', 'ifInUcastPkts', index,
-                    value=LELL_LAMBDA(attribute['port_stat_if_in_ucast_pkts']))
+            add('IF-MIB', 'ifInUcastPkts', index,
+                value=LELL_LAMBDA(attribute['port_stat_if_in_ucast_pkts']))
 
-                add('IF-MIB', 'ifInNUcastPkts', index,
-                    value=LELL_LAMBDA(attribute['port_stat_if_in_non_ucast_pkts']))
+            add('IF-MIB', 'ifInNUcastPkts', index,
+                value=LELL_LAMBDA(attribute['port_stat_if_in_non_ucast_pkts']))
 
-                add('IF-MIB', 'ifInDiscards', index,
-                    value=LELL_LAMBDA(attribute['port_stat_if_in_discards']))
+            add('IF-MIB', 'ifInDiscards', index,
+                value=LELL_LAMBDA(attribute['port_stat_if_in_discards']))
 
-                add('IF-MIB', 'ifInErrors', index,
-                    value=LELL_LAMBDA(attribute['port_stat_if_in_errors']))
+            add('IF-MIB', 'ifInErrors', index,
+                value=LELL_LAMBDA(attribute['port_stat_if_in_errors']))
 
-                add('IF-MIB', 'ifInUnknownProtos', index,
-                    value=LELL_LAMBDA(attribute['port_stat_if_in_unknown_protos']))
+            add('IF-MIB', 'ifInUnknownProtos', index,
+                value=LELL_LAMBDA(attribute['port_stat_if_in_unknown_protos']))
 
-                add('IF-MIB', 'ifOutOctets', index,
-                    value=LELL_LAMBDA(attribute['port_stat_if_out_octets']))
+            add('IF-MIB', 'ifOutOctets', index,
+                value=LELL_LAMBDA(attribute['port_stat_if_out_octets']))
 
-                add('IF-MIB', 'ifOutUcastPkts', index,
-                    value=LELL_LAMBDA(attribute['port_stat_if_out_ucast_pkts']))
+            add('IF-MIB', 'ifOutUcastPkts', index,
+                value=LELL_LAMBDA(attribute['port_stat_if_out_ucast_pkts']))
 
-                add('IF-MIB', 'ifOutNUcastPkts', index,
-                    value=LELL_LAMBDA(attribute['port_stat_if_out_non_ucast_pkts']))
+            add('IF-MIB', 'ifOutNUcastPkts', index,
+                value=LELL_LAMBDA(attribute['port_stat_if_out_non_ucast_pkts']))
 
-                add('IF-MIB', 'ifOutDiscards', index,
-                    value=LELL_LAMBDA(attribute['port_stat_if_out_discards']))
+            add('IF-MIB', 'ifOutDiscards', index,
+                value=LELL_LAMBDA(attribute['port_stat_if_out_discards']))
 
-                add('IF-MIB', 'ifOutErrors', index,
-                    value=LELL_LAMBDA(attribute['port_stat_if_out_errors']))
+            add('IF-MIB', 'ifOutErrors', index,
+                value=LELL_LAMBDA(attribute['port_stat_if_out_errors']))
 
-                add('IF-MIB', 'ifOutQLen', index,
-                    value=LELL_LAMBDA(attribute['port_stat_if_out_qlen']))
+            add('IF-MIB', 'ifOutQLen', index,
+                value=LELL_LAMBDA(attribute['port_stat_if_out_qlen']))
+
+        # count *all* IF-MIB interfaces we currently have - some
+        # may be contributed by other modules
+        ifNumber = len(oidDb.getObjectsByName('IF-MIB', 'ifIndex'))
+
+        add('IF-MIB', 'ifNumber', 0, value=ifNumber)
 
         bdsIds[:] = newBdsIds

@@ -67,39 +67,39 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
 
         swString = mapping_functions.stringFromSoftwareInfo(bdsData)
 
-        with oidDb.module(__name__) as add:
+        add = oidDb.add
 
-            add('SNMPv2-MIB', 'sysDescr', 0, value=swString)
+        add('SNMPv2-MIB', 'sysDescr', 0, value=swString)
 
-            # for index,bdsJsonObject in enumerate(bdsData['objects"]):
-            #     #indexString = bdsJsonObject["attribute"]["library"]
-            #     #indexCharList = [str(ord(c)) for c in indexString]
-            #     #index = str(len(indexCharList)) + "." + ".".join(indexCharList)  # FIXME add description
-            #
-            #     add('HOST-RESOURCES-MIB', 'hrSWRunIndex', index, value=index)
-            #
-            #     add('HOST-RESOURCES-MIB', 'hrSWRunName', index,
-            #          value=bdsJsonObject["attribute"]["commit_id"])
+        # for index,bdsJsonObject in enumerate(bdsData['objects"]):
+        #     #indexString = bdsJsonObject["attribute"]["library"]
+        #     #indexCharList = [str(ord(c)) for c in indexString]
+        #     #index = str(len(indexCharList)) + "." + ".".join(indexCharList)  # FIXME add description
+        #
+        #     add('HOST-RESOURCES-MIB', 'hrSWRunIndex', index, value=index)
+        #
+        #     add('HOST-RESOURCES-MIB', 'hrSWRunName', index,
+        #          value=bdsJsonObject["attribute"]["commit_id"])
 
-            #     add('HOST-RESOURCES-MIB', 'commitDate', index,
-            #         value=bdsJsonObject["attribute"]["commit_date"])
+        #     add('HOST-RESOURCES-MIB', 'commitDate', index,
+        #         value=bdsJsonObject["attribute"]["commit_date"])
 
-            #     add('HOST-RESOURCES-MIB', 'packageDate', index,
-            #         value=bdsJsonObject["attribute"]["package_date"])
+        #     add('HOST-RESOURCES-MIB', 'packageDate', index,
+        #         value=bdsJsonObject["attribute"]["package_date"])
 
-            #     add('HOST-RESOURCES-MIB', 'vcCheckout', index,
-            #         value=bdsJsonObject["attribute"]["vc_checkout"])
+        #     add('HOST-RESOURCES-MIB', 'vcCheckout', index,
+        #         value=bdsJsonObject["attribute"]["vc_checkout"])
 
-            #     add('HOST-RESOURCES-MIB', 'branch', index,
-            #         value=bdsJsonObject["attribute"]["branch"])
+        #     add('HOST-RESOURCES-MIB', 'branch', index,
+        #         value=bdsJsonObject["attribute"]["branch"])
 
-            #     add('HOST-RESOURCES-MIB', 'libraryVersion', index,
-            #         value=bdsJsonObject["attribute"]["version"])
+        #     add('HOST-RESOURCES-MIB', 'libraryVersion', index,
+        #         value=bdsJsonObject["attribute"]["version"])
 
-            #     add('HOST-RESOURCES-MIB', 'sourcePath', index,
-            #         value=bdsJsonObject["attribute"]["source_path"])
+        #     add('HOST-RESOURCES-MIB', 'sourcePath', index,
+        #         value=bdsJsonObject["attribute"]["source_path"])
 
-            # # in addition the SW Info Flag is set by
-            # # creating an abbreviated string over all modules
+        # # in addition the SW Info Flag is set by
+        # # creating an abbreviated string over all modules
 
         bdsIds[:] = newBdsIds

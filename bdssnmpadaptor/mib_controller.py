@@ -75,7 +75,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
 
         for oid, value in varBinds:
             try:
-                oidDbItemObj = self._oidDb.getObjFromOid(str(oid))
+                oidDbItemObj = self._oidDb.getObjectByOid(str(oid))
 
             except Exception as exc:
                 self.moduleLogger.error(f'oidDb read failed for {oid}: {exc}')
@@ -111,7 +111,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
                 f'request OID is {oid}, next OID is {nextOidString}')
 
             try:
-                oidDbItemObj = self._oidDb.getObjFromOid(nextOidString)
+                oidDbItemObj = self._oidDb.getObjectByOid(nextOidString)
 
             except Exception as exc:
                 self.moduleLogger.error(f'oidDb read failed for {oid}: {exc}')

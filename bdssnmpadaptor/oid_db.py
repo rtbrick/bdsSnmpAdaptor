@@ -5,8 +5,6 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
-import contextlib
-import functools
 import time
 from bisect import bisect
 import collections
@@ -61,21 +59,22 @@ class OidDb(object):
         compiler.addMibCompiler(
             mibBuilder, sources=configDict['snmp'].get('mibs', ()))
 
-        # this dict holds all OID items in this # DB
+        # this dict holds all OID items indexed by MIB symbols
+        self._mibObjects = collections.defaultdict(dict)
+
+        # this dict holds only recently updated OIDs (indexed by
+        # MIB name and object)
+        self._candidateMibObjects = collections.defaultdict(dict)
+
+        # this dict holds all OID items populated from `mibObjects`
         self._oids = {}
-
-        # this dict maintains non-expiring OID items
-        self._permanentOids = {}
-
-        # this dict holds only recently updated OIDs (indexed by module)
-        self._candidateOids = collections.defaultdict(dict)
 
         self._expireBy = time.time() + self.EXPIRE_PERIOD
 
-        self._dirty = True  # DB needs sorting
+        self._dirty = True  # OIDs need sorting
 
     def add(self, mibName, mibSymbol, *indices, value=None,
-            valueFormat=None, code=None, bdsMappingFunc=None, permanent=False):
+            valueFormat=None, code=None):
         """Add SNMP MIB managed object instance to the OID DB
 
         Args:
@@ -91,20 +90,15 @@ class OidDb(object):
                 Optional.
             code (string): compile and use this Python code snippet for getting a
                 value at run time. Optional.
-            bdsMappingFunc(string): used to mark, which mapping function owns
-                this oid (used for delete). Optional
-            permanent (bool): never expire this object
 
         Examples:
           add('SNMPv2-MIB', 'sysDescr', 0,
-              value='hello world',
-              bdsMappingFunc="confd_global_interface_container")
+              value='hello world')
 
         """
         if value is None:
             objectIdentity = rfc1902.ObjectIdentity(
                 mibName, mibSymbol, *indices).resolveWithMib(self._mibViewController)
-            objectSyntax = None
 
             try:
                 oidDbItem = self._oids[objectIdentity.getOid()]
@@ -128,7 +122,6 @@ class OidDb(object):
                     code = compile(code, '<%s::%s>' % (mibName, mibSymbol), 'exec')
 
                 oidDbItem = OidDbItem(
-                    bdsMappingFunc=bdsMappingFunc,
                     oid=objectIdentity.getOid(),
                     name=objectIdentity.getMibSymbol()[1],
                     value=objectSyntax,
@@ -148,58 +141,46 @@ class OidDb(object):
         # put new OID online immediately
         self._oids[oidDbItem.oid] = oidDbItem
 
-        if permanent:
-            self._permanentOids[oidDbItem.oid] = oidDbItem
-
         self._dirty = True
 
         now = time.time()
 
+        mibObject = mibName, mibSymbol
+
         # We update two DBs for some time while use only one, eventually
         # we drop the older DB and use the newer one. This effectively
         # expires DB entries that do not get updated for some time.
-        self._candidateOids[bdsMappingFunc][oidDbItem.oid] = oidDbItem
+        self._mibObjects[mibObject][oidDbItem.oid] = oidDbItem
+        self._candidateMibObjects[mibObject][oidDbItem.oid] = oidDbItem
 
         if self._expireBy < now:
-            # drop all online OIDs
-            self._oids.clear()
 
-            # put non-expiring OIDs online
-            self._oids.update(self._permanentOids)
+            # put candidate objects online
+            (self._mibObjects[mibObject],
+             self._candidateMibObjects[mibObject]) = (
+                self._candidateMibObjects[mibObject],
+                self._mibObjects[mibObject])
 
-            # put recently updated OIDs online
-            for module in self._candidateOids:
-                self._oids.update(self._candidateOids[module])
-
-            # clean up candidate OIDs only for the module being updated
-            self._candidateOids[bdsMappingFunc].clear()
+            # prepare new candidate objects dict - drop everything it has,
+            # most importantly, entries that have not been updated
+            # N.B. this only works for tablular SNMP objects
+            self._candidateMibObjects[mibObject].clear()
 
             # stale entries expire in two runs of `.add`
             self._expireBy = now + self.EXPIRE_PERIOD / 2
 
-    def deleteOidsWithPrefix(self, oidPrefix):
-        oidPrefix = ObjectIdentifier(oidPrefix)
+            # drop all online OIDs
+            self._oids.clear()
 
-        for oid in tuple(self._oids):
-            if oidPrefix.isPrefixOf(oid):
-                self.moduleLogger.debug(
-                    f'deleting {oid} by prefix {oidPrefix}')
-                oidItem = self._oids.pop(oid)
-                if oidItem:
-                    self._candidateOids[oidItem.bdsMappingFunc].pop(oid)
-                self._dirty = True
+            # put recently updated OIDs online
+            for oidItems in self._mibObjects.values():
+                self._oids.update(oidItems)
 
-    def deleteOidsFromBdsMappingFunc(self, bdsMappingFunc):
-        for oid, item in tuple(self._oids.items()):
-            if item.bdsMappingFunc == bdsMappingFunc:
-                self.moduleLogger.debug(
-                    f'deleting {oid} by func {bdsMappingFunc}')
-                oidItem = self._oids.pop(oid)
-                if oidItem:
-                    self._candidateOids[oidItem.bdsMappingFunc].pop(oid)
-                self._dirty = True
+    def getObjectsByName(self, mibName, symbolName):
+        mibObject = mibName, symbolName
+        return self._mibObjects.get(mibObject, {})
 
-    def getObjFromOid(self, oid):
+    def getObjectByOid(self, oid):
         try:
             return self._oids[oid]
 
@@ -234,10 +215,6 @@ class OidDb(object):
     def __str__(self):
         return '\n'.join(self._oids)
 
-    @contextlib.contextmanager
-    def module(self, bdsMappingFunc, permanent=False):
-        yield functools.partial(self.add, bdsMappingFunc=bdsMappingFunc, permanent=permanent)
-
 
 class OidDbItem(object):
     """Represents managed object in the database.
@@ -245,11 +222,10 @@ class OidDbItem(object):
     Implements managed objects comparison what is used for ordering
     objects by OID.
     """
-    def __init__(self, bdsMappingFunc=None, oid=None, name=None, value=None, code=None):
+    def __init__(self, oid=None, name=None, value=None, code=None):
         """Database Item, which pysnmp attributes required for get and getnext.
 
         Args:
-            bdsMappingFunc(string): used to mark, which mapping function owns this oid. (used for delete)
             oid(string): oid as string, separated by dots.
             name(string): name of the oid, should map with MIB identifier name, although this is not enforced
             value: object that holds the value of the OID. Type is flexible, subject to OID type
@@ -257,12 +233,10 @@ class OidDbItem(object):
 
         Examples:
           OidDbItem(
-            bdsMappingFunc="confd_global_interface_container",
             oid=oidSegment + "1." + str(index),
             name="ifIndex",
             value=rfc1902.Integer32(index)))
         """
-        self.bdsMappingFunc = bdsMappingFunc
         self.oid = ObjectIdentifier(oid)
         self.name = name
         self.value = value

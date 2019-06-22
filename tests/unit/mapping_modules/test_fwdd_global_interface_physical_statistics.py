@@ -46,6 +46,7 @@ class FwddGlobalInterfacePhysicalStatisticsTestCase(unittest.TestCase):
                 oids_in_db.append(oid)
 
         expected = [
+            '1.3.6.1.2.1.2.1.0',
             '1.3.6.1.2.1.2.2.1.10.528384',
             '1.3.6.1.2.1.2.2.1.11.528384',
             '1.3.6.1.2.1.2.2.1.12.528384',
