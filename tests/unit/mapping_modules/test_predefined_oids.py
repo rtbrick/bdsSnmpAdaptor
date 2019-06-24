@@ -13,7 +13,7 @@ import unittest
 from unittest import mock
 
 from bdssnmpadaptor import oid_db
-from bdssnmpadaptor.mapping_modules import predefined_oids
+from bdssnmpadaptor.mapping_modules import predefined_oids as mmod
 
 from pysnmp.proto.rfc1902 import ObjectIdentifier
 
@@ -37,7 +37,7 @@ pass
     CONFIG = {
         'snmp': {
             'mibs': [
-                os.path.join(os.path.dirname(predefined_oids.__file__), '..', '..', 'mibs')
+                os.path.join(os.path.dirname(mmod.__file__), '..', '..', 'mibs')
             ]
         }
     }
@@ -48,7 +48,7 @@ pass
                 config_mock.return_value = self.CONFIG
                 self.oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
-        self.container = predefined_oids.StaticAndPredefinedOids()
+        self.container = mmod.StaticAndPredefinedOids()
 
         self.my_loop = asyncio.new_event_loop()
         self.addCleanup(self.my_loop.close)

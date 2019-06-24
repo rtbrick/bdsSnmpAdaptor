@@ -7,9 +7,8 @@
 #
 import binascii
 import struct
-import time
 
-from bdssnmpadaptor import mapping_functions
+from bdssnmpadaptor import if_tools
 
 IFTYPEMAP = {
     1: 6  # ethernet-csmacd(6)
@@ -103,9 +102,9 @@ class LldpdGlobalLldpIntfStatus(object):
             attribute = bdsJsonObject['attribute']
 
             ifName = attribute['interface_name']
-            index = mapping_functions.ifIndexFromIfName(ifName)
+            index = if_tools.ifIndexFromIfName(ifName)
 
-            ifPhysicalLocation = mapping_functions.stripIfPrefixFromIfName(ifName)
+            ifPhysicalLocation = if_tools.stripIfPrefixFromIfName(ifName)
 
             add('IF-MIB', 'ifIndex', index, value=index)
 

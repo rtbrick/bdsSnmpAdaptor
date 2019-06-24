@@ -14,7 +14,7 @@ import unittest
 from unittest import mock
 
 from bdssnmpadaptor import oid_db
-from bdssnmpadaptor.mapping_modules import lldpd_global_lldp_intf_status
+from bdssnmpadaptor.mapping_modules import lldpd_global_lldp_intf_status as mmod
 
 
 @mock.patch('tempfile.NamedTemporaryFile', new=mock.MagicMock)
@@ -29,7 +29,7 @@ class LldpdGlobalLldpIntfStatusTestCase(unittest.TestCase):
             with mock.patch.object(oid_db, 'set_logging', autospec=True):
                 self.oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
-        self.container = lldpd_global_lldp_intf_status.LldpdGlobalLldpIntfStatus()
+        self.container = mmod.LldpdGlobalLldpIntfStatus()
 
         self.my_loop = asyncio.new_event_loop()
         self.addCleanup(self.my_loop.close)

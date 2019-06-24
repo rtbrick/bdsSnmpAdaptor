@@ -8,7 +8,7 @@
 import binascii
 import struct
 
-from bdssnmpadaptor import mapping_functions
+from bdssnmpadaptor import if_tools
 
 IFTYPEMAP = {
     1: 6  # ethernet-csmacd(6)
@@ -96,18 +96,18 @@ class ConfdGlobalInterfaceContainer(object):
 
             ifName = bdsObject['attribute']['interface_name']
 
-            index = mapping_functions.ifIndexFromIfName(ifName)
+            index = if_tools.ifIndexFromIfName(ifName)
 
             ifSpeed = IFSPEED_LAMBDA(bdsObject['attribute']['bandwidth'])
 
             if ifSpeed == 100000000:
-                ifGigEtherName = 'hundredGe-' + mapping_functions.stripIfPrefixFromIfName(ifName)
+                ifGigEtherName = 'hundredGe-' + if_tools.stripIfPrefixFromIfName(ifName)
 
             elif ifSpeed == 10000000:
-                ifGigEtherName = 'tenGe-' + mapping_functions.stripIfPrefixFromIfName(ifName)
+                ifGigEtherName = 'tenGe-' + if_tools.stripIfPrefixFromIfName(ifName)
 
             else:
-                ifGigEtherName = 'ge-' + mapping_functions.stripIfPrefixFromIfName(ifName)
+                ifGigEtherName = 'ge-' + if_tools.stripIfPrefixFromIfName(ifName)
 
             add('IF-MIB', 'ifIndex', index, value=index)
 
