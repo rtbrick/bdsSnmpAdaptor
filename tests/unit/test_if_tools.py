@@ -5,61 +5,65 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
-import json
-import os
 import sys
 import unittest
 
-from bdssnmpadaptor import mapping_functions
+from bdssnmpadaptor import if_tools
 
 
 class MappingFunctionsTestCase(unittest.TestCase):
 
-    with open(os.path.join(os.path.dirname(__file__), 'samples',
-                           'bds-version-response.json')) as fl:
-        JSON_RESPONSE = json.load(fl)
-
-    def test_stringFromSoftwareInfo(self):
-        version = mapping_functions.stringFromSoftwareInfo(self.JSON_RESPONSE)
-        expected = ('RtBrick Fullstack: bd:18.06-0 libbgp:18.06-2 libfwdd:18.06-0 '
-                    'lwip:18.06-0 libbds:18.06-0 libisis:18.06-3 libconfd:18.06-0')
-        self.assertEqual(expected, version)
-
     def test_ifIndexFromIfName_ifc(self):
         ifName = "ifc-0/0/1/1"
-        ifIndex = mapping_functions.ifIndexFromIfName(ifName)
+        ifIndex = if_tools.ifIndexFromIfName(ifName)
         expected = 528384
         self.assertEqual(expected, ifIndex)
 
     def test_ifIndexFromIfName_ifp(self):
         ifName = "ifp-0/0/1"
-        ifIndex = mapping_functions.ifIndexFromIfName(ifName)
+        ifIndex = if_tools.ifIndexFromIfName(ifName)
         expected = 4096
         self.assertEqual(expected, ifIndex)
 
     def test_ifIndexFromIfName_ifl(self):
         ifName = "ifl-0/0/1/1/0"
-        ifIndex = mapping_functions.ifIndexFromIfName(ifName)
+        ifIndex = if_tools.ifIndexFromIfName(ifName)
         expected = 528385
         self.assertEqual(expected, ifIndex)
 
+    def test_ifIndexFromIfName_lo(self):
+        ifName = "lo-0/0/1"
+        ifIndex = if_tools.ifIndexFromIfName(ifName)
+        expected = 4294971392
+        self.assertEqual(expected, ifIndex)
+
+    def test_ifIndexFromIfName_unknown(self):
+        ifName = "unk-1/0/1"
+        ifIndex = if_tools.ifIndexFromIfName(ifName)
+        self.assertIsNone(ifIndex)
+
     def test_stripIfPrefixFromIfName_ifc(self):
         ifName = "ifc-0/0/1/1"
-        stripped = mapping_functions.stripIfPrefixFromIfName(ifName)
+        stripped = if_tools.stripIfPrefixFromIfName(ifName)
         expected = '0/1/1'
         self.assertEqual(expected, stripped)
 
     def test_stripIfPrefixFromIfName_ifp(self):
         ifName = "ifp-0/0/1"
-        stripped = mapping_functions.stripIfPrefixFromIfName(ifName)
+        stripped = if_tools.stripIfPrefixFromIfName(ifName)
         expected = '0/0/1'
         self.assertEqual(expected, stripped)
 
     def test_stripIfPrefixFromIfName_ifl(self):
         ifName = "ifl-0/0/1/1/0"
-        stripped = mapping_functions.stripIfPrefixFromIfName(ifName)
+        stripped = if_tools.stripIfPrefixFromIfName(ifName)
         expected = '0/0/1/1/0'
         self.assertEqual(expected, stripped)
+
+    def test_stripIfPrefixFromIfName_unknown(self):
+        ifName = "unk-0/0/1/1/0/0"
+        stripped = if_tools.stripIfPrefixFromIfName(ifName)
+        self.assertIsNone(stripped)
 
 
 suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])

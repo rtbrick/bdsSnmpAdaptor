@@ -13,7 +13,7 @@ import unittest
 from unittest import mock
 
 from bdssnmpadaptor import oid_db
-from bdssnmpadaptor.mapping_modules import ffwd_default_interface_logical
+from bdssnmpadaptor.mapping_modules import ffwd_default_interface_logical as mmod
 
 
 @mock.patch('tempfile.NamedTemporaryFile', new=mock.MagicMock)
@@ -28,7 +28,7 @@ class FfwdDefaultInterfaceLogicalTestCase(unittest.TestCase):
             with mock.patch.object(oid_db, 'set_logging', autospec=True):
                 self.oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
-        self.container = ffwd_default_interface_logical.FfwdDefaultInterfaceLogical()
+        self.container = mmod.FfwdDefaultInterfaceLogical()
 
         self.my_loop = asyncio.new_event_loop()
         self.addCleanup(self.my_loop.close)

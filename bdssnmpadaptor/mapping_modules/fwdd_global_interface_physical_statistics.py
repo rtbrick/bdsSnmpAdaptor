@@ -9,7 +9,7 @@ import binascii
 import struct
 import time
 
-from bdssnmpadaptor import mapping_functions
+from bdssnmpadaptor import if_tools
 
 HEX_STRING_LAMBDA = lambda x: int(x, 16)
 
@@ -160,7 +160,7 @@ class FwddGlobalInterfacePhysicalStatistics(object):
 
             ifName = attribute['interface_name']
 
-            index = mapping_functions.ifIndexFromIfName(ifName)
+            index = if_tools.ifIndexFromIfName(ifName)
 
             add('IF-MIB', 'ifInOctets', index,
                 value=LELL_LAMBDA(attribute['port_stat_if_in_octets']))

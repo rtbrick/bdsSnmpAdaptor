@@ -6,8 +6,6 @@
 # License: BSD License 2.0
 #
 
-from bdssnmpadaptor import mapping_functions
-
 
 class ConfdLocalSystemSoftwareInfoConfd(object):
     """Implement SNMP SNMPv2-MIB for BDS system.
@@ -43,6 +41,21 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
     }
     """
 
+    KNOWN_LIBS = ('libbds', 'libconfd', 'libisis', 'lwip',
+                  'libfwdd', 'libbgp', 'bd')
+
+    @classmethod
+    def getSoftwareInfo(cls, bdsData):
+        desc = 'RtBrick Fullstack:'
+
+        for swModule in bdsData['objects']:
+            attribute = swModule['attribute']
+
+            if attribute['library'] in cls.KNOWN_LIBS:
+                desc += f' {attribute["library"]}:{attribute["version"]}'
+
+        return desc
+
     @classmethod
     def setOids(cls, oidDb, bdsData, bdsIds, uptime):
         """Populates OID DB with BDS information.
@@ -65,7 +78,7 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
         if newBdsIds == bdsIds:
             return
 
-        swString = mapping_functions.stringFromSoftwareInfo(bdsData)
+        swString = cls.getSoftwareInfo(bdsData)
 
         add = oidDb.add
 

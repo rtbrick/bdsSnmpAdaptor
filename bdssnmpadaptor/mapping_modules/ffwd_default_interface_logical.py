@@ -7,7 +7,7 @@
 #
 import time
 
-from bdssnmpadaptor import mapping_functions
+from bdssnmpadaptor import if_tools
 
 
 class FfwdDefaultInterfaceLogical(object):
@@ -70,7 +70,7 @@ class FfwdDefaultInterfaceLogical(object):
 
             ifName = bdsJsonObject['attribute']['interface_name']
 
-            index = mapping_functions.ifIndexFromIfName(ifName)
+            index = if_tools.ifIndexFromIfName(ifName)
 
             add('IF-MIB', 'ifIndex', index, value=index)
 

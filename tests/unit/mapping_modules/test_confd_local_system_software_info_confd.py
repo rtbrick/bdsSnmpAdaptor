@@ -13,7 +13,7 @@ import unittest
 from unittest import mock
 
 from bdssnmpadaptor import oid_db
-from bdssnmpadaptor.mapping_modules import confd_local_system_software_info_confd
+from bdssnmpadaptor.mapping_modules import confd_local_system_software_info_confd as mmod
 
 
 @mock.patch('tempfile.NamedTemporaryFile', new=mock.MagicMock)
@@ -28,12 +28,17 @@ class ConfdLocalSystemSoftwareInfoConfdTestCase(unittest.TestCase):
             with mock.patch.object(oid_db, 'set_logging', autospec=True):
                 self.oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
-        self.container = confd_local_system_software_info_confd.ConfdLocalSystemSoftwareInfoConfd()
+        self.container = mmod.ConfdLocalSystemSoftwareInfoConfd()
 
         self.my_loop = asyncio.new_event_loop()
         self.addCleanup(self.my_loop.close)
 
         super(ConfdLocalSystemSoftwareInfoConfdTestCase, self).setUp()
+
+    def test_getSoftwareInfo(self):
+        version = mmod.ConfdLocalSystemSoftwareInfoConfd.getSoftwareInfo(self.JSON_RESPONSE)
+        expected = 'RtBrick Fullstack: bd:19.04-29'
+        self.assertEqual(expected, version)
 
     def test_setOids(self):
         self.container.setOids(self.oidDb, self.JSON_RESPONSE, [], 0)

@@ -14,7 +14,7 @@ import unittest
 from unittest import mock
 
 from bdssnmpadaptor import oid_db
-from bdssnmpadaptor.mapping_modules import confd_global_interface_physical
+from bdssnmpadaptor.mapping_modules import confd_global_interface_physical as mmod
 
 
 @mock.patch('tempfile.NamedTemporaryFile', new=mock.MagicMock)
@@ -29,7 +29,7 @@ class ConfdGlobalInterfacePhysicalTestCase(unittest.TestCase):
             with mock.patch.object(oid_db, 'set_logging', autospec=True):
                 self.oidDb = oid_db.OidDb(mock.MagicMock(config={}))
 
-        self.container = confd_global_interface_physical.ConfdGlobalInterfacePhysical()
+        self.container = mmod.ConfdGlobalInterfacePhysical()
 
         self.my_loop = asyncio.new_event_loop()
         self.addCleanup(self.my_loop.close)
