@@ -13,9 +13,18 @@ TWO_POWER_19 = 4096 * 128
 TWO_POWER_12 = 4096
 
 
-def ifIndexFromIfName(ifNameString):
+def ifIndexFromIfName(ifName):
+    """Parse BDS interface name into SNMP IF-MIB index.
 
-    ifName, _ , ifIndex = ifNameString.partition('-')
+    Args:
+        ifName (str): BDS interface name
+
+    Returns:
+        int: SNMP IF-MIB interface index or None if interface name
+            can't be parsed
+    """
+
+    ifName, _ , ifIndex = ifName.partition('-')
 
     ifIndices = [int(x) for x in ifIndex.split('/')]
 
@@ -68,9 +77,16 @@ def ifIndexFromIfName(ifNameString):
         )
 
 
-def stripIfPrefixFromIfName(ifNameString):
+def stripIfPrefixFromIfName(ifName):
+    """Strip prerix from BDS interface name.
 
-    ifName, _ , ifIndex = ifNameString.partition('-')
+    Args:
+        ifName (str): BDS interface name
+
+    Returns:
+        str: BDS interface name suffix
+    """
+    ifName, _ , ifIndex = ifName.partition('-')
 
     if ifIndex.count('/') in (2, 4):
         return ifIndex

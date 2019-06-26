@@ -16,6 +16,11 @@ from bdssnmpadaptor.error import BdsError
 
 
 def daemonize():
+    """Turn calling process into a UNIX daemon.
+
+    Follows standard UNIX procedure of detouching process from the parent
+    resources.
+    """
     try:
         pid = os.fork()
         if pid > 0:
@@ -64,6 +69,17 @@ def daemonize():
 
 
 def pidfile(filename):
+    """Setup PID file for the calling processs on the filesystem.
+
+    Attempts to setup PID file on the filesystem for the calling process.
+
+    Args:
+        filename (str): Path to the prospective PID file.
+
+    Raises:
+        BdsError: If the PID file already exists and process ID written
+            there refers to an existing process as well as on other errors.
+    """
 
     def cbFun():
         try:
