@@ -141,7 +141,7 @@ class ConfdGlobalInterfaceContainer(object):
 
             else:
                 # initial run or table size change
-                ifLastChange = 0 if bdsIds else currentSysTime
+                ifLastChange = currentSysTime if bdsIds else 0
 
             add('IF-MIB', 'ifLastChange', index, value=ifLastChange)
 

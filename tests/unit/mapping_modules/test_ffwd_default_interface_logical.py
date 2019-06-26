@@ -49,7 +49,9 @@ class FfwdDefaultInterfaceLogicalTestCase(unittest.TestCase):
             '1.3.6.1.2.1.2.1.0',
             '1.3.6.1.2.1.2.2.1.1.528385',
             '1.3.6.1.2.1.2.2.1.2.528385',
-            '1.3.6.1.2.1.2.2.1.3.528385'
+            '1.3.6.1.2.1.2.2.1.3.528385',
+            '1.3.6.1.2.1.31.1.5.0',
+            '1.3.6.1.2.1.31.1.6.0'
         ]
 
         self.assertEqual(expected, [str(o) for o in oids_in_db])

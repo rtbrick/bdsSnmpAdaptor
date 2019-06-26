@@ -5,6 +5,7 @@
 # Copyright (C) 2017-2019, RtBrick Inc
 # License: BSD License 2.0
 #
+import time
 
 from bdssnmpadaptor import mapping_functions
 
@@ -63,9 +64,11 @@ class FfwdDefaultInterfaceLogical(object):
         if newBdsIds == bdsIds:
             return
 
+        currentSysTime = int((time.time() - birthday) * 100)
+
         add = oidDb.add
 
-        for bdsJsonObject in bdsData['objects']:
+        for i, bdsJsonObject in enumerate(bdsData['objects']):
 
             ifName = bdsJsonObject['attribute']['interface_name']
 
@@ -78,10 +81,23 @@ class FfwdDefaultInterfaceLogical(object):
 
             add('IF-MIB', 'ifType', index, value=6)
 
+            if i < len(bdsIds):
+                # possible table entry change
+                ifLastChange = None if newBdsIds[i] == bdsIds[i] else currentSysTime
+
+            else:
+                # initial run or table size change
+                ifLastChange = currentSysTime if bdsIds else 0
+
         # count *all* IF-MIB interfaces we currently have - some
         # may be contributed by other modules
         ifNumber = len(oidDb.getObjectsByName('IF-MIB', 'ifIndex'))
 
         add('IF-MIB', 'ifNumber', 0, value=ifNumber)
+
+        add('IF-MIB', 'ifStackLastChange', 0,
+            value=currentSysTime if bdsIds else 0)
+        add('IF-MIB', 'ifTableLastChange', 0,
+            value=currentSysTime if bdsIds else 0)
 
         bdsIds[:] = newBdsIds
