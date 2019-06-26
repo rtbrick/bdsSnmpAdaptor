@@ -12,13 +12,26 @@ from logging import StreamHandler
 from logging.handlers import RotatingFileHandler
 
 
-def set_logging(configDict, name):
+def set_logging(cfg, name):
+    """Create isolated Python logger.
 
-    moduleLogger = logging.getLogger(name)
+    Creates Python logger according to given configuration. The new
+    logger object logs solely through its own handler, log message
+    propagation towards upper logging object is inhibited.
 
-    moduleLogger.propagate = False  # log only via this logger
+    Args:
+        cfg (dict): BDS system configuration
+        name (str): log under this name
 
-    logFile = configDict.get('rotatingLogFile')
+    Returns:
+        Logger: Python logger object
+    """
+
+    logger = logging.getLogger(name)
+
+    logger.propagate = False  # log only via this logger
+
+    logFile = cfg.get('rotatingLogFile')
     if logFile:
         logFile = os.path.join(logFile, name.split('.')[-1]) + '.log'
 
@@ -33,11 +46,11 @@ def set_logging(configDict, name):
 
     handler.setFormatter(formatter)
 
-    moduleLogger.addHandler(handler)
+    logger.addHandler(handler)
 
-    loggingLevel = configDict['loggingLevel']
+    loggingLevel = cfg['loggingLevel']
 
-    moduleLogger.setLevel(
+    logger.setLevel(
         getattr(logging, loggingLevel.upper(), 'ERROR'))
 
-    return moduleLogger
+    return logger

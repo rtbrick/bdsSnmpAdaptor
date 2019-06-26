@@ -62,6 +62,10 @@ class BdsAccess(object):
     Within asyncio loop, perform BDS REST API call, pull configured
     documents, turn them into SNMP managed objects and cache them
     in the in-memory OID DB.
+
+    Args:
+        args (object): argparse namespace object holding command-line options
+            in form of object attributes.
     """
 
     POLL_PERIOD = 5
@@ -88,7 +92,12 @@ class BdsAccess(object):
 
     @property
     def oidDb(self):
-        """Return OID DB instance"""
+        """Return OID DB instance
+
+        Returns:
+
+            OidDb: class instance
+        """
         return self._oidDb
 
     @asyncio.coroutine

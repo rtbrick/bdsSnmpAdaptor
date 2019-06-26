@@ -18,13 +18,27 @@ BIRTHDAY = time.time()
 
 
 class MibInstrumController(instrum.AbstractMibInstrumController):
-    """MIB instrumentation controller.
+    """Create MIB instrumentation controller.
 
     Implements SNMP agent interface to OID DB in form of MIB
     instrumentation controller complying to pysnmp API.
     """
 
     def createVarbindFromOidDbItem(self, oidDbItem):
+        """Create SNMP variable-bindings from OID DB item.
+
+        Creates pysnmp object representing SNMP variable-binding from OID DB
+        item. Depending on the type of OID DB item (static value or code object),
+        might execute attached Python code snippet to generate a payload value.
+        In case of errors, `noSuchObject` sentinel value might be set on the
+        variable-binding.
+
+        Args:
+            oidDbItem (OidItem): OID DB item to create SNMP var-binds from
+
+        Returns:
+            VarBind: pysnmp variable-binding object
+        """
 
         if oidDbItem.code:
             scope = {}

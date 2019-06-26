@@ -8,5 +8,4 @@
 
 
 class BdsError(Exception):
-    """General BDS error
-    """
+    """General BDS error"""
