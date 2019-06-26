@@ -44,7 +44,7 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
     """
 
     @classmethod
-    def setOids(cls, oidDb, bdsData, bdsIds, birthday):
+    def setOids(cls, oidDb, bdsData, bdsIds, uptime):
         """Populates OID DB with BDS information.
 
         Takes known objects from JSON document, puts them into
@@ -54,7 +54,7 @@ class ConfdLocalSystemSoftwareInfoConfd(object):
             oidDb (OidDb): OID DB instance to work on
             bdsData (dict): BDS information to put into OID DB
             bdsIds (list): list of last known BDS record sequence IDs
-            birthday (float): timestamp of system initialization
+            uptime (int): system uptime in hundreds of seconds
 
         Raises:
             BdsError: on OID DB population error
