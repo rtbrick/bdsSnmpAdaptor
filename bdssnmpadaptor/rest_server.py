@@ -21,10 +21,14 @@ class AsyncioRestServer(object):
     Implements HTTP server running within asyncio loop and receiving
     notification through REST API. Places received notifications
     into a queue for consumers to read from.
+
+    Args:
+        args (object): argparse namespace object holding command-line options
+        queue (Queue): asyncio `Queue` instance used for passing received
+            REST API calls on to outer consumers
+
     """
     def __init__(self, args, queue):
-
-        self.moduleFileNameWithoutPy, _ = os.path.splitext(os.path.basename(__file__))
 
         configDict = loadConfig(args.config)
 

@@ -21,6 +21,11 @@ from bdssnmpadaptor.log import set_logging
 
 
 def lazilySorted(func):
+    """Ensure OID DB items are sorted.
+
+    A decorator expecting `self._oids` attribute of the passing object to
+    contain a `dict`, which will be ordered if `self._dirty` is `True`.
+    """
     def wrapper(self, *args, **kwargs):
         if self._dirty:
             self._oids = collections.OrderedDict(
@@ -38,11 +43,15 @@ def lazilySorted(func):
 class OidDb(object):
     """SNMP managed objects database
 
-     Implements in-memory store for MIB managed objects keyed by
-     object identifier (OID).
+    Implements in-memory store for MIB managed objects keyed by
+    object identifier (OID).
 
-     Managed objects population is based on SNMP MIB information,
-     retrieval is based on OID look up.
+    Managed objects population is based on SNMP MIB information,
+    retrieval is based on OID look up.
+
+    Args:
+        args (object): argparse namespace object holding command-line options
+
      """
     EXPIRE_PERIOD = 60
 
@@ -92,8 +101,10 @@ class OidDb(object):
                 value at run time. Optional.
 
         Examples:
-          add('SNMPv2-MIB', 'sysDescr', 0,
-              value='hello world')
+
+          add('SNMPv2-MIB', 'sysDescr', 0, value='hello world')
+          add('SNMPv2-MIB', 'sysDescr', 0, value='10101010', valueFormat='binValue')
+          add('SNMPv2-MIB', 'sysDescr', 0, code='print("hello world")')
 
         """
         if value is None:
@@ -177,10 +188,42 @@ class OidDb(object):
                 self._oids.update(oidItems)
 
     def getObjectsByName(self, mibName, symbolName):
+        """Fetch SNMP managed objects instances by MIB object name.
+
+        Args:
+            mibName (str): MIB module name to search and load up
+            symbolName (str): MIB object name to search in MIB module `mibName`
+
+        Returns:
+            dict: A `dict` containing zero or more `OidDbItem` objects keyed by
+                OIDs of the managed objects instances.
+
+        Examples:
+
+              >>> self.getObjectByName('IF-MIB', 'ifIndex')
+              {'1.3.6.1.2.1.2.2.1.1.1': <OidDbItem instance at 0x10283b6c8>,
+               '1.3.6.1.2.1.2.2.1.1.2': <OidDbItem instance at 0x1028345a1>}
+
+        """
         mibObject = mibName, symbolName
         return self._mibObjects.get(mibObject, {})
 
     def getObjectByOid(self, oid):
+        """Fetch SNMP managed object instance by OID.
+
+        Args:
+            oid (str): OID of the MIB managed object instance to fetch
+
+        Returns:
+            OidDbItem: requested `OidDbItem` if found or `None` otherwise.
+
+        Examples:
+
+              >>> self.getObjectByOid('1.3.6.1.2.1.2.2.1.1.1')
+              {'1.3.6.1.2.1.2.2.1.1.1': <OidDbItem instance at 0x10283b6c8>,
+
+        """
+
         try:
             return self._oids[oid]
 
@@ -189,14 +232,31 @@ class OidDb(object):
                 f'requested OID {oid} is not found in OID DB')
 
     @lazilySorted
-    def getNextOid(self, searchOid):
+    def getNextOid(self, oid):
+        """Fetch lexicographically *next* MIB managed object instance OID.
+
+        Args:
+            oid (str): OID of the MIB managed object instance which is
+                lexicographically just before the desired managed object
+                instance.
+
+        Returns:
+            str: OID of the lexicographically *next* MIB managed object
+                instance or `None` if no *next* OID was not found
+
+        Examples:
+
+              >>> self.getNextOid('1.3.6.1.2.1.2.2.1.1')
+              '1.3.6.1.2.1.2.2.1.1.1'
+
+        """
         self.moduleLogger.debug(
-            f'searching for OID next to {searchOid}')
+            f'searching for OID next to {oid}')
 
         sortedItems = tuple(self._oids.values())
 
-        searchItem = (searchOid if isinstance(searchOid, OidDbItem)
-                      else OidDbItem(oid=searchOid))
+        searchItem = (oid if isinstance(oid, OidDbItem)
+                      else OidDbItem(oid=oid))
 
         nextIdx = bisect(sortedItems, searchItem)
 
@@ -221,22 +281,23 @@ class OidDbItem(object):
 
     Implements managed objects comparison what is used for ordering
     objects by OID.
+
+    Args:
+        oid (string): OID of the MIB managed object at hand
+        name (string): MIB managed object name
+        value (object): object that holds the static value of the OID.
+        code (object): Python code object to run and produce a dynamic value at
+            the request time
+
+    Examples:
+
+      OidDbItem(
+        oid=oidSegment + "1." + str(index),
+        name="ifIndex",
+        value=rfc1902.Integer32(index)))
+
     """
     def __init__(self, oid=None, name=None, value=None, code=None):
-        """Database Item, which pysnmp attributes required for get and getnext.
-
-        Args:
-            oid(string): oid as string, separated by dots.
-            name(string): name of the oid, should map with MIB identifier name, although this is not enforced
-            value: object that holds the value of the OID. Type is flexible, subject to OID type
-            code (object): use this Python code object for getting a value at run time
-
-        Examples:
-          OidDbItem(
-            oid=oidSegment + "1." + str(index),
-            name="ifIndex",
-            value=rfc1902.Integer32(index)))
-        """
         self.oid = ObjectIdentifier(oid)
         self.name = name
         self.value = value
