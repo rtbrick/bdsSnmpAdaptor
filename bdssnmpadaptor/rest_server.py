@@ -43,10 +43,19 @@ class AsyncioRestServer(object):
 
     @asyncio.coroutine
     def handler(self, request):
-        """Handle HTTP request
+        """Handle REST API call
 
-        A coroutine that accepts a Request instance as its only argument.
-        Returns 200 with a copy of the incoming header dict.
+        Args:
+            request (Request): aiohttp `Request` object representing incoming
+                REST API call
+
+        Returns:
+            Response: aiohttp `Response` object indicating the outcome
+                of the request
+
+        Note:
+            This coroutine queues the request and responds immediately even
+            if further processing fails.
         """
         peerIP = request._transport_peername[0]
 
@@ -60,6 +69,7 @@ class AsyncioRestServer(object):
             'headers': dict(request.headers)
         }
 
+        # TODO: use aiohttp for json parsing, handle JSON errors
         jsonTxt = yield from request.text()
 
         try:
@@ -76,6 +86,11 @@ class AsyncioRestServer(object):
 
     @asyncio.coroutine
     def initialize(self):
+        """Create REST API endpoint
+
+        Returns:
+            object: `asyncio` awaitable object
+        """
         server = web.Server(self.handler)
 
         loop = asyncio.get_event_loop()
