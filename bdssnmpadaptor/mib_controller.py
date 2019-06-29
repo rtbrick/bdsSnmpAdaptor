@@ -21,7 +21,10 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
     """Create MIB instrumentation controller.
 
     Implements SNMP agent interface to OID DB in form of MIB
-    instrumentation controller complying to pysnmp API.
+    instrumentation controller complying with pysnmp API.
+
+    Methods of this class will be invoked by pysnmp to handle SNMP
+    command.
     """
 
     def createVarbindFromOidDbItem(self, oidDbItem):
@@ -71,9 +74,14 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         return oidDbItem.oid, value
 
     def setOidDbAndLogger(self, oidDb, args):
-        self._oidDb = oidDb
+        """Attach OID DB and logging objects
 
-        self.moduleFileNameWithoutPy, _ = os.path.splitext(os.path.basename(__file__))
+        Args:
+            oidDb (OidDb): OID DB object to operate on
+            args (object): argparse namespace object holding
+                command-line options
+        """
+        self._oidDb = oidDb
 
         configDict = loadConfig(args.config)
 
@@ -82,6 +90,31 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         return self
 
     def readVars(self, varBinds, *args, **kwargs):
+        """Handle SNMP GET command.
+
+        Take pysnmp variable-bindings that come in SNMP GET command request,
+        fetch OID DB items corresponding to the requested SNMP MIB objects
+        to produce response variable-bindings.
+
+        The length of the response list is guaranteed to be of the same length
+        as request list. Response variable-bindings match their request
+        counterparts positionally.
+
+        In case of an error in processing individual variable-binding,
+        `NoSuchObject` sentinel pysnmp object will be returned as a value
+        for the failed variable binding.
+
+        Args:
+            varBinds (list): pysnmp variable-binding objects
+            *args (object): opaque pysnmp options
+            **kawrgs (object): opaque pysnmp options
+
+        Returns:
+            list: list of pysnmp variable-binding objects to respond with
+
+        Note:
+            This method is called from pysnmp to handle SNMP GET command.
+        """
 
         self.moduleLogger.info(f'GET request var-binds: {varBinds}')
 
@@ -111,9 +144,37 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
         return returnList
 
     def readNextVars(self, varBinds, *args, **kwargs):
-        """ process get next request
+        """Handle SNMP GETNEXT and GETBULK commands.
 
+        Take pysnmp variable-bindings that come in SNMP GETNEXT or GETBULK
+        command request, fetch OID DB items corresponding to lexicographically
+        *next* SNMP MIB objects relative to the requested ones to produce
+        response variable-bindings.
+
+        The length of the response list is guaranteed to be of the same length
+        as request list. Response variable-bindings match their request
+        counterparts positionally.
+
+        In case of an error in processing individual variable-binding,
+        `NoSuchObject` sentinel pysnmp object will be returned as a value
+        for the failed variable binding.
+
+        If no more objects is found in OID DB, `EndOfMib` sentinel pysnmp
+        object will be returned as a value for the requested managed object.
+
+        Args:
+            varBinds (list): pysnmp variable-binding objects
+            *args (object): opaque pysnmp options
+            **kawrgs (object): opaque pysnmp options
+
+        Returns:
+            list: list of pysnmp variable-binding objects to respond with
+
+        Note:
+            This method is called from pysnmp to handle SNMP GETNEXT or GETBULK
+            commands.
         """
+
         self.moduleLogger.info(f'GETNEXT request var-binds: {varBinds}')
 
         returnList = []
@@ -133,7 +194,7 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
                 continue
 
             self.moduleLogger.debug(
-                f'oidDb GETNEXT returned {oidDbItemObj} for oid: {oid}')
+                f'oidDb GETNEXT/GETBULK returned {oidDbItemObj} for oid: {oid}')
 
             if oidDbItemObj is None:
                 returnList.append((oid, v2c.EndOfMibView()))
@@ -142,6 +203,6 @@ class MibInstrumController(instrum.AbstractMibInstrumController):
             returnList.append(self.createVarbindFromOidDbItem(oidDbItemObj))
 
         self.moduleLogger.debug(
-            f'GETNEXT response var-binds: {returnList}')
+            f'GETNEXT/GETBULK response var-binds: {returnList}')
 
         return returnList
