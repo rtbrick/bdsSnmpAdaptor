@@ -47,6 +47,14 @@ MP_MODELS = {
 
 
 def getSnmpEngine(engineId=None):
+    """Create SNMP engine instance.
+
+    Args:
+        engineId (str): SNMP engine ID as a ASCII or hex string
+
+    Returns:
+        object: SNMP engine object
+    """
     if engineId:
         engineId = engineId.replace(':', '')
 
@@ -59,12 +67,23 @@ def getSnmpEngine(engineId=None):
 
 
 def setSnmpEngineBoots(snmpEngine, stateDir):
-    """Read, update and set SnmpEngineBoots counter to SNMP Engine
+    """Manage SNMP engine boots counter.
 
-    Note
-    ----
-    Make sure to call this function after SNMP engine ID is configured
-    to the application.
+    Increments stateful SNMP engine boots counter maintained on the local
+    file system, applies most current boots counter to the given SNMP
+    engine instance.
+
+    Args:
+        snmpEngine (object): pysnmp `SnmpEngine` class instance
+        stateDir (str): path to application's own writable directory
+            for storing boots counter.
+
+    Returns:
+        int: updated boots counter
+
+    Notes:
+        Make sure to call this function after SNMP engine ID is configured
+        to the application.
     """
     mibBuilder = snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder
 
@@ -103,7 +122,21 @@ def setSnmpEngineBoots(snmpEngine, stateDir):
 
 
 def setCommunity(snmpEngine, security, community, version='2c', tag=''):
-    """Configure SNMP community name and VACM access
+    """Configure SNMP v1/v2c community name and VACM access.
+
+    Args:
+        snmpEngine (object): pysnmp `SnmpEngine` class instance
+        security (str): SNMP security name. Used in SNMP engine configuration
+            primarily as an ID for the given SNMP v1/v2c authentication
+            information
+        community (str): SNMP v1/v2c community name
+        version (str): SNMP version to use for this configuration entry. Either
+            'v1' or 'v2c'.
+        tag (str): Tags this SNMP configuration entry. Tags can be used internally
+            by SNMP engine for looking up desired SNMP authentication information.
+
+    Returns:
+        str: effective SNMP authentication and privacy level ('noAuthNoPriv')
     """
     mpModel = MP_MODELS[version]
     authLevel = 'noAuthNoPriv'
@@ -120,7 +153,27 @@ def setCommunity(snmpEngine, security, community, version='2c', tag=''):
 
 def setUsmUser(snmpEngine, security, user, authKey=None, authProtocol=None,
                privKey=None, privProtocol=None):
-    """Configure SNMP USM user credentials and VACM access
+    """Configure SNMP v3 USM user credentials and VACM access.
+
+    Args:
+        snmpEngine (object): pysnmp `SnmpEngine` class instance
+        security (str): SNMP security name. Used in SNMP engine configuration
+            primarily as an ID for the given SNMP v3 authentication information.
+        user (str): SNMP v3 USM user name
+        authKey (str): SNMP v3 USM authentication key. Must be 8+ characters long,
+            unless no SNMP message authentication is in use. Defaults to `None`.
+        authProtocol (str): Authentication protocol to use. Known values are:
+            'MD5', 'SHA', 'SHA224', 'SHA256', 'SHA384', 'SHA512', 'NONE'. Defaults
+            to 'NONE'.
+        privKey (str): SNMP v3 USM privacy key. Must be 8+ characters long,
+            unless no SNMP payload encryption is in use. Defaults to `None`.
+        privProtocol (str): SNMP message encryption protocol to use. Known values are:
+            'DES', '3DES', 'AES', 'AES128', 'AES192', 'AES192BLMT', 'AES256',
+            'AES256BLMT', 'NONE'. Defaults to 'NONE'.
+
+    Returns:
+        str: effective SNMP authentication and privacy level. Known values are:
+            'noAuthNoPriv', 'authNoPriv', 'authPriv'.
     """
     if not authKey:
         authProtocol = 'NONE'
@@ -176,7 +229,17 @@ def _getTrapTargetName(security):
 
 
 def setTrapTargetAddress(snmpEngine, security, dst, tag=''):
-    """Configure SNMP TRAP target
+    """Configure SNMP notification target for SNMP security name.
+
+    Args:
+        snmpEngine (object): pysnmp `SnmpEngine` class instance
+        security (str): SNMP security name to associate SNMP notification target
+            address with.
+        dst (tuple): notification destination network address in `socket` format
+            (i.e. ('XXX.XXX.XXX.XXX', NNN)).
+        tag (str): Tags this target address. Tags can be used internally
+            by SNMP engine for looking up desired notification destination or SNMP
+            authentication information by transport address.
     """
     config.addTargetAddr(
         snmpEngine, _getTrapTargetName(security), udp.domainName, dst,
@@ -184,7 +247,17 @@ def setTrapTargetAddress(snmpEngine, security, dst, tag=''):
 
 
 def setTrapVersion(snmpEngine, security, authLevel, version='2c'):
-    """Configure SNMP TRAP target
+    """Configure SNMP version for SNMP security name.
+
+    Args:
+        snmpEngine (object): pysnmp `SnmpEngine` class instance
+        security (str): SNMP security name to associate SNMP notification version
+            requirement with.
+        authLevel (str): SNMP authentication and privacy level to associate
+            with this SNMP security name. Known values are: 'noAuthNoPriv',
+            'authNoPriv', 'authPriv'.
+        version (str): SNMP version to associate with this SNMP security
+            name in the context of sending SNMP notifications.
     """
     mpModel = MP_MODELS[version]
 
@@ -196,6 +269,19 @@ def setTrapVersion(snmpEngine, security, authLevel, version='2c'):
 
 
 def setTrapTypeForTag(snmpEngine, tag, kind='trap'):
+    """Configure SNMP notification type per tag.
+
+    Args:
+        snmpEngine (object): pysnmp `SnmpEngine` class instance
+        tag (str): SNMP tag to add to the list of tags used for issuing SNMP
+            notifications.
+        kind (str): SNMP notification type to use. Known values are
+            'trap' and 'inform'.
+
+    Returns:
+        str: Group name to refer to all tagged configuration entries at
+            once for selecting suitable ones for sending SNMP notifications.
+    """
     targets = 'all-targets'
 
     config.addNotificationTarget(
@@ -207,6 +293,17 @@ def setTrapTypeForTag(snmpEngine, tag, kind='trap'):
 
 
 def setMibController(snmpEngine, controller):
+    """Register SNMP MIB instrumentation controller with SNMP engine.
+
+    Args:
+        snmpEngine (object): pysnmp `SnmpEngine` class instance
+        controller (object): SNMP MIB instrumentation controller compliant to pysnmp
+            MIB instrumentation API.
+
+    Returns:
+        object: pysnmp `SnmpContext` object representing SNMP context for which
+            SNMP MIB instrumentation controller is registered.
+    """
     snmpContextName = v2c.OctetString('')
 
     # https://github.com/openstack/virtualpdu/blob/master/virtualpdu/pdu/pysnmp_handler.py
@@ -218,6 +315,15 @@ def setMibController(snmpEngine, controller):
 
 
 def setSnmpTransport(snmpEngine, listen=None):
+    """Create network endpoint for SNMP communication.
+
+    Args:
+        snmpEngine (object): pysnmp `SnmpEngine` class instance
+        listen (tuple): if given, should refer to a local network address
+            for SNMP engine to listen for SNMP notifications. If not given,
+            client-side operation is assumed. When `listen` is given, must be
+            in `socket` format (i.e. ('XXX.XXX.XXX.XXX', NNN)).
+    """
     transport = udp.UdpAsyncioTransport()
 
     if listen:
