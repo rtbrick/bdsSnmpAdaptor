@@ -27,8 +27,13 @@ from bdssnmpadaptor.log import set_logging
 class SnmpNotificationOriginator(object):
     """Send SNMP TRAP messages.
 
-    Runs within asyncio loop, fetches messages from a queue and sends
+    Runs within asyncio loop, fetches messages from the queue and sends
     them in SNMP TRAP notifications to preconfigured target(s).
+
+    Args:
+        args (object): argparse namespace object holding command-line options
+        queue (Queue): asyncio `Queue` instance used for fetching notification
+            data from
     """
 
     TARGETS_TAG = 'mgrs'
@@ -170,8 +175,13 @@ class SnmpNotificationOriginator(object):
             f'{self._syslogMsgText}=OctetString')
 
     @asyncio.coroutine
-    def sendTrap(self, bdsLogDict):
-        self.moduleLogger.info(f'sendTrap bdsLogDict: {bdsLogDict}')
+    def sendTrap(self, logRecord):
+        """Send BDS log message as SNMP notification.
+
+        Args:
+            logRecord (dict): log record data as a Python `dict`
+        """
+        self.moduleLogger.info(f'sendTrap payload: {logRecord}')
 
         self._trapCounter += 1
 
@@ -179,28 +189,28 @@ class SnmpNotificationOriginator(object):
             self._trapCounter = 0
 
         try:
-            syslogMsgFacility = bdsLogDict['host']
+            syslogMsgFacility = logRecord['host']
 
         except KeyError:
             self.moduleLogger.error(
-                f'cannot get syslog facility from {bdsLogDict}')
+                f'cannot get syslog facility from {logRecord}')
             syslogMsgFacility = 'error'
 
         try:
-            syslogMsgSeverity = bdsLogDict['level']
+            syslogMsgSeverity = logRecord['level']
 
         except KeyError:
             self.moduleLogger.error(
-                f'cannot get syslog severity from {bdsLogDict}')
+                f'cannot get syslog severity from {logRecord}')
             syslogMsgSeverity = 0
 
         try:
-            syslogMsgText = bdsLogDict['short_message']
+            syslogMsgText = logRecord['short_message']
 
         except KeyError:
             self.moduleLogger.error(
                 f'cannot get syslog message text from bdsLogDict '
-                f'{bdsLogDict}')
+                f'{logRecord}')
 
             syslogMsgText = 'error'
 
@@ -244,14 +254,19 @@ class SnmpNotificationOriginator(object):
 
     @asyncio.coroutine
     def run_forever(self):
+        """Pull messages off the queue, send SNMP notifications.
+
+        Endlessly wait on the queue for new messages to appear, pull
+        one by one and pass them to SNMP notificator.
+        """
 
         while True:
-            bdsLogToBeProcessed = yield from self._queue.get()
+            logRecord = yield from self._queue.get()
 
-            self.moduleLogger.info(f'new log record: {bdsLogToBeProcessed}')
+            self.moduleLogger.info(f'new log record: {logRecord}')
 
             try:
-                yield from self.sendTrap(bdsLogToBeProcessed)
+                yield from self.sendTrap(logRecord)
 
             except Exception as exc:
                 self.moduleLogger.error(f'TRAP not sent: {exc}')
