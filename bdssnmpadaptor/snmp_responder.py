@@ -21,6 +21,11 @@ class SnmpCommandResponder(object):
     Listens for incoming SNMP commands within asyncio loop,
     calls MIB instrumentation controller to retrieve requested
     management information and responds back to SNMP manager.
+
+    Args:
+        args (object): argparse namespace object holding command-line options
+        mibController (object): MIB controller object to fetch requested
+            managed objects from
     """
 
     def __init__(self, args, mibController):
