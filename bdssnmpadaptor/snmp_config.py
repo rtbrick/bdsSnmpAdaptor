@@ -228,7 +228,7 @@ def _getTrapTargetName(security):
     return security + '-target'
 
 
-def setTrapTargetAddress(snmpEngine, security, dst, tag=''):
+def setTrapTargetAddress(snmpEngine, security, dst, src=None, tag=''):
     """Configure SNMP notification target for SNMP security name.
 
     Args:
@@ -237,13 +237,16 @@ def setTrapTargetAddress(snmpEngine, security, dst, tag=''):
             address with.
         dst (tuple): notification destination network address in `socket` format
             (i.e. ('XXX.XXX.XXX.XXX', NNN)).
+        src (tuple): source network address from which notification message is sent
+            in `socket` format (i.e. ('XXX.XXX.XXX.XXX', NNN)).
+            Default is ('0.0.0.0', 0).
         tag (str): Tags this target address. Tags can be used internally
             by SNMP engine for looking up desired notification destination or SNMP
             authentication information by transport address.
     """
     config.addTargetAddr(
         snmpEngine, _getTrapTargetName(security), udp.domainName, dst,
-        _getTrapCreds(security), tagList=tag)
+        _getTrapCreds(security), tagList=tag, sourceAddress=src)
 
 
 def setTrapVersion(snmpEngine, security, authLevel, version='2c'):

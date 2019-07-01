@@ -112,11 +112,16 @@ class SnmpNotificationOriginator(object):
         for targetName, targetConfig in configDict['notificator'].get(
                 'snmpTrapTargets', {}).items():
 
-            address, port = targetConfig['address'], int(targetConfig.get('port', 162))
+            bind_address = targetConfig.get('bind-address', '0.0.0.0'), 0
+
+            address = targetConfig['address']
+            port = int(targetConfig.get('port', 162))
+
             security = targetConfig['security-name']
 
             snmp_config.setTrapTargetAddress(
-                self._snmpEngine, security, (address, port), self.TARGETS_TAG)
+                self._snmpEngine, security, (address, port), src=bind_address,
+                tag=self.TARGETS_TAG)
 
             snmpVersion, authLevel = authEntries[security]
 
@@ -124,8 +129,8 @@ class SnmpNotificationOriginator(object):
                 self._snmpEngine, security, authLevel, snmpVersion)
 
             self.moduleLogger.info(
-                f'Configuring target {address}:{port} using security '
-                f'name {security}')
+                f'Configuring target {address}:{port}, bind address '
+                f'{bind_address} using security name {security}')
 
         self._configureMibObjects(configDict)
 
