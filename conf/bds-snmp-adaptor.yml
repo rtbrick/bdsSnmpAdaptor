@@ -2,6 +2,7 @@ bdsSnmpAdapter:
   loggingLevel: debug
   # Log to stdout unless log file is set here
   rotatingLogFile: /var/log/bds-snmp-adaptor
+  # Unless set, use new temporary directory on every invocation
   stateDir: /var/run/bds-snmp-adaptor
   # BDS REST API endpoints
   access:

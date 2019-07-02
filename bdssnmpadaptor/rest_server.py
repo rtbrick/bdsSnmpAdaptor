@@ -57,12 +57,26 @@ class AsyncioRestServer(object):
             This coroutine queues the request and responds immediately even
             if further processing fails.
         """
-        peerIP = request._transport_peername[0]
+        # depending on aiohttp version, there can be different ways of
+        # getting remote address
+        try:
+            peer = request.remote
+
+        except AttributeError:
+            try:
+                peer = request._transport_peername
+
+            except AttributeError:
+                try:
+                    peer = request._transport._extra['peername']
+
+                except (AttributeError, KeyError):
+                    peer = 'unknown'
 
         self.requestCounter += 1
 
         self.moduleLogger.info(
-            f'handler: incoming request peerIP {peerIP}, headers '
+            f'handler: incoming request peer {peer}, headers '
             f'{request.headers}, count {self.requestCounter}')
 
         data = {
