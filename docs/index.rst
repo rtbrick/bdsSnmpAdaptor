@@ -3,8 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to bdsSnmpAdapter's documentation!
-==========================================
+RtBrick SNMP adaptor
+====================
+
+The BDS SNMP adaptor tool implements SNMP interface to otherwise REST-based
+[RtBrick](https://www.rtbrick.com) bare metal switch platform.
 
 .. toctree::
   :hidden:
@@ -13,6 +16,7 @@ Welcome to bdsSnmpAdapter's documentation!
   overview
   modules
   oids
+  changes
 
 
 Indices and tables
