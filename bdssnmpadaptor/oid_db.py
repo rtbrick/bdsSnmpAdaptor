@@ -212,7 +212,8 @@ class OidDb(object):
         """Fetch SNMP managed object instance by OID.
 
         Args:
-            oid (str): OID of the MIB managed object instance to fetch
+            oid (ObjectIdentifier): OID of the MIB managed object instance
+            to fetch
 
         Returns:
             OidDbItem: requested `OidDbItem` if found or `None` otherwise.
@@ -236,9 +237,9 @@ class OidDb(object):
         """Fetch lexicographically *next* MIB managed object instance OID.
 
         Args:
-            oid (str): OID of the MIB managed object instance which is
-                lexicographically just before the desired managed object
-                instance.
+            oid (ObjectIdentifier): OID of the MIB managed object instance
+                which is lexicographically just before the desired managed
+                object instance.
 
         Returns:
             str: OID of the lexicographically *next* MIB managed object
