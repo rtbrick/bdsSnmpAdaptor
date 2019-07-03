@@ -57,10 +57,12 @@ bdsSnmpAdapter:
     # A single REST API call will cause SNMP notifications to all the listed targets
     snmpTrapTargets:  # array of SNMP trap targets
       target-I:  # descriptive name of this notification target
+        bind-address: 0.0.0.0  # send SNMP trap from this address
         address: 127.0.0.1  # send SNMP trap to this address
         port: 162  # send SNMP trap to this port
         security-name: manager-B  # use this SNMP security name
       target-II:  # descriptive name of this notification target
+        bind-address: 127.0.0.1  # send SNMP trap from this address
         address: 127.0.0.2  # send SNMP trap to this address
         port: 162  # send SNMP trap to this port
         security-name: user1  # use this SNMP security name
@@ -115,8 +117,10 @@ bdsSnmpAdapter:
             mock_setUsmUser_calls)
 
         mock_setTrapTargetAddress_calls = [
-            mock.call(mock_snmpEngine, 'manager-B', ('127.0.0.1', 162), 'mgrs'),
-            mock.call(mock_snmpEngine, 'user1', ('127.0.0.2', 162), 'mgrs')
+            mock.call(mock_snmpEngine, 'manager-B',
+                      ('127.0.0.1', 162), src=('0.0.0.0', 0), tag='mgrs'),
+            mock.call(mock_snmpEngine, 'user1',
+                      ('127.0.0.2', 162), src=('127.0.0.1', 0), tag='mgrs')
         ]
         mock_snmp_config.setTrapTargetAddress.assert_has_calls(
             mock_setTrapTargetAddress_calls)

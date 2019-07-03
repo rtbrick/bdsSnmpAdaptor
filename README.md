@@ -8,7 +8,7 @@ License: BSD License 2.0
 
 # SNMP frontend to (Rt)Brick Datastore
 
-*Version 0.4 - under development*
+*Version 0.0.1*
 
 The BDS SNMP adaptor tool implements SNMP interface to otherwise REST-based
 [RtBrick](https://www.rtbrick.com) bare metal switch platform.
@@ -24,12 +24,14 @@ sudo apt-get install git snmp snmp-mibs-downloader
 
 bdsSnmpAdapter python modules and MIBs
 ```shell
-mkdir ~/git
-cd git
 git clone https://github.com/rtbrick/bdsSnmpAdaptor
 cd bdsSnmpAdaptor
-sudo pip3 install -r requirements.txt
-sudo cp mibs/RT* /usr/share/snmp/mibs
+sudo pip3 install .
+sudo mkdir -p /etc/bds-snmp-adaptor/mibs
+sudo mkdir /var/log/bds-snmp-adaptor
+sudo mkdir /var/run/bds-snmp-adaptor
+sudo cp mibs/* /etc/bds-snmp-adaptor/mibs
+sudo cp conf/bds-snmp-adaptor.yml /etc/bds-snmp-adaptor
 ```
 
 Modify config parameters in config file (dev. status)
@@ -110,10 +112,12 @@ bdsSnmpAdapter:
     # A single REST API call will cause SNMP notifications to all the listed targets
     snmpTrapTargets:  # array of SNMP trap targets
       target-I:  # descriptive name of this notification target
+        bind-address: 0.0.0.0  # send SNMP trap messages from this address
         address: 127.0.0.1  # send SNMP trap to this address
         port: 162  # send SNMP trap to this port
         security-name: manager-B  # use this SNMP security name
       target-II:  # descriptive name of this notification target
+        bind-address: 0.0.0.0  # send SNMP trap messages from this address
         address: 127.0.0.2  # send SNMP trap to this address
         port: 162  # send SNMP trap to this port
         security-name: user1  # use this SNMP security name
