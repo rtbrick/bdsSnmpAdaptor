@@ -208,11 +208,10 @@ For `SYSV` init scripts:
 
 .. code-block:: bash
 
-    $ tar zxvf bdsSnmpAdaptor-*.tar.gz bdsSnmpAdaptor-*/sysvinit
-    $ sudo cp bdsSnmpAdaptor-0.0.1/sysvinit/generic/* /etc/init.d
-    $ for x in 2 3 4 5
-        sudo ln -s /etc/init.d/bds-snmp-adaptor /etc/rc.$xd/S02bds-snmp-adaptor
-    done
+    $ #tar zxvf bdsSnmpAdaptor-*.tar.gz bdsSnmpAdaptor-*/sysvinit
+    $ sudo cp bdsSnmpAdaptor/sysvinit/onl/* /etc/init.d
+    $ for x in 2 3 4 5; do sudo ln -s /etc/init.d/bds-snmp-adaptor /etc/rc$x.d/S02bds-snmp-adaptor; done
+    $ sudo chmod 744 /etc/init.d/bds-snmp-adaptor 
     $ sudo /etc/init.d/bds-snmp-adaptor start
 
 .. note::
