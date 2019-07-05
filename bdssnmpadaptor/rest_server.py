@@ -77,21 +77,25 @@ class AsyncioRestServer(object):
             f'handler: incoming request #%{self.requestCounter} from peer '
             f'{peer}, headers {request.headers}')
 
-        data = {
-            'headers': dict(request.headers)
-        }
+        if request.method not in ('PUT', 'POST'):
+            self.moduleLogger.error(
+                f'Invalid method {request.method} in REST call from {peer}')
+
+            return web.json_response(
+                status=405, text='POST or PUT methods required')
 
         try:
             restReq = yield from request.json()
 
         except Exception as exc:
             self.moduleLogger.error(
-                f'Invalid JSON payload in REST call: {exc}')
+                f'Invalid JSON payload in REST call from {peer}: {exc}')
+            return web.json_response(
+                status=500, text='Malformed request payload')
 
-        else:
-            self.queue.put_nowait(restReq)
+        self.queue.put_nowait(restReq)
 
-        return web.json_response(data)
+        return web.json_response()
 
     @asyncio.coroutine
     def initialize(self):
