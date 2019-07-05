@@ -6,8 +6,6 @@
 # License: BSD License 2.0
 #
 import asyncio
-import json
-import os
 
 from aiohttp import web
 
@@ -76,25 +74,22 @@ class AsyncioRestServer(object):
         self.requestCounter += 1
 
         self.moduleLogger.info(
-            f'handler: incoming request peer {peer}, headers '
-            f'{request.headers}, count {self.requestCounter}')
+            f'handler: incoming request #%{self.requestCounter} from peer '
+            f'{peer}, headers {request.headers}')
 
         data = {
             'headers': dict(request.headers)
         }
 
-        # TODO: use aiohttp for json parsing, handle JSON errors
-        jsonTxt = yield from request.text()
-
         try:
-            bdsLogDict = json.loads(jsonTxt)
+            restReq = yield from request.json()
 
         except Exception as exc:
             self.moduleLogger.error(
-                f'cannot convert JSON to dict {jsonTxt}: {exc}')
+                f'Invalid JSON payload in REST call: {exc}')
 
         else:
-            self.queue.put_nowait(bdsLogDict)
+            self.queue.put_nowait(restReq)
 
         return web.json_response(data)
 
