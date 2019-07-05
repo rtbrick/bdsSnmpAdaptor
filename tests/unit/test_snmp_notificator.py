@@ -78,6 +78,10 @@ bdsSnmpAdapter:
 
         self.mock_queue = mock.MagicMock
 
+        mock_snmp_config.setSnmpTransport.side_effect = [
+            (1, 2, 3), (1, 2, 4)
+        ]
+
         with mock.patch(
                 'bdssnmpadaptor.config.open',
                 side_effect=[io.StringIO(self.CONFIG),
@@ -92,8 +96,12 @@ bdsSnmpAdapter:
             engineId=mock.ANY)
         mock_snmp_config.setSnmpEngineBoots.assert_called_once_with(
             mock_snmpEngine, '/var/run/bds-snmp-responder')
-        mock_snmp_config.setSnmpTransport.assert_called_once_with(
-            mock_snmpEngine)
+        mock_snmp_config.setSnmpTransport.assert_any_call(
+            mock_snmpEngine, iface=('0.0.0.0', 0), iface_num=0,
+        )
+        mock_snmp_config.setSnmpTransport.assert_any_call(
+            mock_snmpEngine, iface=('127.0.0.1', 0), iface_num=1
+        )
         mock_snmp_config.setTrapTypeForTag.assert_called_once_with(
             mock_snmpEngine, 'mgrs')
 
@@ -118,9 +126,9 @@ bdsSnmpAdapter:
 
         mock_setTrapTargetAddress_calls = [
             mock.call(mock_snmpEngine, 'manager-B',
-                      ('127.0.0.1', 162), src=('0.0.0.0', 0), tag='mgrs'),
+                      (1, 2, 3), ('127.0.0.1', 162), tag='mgrs'),
             mock.call(mock_snmpEngine, 'user1',
-                      ('127.0.0.2', 162), src=('127.0.0.1', 0), tag='mgrs')
+                      (1, 2, 4), ('127.0.0.2', 162), tag='mgrs')
         ]
         mock_snmp_config.setTrapTargetAddress.assert_has_calls(
             mock_setTrapTargetAddress_calls)

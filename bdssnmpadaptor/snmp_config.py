@@ -228,25 +228,26 @@ def _getTrapTargetName(security):
     return security + '-target'
 
 
-def setTrapTargetAddress(snmpEngine, security, dst, src=None, tag=''):
+def setTrapTargetAddress(snmpEngine, security, transportDomain, transportAddress,
+                         src=None, tag=''):
     """Configure SNMP notification target for SNMP security name.
 
     Args:
         snmpEngine (object): pysnmp `SnmpEngine` class instance
         security (str): SNMP security name to associate SNMP notification target
             address with.
-        dst (tuple): notification destination network address in `socket` format
-            (i.e. ('XXX.XXX.XXX.XXX', NNN)).
-        src (tuple): source network address from which notification message is sent
-            in `socket` format (i.e. ('XXX.XXX.XXX.XXX', NNN)).
-            Default is ('0.0.0.0', 0).
+        transportDomain (tuple): SNMP transport domain instance to send
+            notifications by.
+        transportAddress (tuple): notification destination network address in `socket`
+            format (i.e. ('XXX.XXX.XXX.XXX', NNN)).
         tag (str): Tags this target address. Tags can be used internally
             by SNMP engine for looking up desired notification destination or SNMP
             authentication information by transport address.
     """
     config.addTargetAddr(
-        snmpEngine, _getTrapTargetName(security), udp.domainName, dst,
-        _getTrapCreds(security), tagList=tag, sourceAddress=src)
+        snmpEngine, _getTrapTargetName(security), transportDomain,
+        transportAddress, _getTrapCreds(security), tagList=tag,
+        sourceAddress=src)
 
 
 def setTrapVersion(snmpEngine, security, authLevel, version='2c'):
@@ -317,25 +318,32 @@ def setMibController(snmpEngine, controller):
     return snmpContext
 
 
-def setSnmpTransport(snmpEngine, listen=None):
+def setSnmpTransport(snmpEngine, listen=None, iface=None, iface_num=0):
     """Create network endpoint for SNMP communication.
 
     Args:
         snmpEngine (object): pysnmp `SnmpEngine` class instance
         listen (tuple): if given, should refer to a local network address
-            for SNMP engine to listen for SNMP notifications. If not given,
+            for SNMP engine to listen for SNMP packets. If not given,
             client-side operation is assumed. When `listen` is given, must be
             in `socket` format (i.e. ('XXX.XXX.XXX.XXX', NNN)).
+        iface (tuple): if given, should refer to a local network address
+            for SNMP engine to send SNMP packets from. When `iface` is given,
+            must be in `socket` format (i.e. ('XXX.XXX.XXX.XXX', NNN)).
+        iface_num (int): UDP transport instance ID. Default is 0.
+
+    Returns:
+        tuple: SNMP UDP transport domain instance ID
     """
     transport = udp.UdpAsyncioTransport()
 
     if listen:
         transport = transport.openServerMode(listen)
     else:
-        transport = transport.openClientMode()
+        transport = transport.openClientMode(iface=iface)
 
-    config.addTransport(
-        snmpEngine,
-        udp.domainName,
-        transport
-    )
+    transportDomain = udp.domainName + (iface_num,)
+
+    config.addTransport(snmpEngine, transportDomain, transport)
+
+    return transportDomain

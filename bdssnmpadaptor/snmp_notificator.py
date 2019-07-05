@@ -60,8 +60,6 @@ class SnmpNotificationOriginator(object):
         engineBoots = snmp_config.setSnmpEngineBoots(
             self._snmpEngine, configDict.get('stateDir', '.'))
 
-        snmp_config.setSnmpTransport(self._snmpEngine)
-
         self._targets = snmp_config.setTrapTypeForTag(self._snmpEngine, self.TARGETS_TAG)
 
         authEntries = {}
@@ -109,18 +107,22 @@ class SnmpNotificationOriginator(object):
 
             self._birthday = time.time()
 
-        for targetName, targetConfig in configDict['notificator'].get(
-                'snmpTrapTargets', {}).items():
+        snmpTrapTargets = configDict['notificator'].get('snmpTrapTargets', {}).items()
+
+        for targetId, (targetName, targetConfig) in enumerate(snmpTrapTargets):
 
             bind_address = targetConfig.get('bind-address', '0.0.0.0'), 0
 
-            address = targetConfig['address']
-            port = int(targetConfig.get('port', 162))
-
             security = targetConfig['security-name']
 
+            transportDomain = snmp_config.setSnmpTransport(
+                self._snmpEngine, iface=bind_address, iface_num=targetId)
+
+            transportAddress = (targetConfig['address'],
+                                int(targetConfig.get('port', 162)))
+
             snmp_config.setTrapTargetAddress(
-                self._snmpEngine, security, (address, port), src=bind_address,
+                self._snmpEngine, security, transportDomain, transportAddress,
                 tag=self.TARGETS_TAG)
 
             snmpVersion, authLevel = authEntries[security]
@@ -129,8 +131,9 @@ class SnmpNotificationOriginator(object):
                 self._snmpEngine, security, authLevel, snmpVersion)
 
             self.moduleLogger.info(
-                f'Configuring target {address}:{port}, bind address '
-                f'{bind_address} using security name {security}')
+                f'Configuring target #{targetId}, transport domain '
+                f'{transportDomain}, destination {transportAddress}, '
+                f'bind address {bind_address} using security name {security}')
 
         self._configureMibObjects(configDict)
 
