@@ -50,9 +50,8 @@ bdsSnmpAdapter:
             self.assertEqual('0.0.0.0', rs.listeningIP)
             self.assertEqual(5000, rs.listeningPort)
 
-    @mock.patch('bdssnmpadaptor.rest_server.json', autospec=True)
     @mock.patch('bdssnmpadaptor.rest_server.web', autospec=True)
-    def test_handler(self, mock_web, mock_json):
+    def test_handler(self, mock_web):
             mock_queue = mock.MagicMock(asyncio.Queue)
 
             with mock.patch(
@@ -67,16 +66,68 @@ bdsSnmpAdapter:
 
             mock_request = mock.MagicMock()
 
-            mock_request.text = asynctest.CoroutineMock()
+            mock_request.method = 'PUT'
+            mock_request.json = asynctest.CoroutineMock()
 
             self.my_loop.run_until_complete(
                 rs.handler(mock_request))
 
-            mock_json.loads.assert_called_once_with(mock.ANY)
-
             mock_queue.put_nowait.assert_called_once_with(mock.ANY)
 
-            mock_web.json_response.assert_called_once_with(mock.ANY)
+            mock_web.json_response.assert_called_once_with()
+
+    @mock.patch('bdssnmpadaptor.rest_server.web', autospec=True)
+    def test_handler_bad_method(self, mock_web):
+            mock_queue = mock.MagicMock(asyncio.Queue)
+
+            with mock.patch(
+                    'bdssnmpadaptor.config.open',
+                    side_effect=[io.StringIO(self.CONFIG),
+                                 io.StringIO(self.CONFIG),
+                                 io.StringIO(self.CONFIG)]):
+                rs = rest_server.AsyncioRestServer(
+                    mock.MagicMock(config={}), mock_queue)
+
+            mock_web.json_response = asynctest.CoroutineMock()
+
+            mock_request = mock.MagicMock()
+
+            mock_request.method = 'GET'
+
+            self.my_loop.run_until_complete(
+                rs.handler(mock_request))
+
+            self.assertFalse(mock_queue.put_nowait.called)
+
+            mock_web.json_response.assert_called_once_with(
+                status=405, text='POST or PUT methods required')
+
+    @mock.patch('bdssnmpadaptor.rest_server.web', autospec=True)
+    def test_handler_bad_payload(self, mock_web):
+            mock_queue = mock.MagicMock(asyncio.Queue)
+
+            with mock.patch(
+                    'bdssnmpadaptor.config.open',
+                    side_effect=[io.StringIO(self.CONFIG),
+                                 io.StringIO(self.CONFIG),
+                                 io.StringIO(self.CONFIG)]):
+                rs = rest_server.AsyncioRestServer(
+                    mock.MagicMock(config={}), mock_queue)
+
+            mock_web.json_response = asynctest.CoroutineMock()
+
+            mock_request = mock.MagicMock()
+
+            mock_request.method = 'PUT'
+            mock_request.json.side_effect = Exception()
+
+            self.my_loop.run_until_complete(
+                rs.handler(mock_request))
+
+            self.assertFalse(mock_queue.put_nowait.called)
+
+            mock_web.json_response.assert_called_once_with(
+                status=500, text='Malformed request payload')
 
     @asynctest.patch('bdssnmpadaptor.rest_server.web', autospec=True)
     def test_initialize(self, mock_web):
