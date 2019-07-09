@@ -91,9 +91,13 @@ syslogMsgText OBJECT-TYPE
         ::= { rtbrickSyslogNotifications 0 }
 
     rtbrickSyslogTrap NOTIFICATION-TYPE
+        OBJECTS { syslogMsgNumber,
+                  syslogMsgFacility,
+                  syslogMsgSeverity,
+                  syslogMsgText }
         STATUS  current
         DESCRIPTION
             "Notification of a generated syslog message"
-        ::= { rtbrickSyslogNotificationPrefix 1 }
+        ::= { rtbrickSyslogNotificationPrefix 1 }   
 
 END
